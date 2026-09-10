@@ -1148,7 +1148,8 @@ select {
     color: #b91c1c;
 }
 
-.dtr-print-special--leave td {
+.dtr-print-special--leave td,
+.dtr-print-special--travel td {
     color: #1d4ed8;
 }
 
@@ -3436,14 +3437,17 @@ body.dtr-batch-printing .dtr-print-card {
 }
 
 .dtr-print-special--leave td,
+.dtr-print-special--travel td,
 .dtr-print-inline-special {
     color: #001eff;
     font-weight: 700;
 }
 
-/* This badge sits in a merged colspan="2" cell (rendered only when the day has no punches — see
-   renderPrintDay's `special && !anyPunch` branch), so unlike .dtr-print-inline-note below it has
-   real room: wrap onto a second line instead of truncating a long destination/holiday name. */
+/* This badge sits in a merged colspan="2" cell for a day that has SOME punch but an empty
+   AM-OUT/PM-IN pair (see renderPrintDay's `special && !values[1] && !values[2]` branch) — a
+   fully punch-less day now gets the full-row dtr-print-special--travel/--leave/--holiday merge
+   above instead. Unlike .dtr-print-inline-note below, this one has real room: wrap onto a second
+   line instead of truncating a long destination/holiday name. */
 .dtr-print-inline-special {
     display: block;
     text-align: center;

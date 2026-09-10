@@ -954,8 +954,16 @@ async function handleReportDashboard(req, res) {
   const preparedByBreakdown = tally(items, (item) => item.createdBy).sort((a, b) => b.count - a.count);
   const topTypes = tally(items, (item) => item.type).sort((a, b) => b.count - a.count).slice(0, 8);
   const trend = tally(items, (item) => (item.reportedAt ? String(item.reportedAt).slice(0, 10) : null)).sort((a, b) => a.label.localeCompare(b.label));
+  // [HYBRID] Trimmed rows behind the charts — the dashboard already loaded every complaint in
+  // range to build the tallies above, so the list view reuses that same set instead of a second
+  // query; the reports screen filters/sorts this client-side instead of round-tripping per click.
+  const listItems = items.map((item) => ({
+    id: item.id, databaseId: item.databaseId, type: item.type, consumer: item.consumer, address: item.address,
+    department: item.department, area: COMPLAINT_AREAS.includes(item.complaintArea) ? item.complaintArea : 'UNSPECIFIED',
+    status: item.status, preparedBy: item.createdBy || 'Unspecified', reportedAt: item.reportedAt,
+  }));
   return successResponse(res, { period: { from, to }, total: items.length,
-    done: items.filter((item) => item.status === 'Done').length, statusBreakdown, areaBreakdown, departmentBreakdown, preparedByBreakdown, topTypes, trend,
+    done: items.filter((item) => item.status === 'Done').length, statusBreakdown, areaBreakdown, departmentBreakdown, preparedByBreakdown, topTypes, trend, listItems,
     truncated: rows.length >= 5000 });
 }
 async function handleReportEncoders(req, res) {

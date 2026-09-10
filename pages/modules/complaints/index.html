@@ -252,7 +252,7 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
         @keyframes monitor-pulse{0%{transform:scale(.8);opacity:.9}75%,100%{transform:scale(2.15);opacity:0}}@keyframes monitor-live{0%{box-shadow:0 0 0 0 rgba(34,197,94,.35)}100%{box-shadow:0 0 0 8px rgba(34,197,94,0)}}
         .dialog-actions{justify-content:flex-end;margin-top:var(--s4)}
         .dialog-close{width:36px;height:36px;padding:0;font-size:22px;line-height:1}
-        #reports-dialog{width:min(1080px,calc(100vw - 24px));--st-new:var(--info);--st-pending:var(--warning);--st-progress:var(--processing);--st-released:#8b5cf6;--st-done:var(--success)}
+        #reports-dialog{width:min(1180px,calc(100vw - 24px));--st-new:var(--info);--st-pending:var(--warning);--st-progress:var(--processing);--st-released:#8b5cf6;--st-done:var(--success)}
         #reports-dialog .dialog-body{padding-bottom:var(--s4)}
         .rp-filterbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);padding:0 var(--s4)}
         .rp-seg{display:flex;padding:3px;border-radius:var(--r2);background:var(--canvas);gap:2px}
@@ -300,6 +300,41 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
         .rp-rank-row strong{display:block;overflow:hidden;font-size:12.5px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
         .rp-rank-row .r-count{padding:2px 9px;border-radius:999px;background:var(--primary-soft);color:var(--primary-dark);font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums}
         .rp-empty{padding:var(--s3) 0;color:var(--muted);font-size:12px}
+        /* [HYBRID] Chart segments/bars/ranks double as click-to-filter controls for the live list
+           below — button resets here, the existing row layout above is untouched. */
+        .rp-bar-row,.rp-legend-row,.rp-rank-row{cursor:pointer;border:1px solid transparent;background:transparent;width:100%;text-align:left;font:inherit;color:inherit}
+        .rp-bar-row{border-radius:var(--r2);padding:3px 4px}
+        .rp-bar-row:hover{background:var(--canvas)}
+        .rp-bar-row.active{background:var(--primary-soft);border-color:var(--primary)}
+        .rp-legend-row{border-radius:var(--r2);padding:4px 6px}
+        .rp-legend-row:hover{background:var(--canvas)}
+        .rp-legend-row.active{background:var(--primary-soft);border-color:var(--primary)}
+        .rp-rank-row:hover{border-color:var(--primary)}
+        .rp-rank-row.active{background:var(--primary-soft);border-color:var(--primary)}
+        .rp-chipbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 var(--s4);min-height:4px}
+        .rp-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 7px 5px 11px;border-radius:999px;background:var(--primary-soft);color:var(--primary-dark);font-size:11.5px;font-weight:700}
+        .rp-chip button{display:grid;place-items:center;width:16px;height:16px;border:0;border-radius:50%;background:color-mix(in srgb,var(--primary) 18%,transparent);color:inherit;font-size:11px;cursor:pointer}
+        .rp-chip-clear{border:1px dashed var(--border);background:transparent;color:var(--muted);padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:pointer}
+        .rp-chip-clear:hover{border-color:var(--primary);color:var(--primary)}
+        .rp-list-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;padding:var(--s2) var(--s4) 0}
+        .rp-list-head h4{margin:0;font-size:14px}
+        .rp-list-head h4 em{margin-left:6px;color:var(--muted);font-size:11px;font-style:normal;font-weight:600}
+        .rp-list-hint{margin:2px 0 0;color:var(--muted);font-size:11.5px}
+        .rp-hlist-labels{display:grid;grid-template-columns:4px minmax(0,1.7fr) 96px 108px 118px 96px 84px;gap:12px;padding:var(--s3) var(--s4) 4px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+        .rp-hybrid-list{display:flex;flex-direction:column;gap:6px;padding:0 var(--s4) var(--s4)}
+        .rp-hrow{display:grid;grid-template-columns:4px minmax(0,1.7fr) 96px 108px 118px 96px 84px;gap:12px;align-items:center;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r2);background:var(--surface);text-align:left;cursor:pointer}
+        .rp-hrow:hover{border-color:var(--primary)}
+        .rp-hrow-stripe{align-self:stretch;border-radius:3px;background:var(--row-color,var(--border))}
+        .rp-hrow-who{min-width:0}
+        .rp-hrow-who .ref{display:block;color:var(--primary-dark);font-size:10.5px;font-weight:800}
+        .rp-hrow-who strong{display:block;margin-top:1px;overflow:hidden;font-size:12.5px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+        .rp-hrow-who small{display:block;overflow:hidden;color:var(--muted);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+        .rp-tag{display:inline-flex;padding:3px 8px;border-radius:999px;background:var(--canvas);color:var(--body);font-size:10.5px;font-weight:700;width:fit-content}
+        .rp-prepared{overflow:hidden;font-size:11.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+        .rp-status-pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;width:fit-content}
+        .rp-status-pill i{width:6px;height:6px;border-radius:50%}
+        .rp-when{color:var(--muted);font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+        @media (max-width:760px){.rp-hlist-labels{display:none}.rp-hrow{grid-template-columns:4px 1fr}}
         .rp-print-panel{display:flex;flex-wrap:wrap;align-items:end;gap:var(--s3);margin:0 var(--s4);padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r3);background:var(--canvas)}
         .rp-print-panel .field{flex:1;min-width:170px}
         @keyframes rp-pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.35)}100%{box-shadow:0 0 0 6px transparent}}
@@ -751,10 +786,12 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
                     <option value="ALL">All areas</option>
                     <option>MAIN</option><option>CATBALOGAN</option><option>VILLAREAL</option><option>BASEY</option>
                 </select>
-                <select id="reports-user"><option value="ALL">All encoders</option></select>
+                <select id="reports-type"><option value="ALL">All categories</option></select>
+                <select id="reports-user"><option value="ALL">All prepared by</option></select>
                 <span class="spacer"></span>
                 <span class="rp-live" id="rp-live">— tracked</span>
             </div>
+            <div class="rp-chipbar" id="rp-chipbar"></div>
             <p class="dialog-copy" id="reports-status-line" style="padding:var(--s2) var(--s4) 0"></p>
             <div class="rp-kpis" id="rp-kpis"></div>
             <div class="rp-panels">
@@ -771,6 +808,11 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
                 <div class="rp-panel"><h4>By prepared by</h4><div id="rp-preparedby"></div></div>
                 <div class="rp-panel"><h4>Top complaint types</h4><div class="rp-ranked" id="rp-types"></div></div>
             </div>
+            <!-- [HYBRID] Charts above are click-to-filter; this is the live list they narrow — no
+                 separate lookup screen. Clicking a row opens that complaint directly. -->
+            <div class="rp-list-head"><h4>Matching complaints <em id="rp-list-count"></em></h4><p class="rp-list-hint">Click a chart above to narrow this list, or a row to open that complaint.</p></div>
+            <div class="rp-hlist-labels"><span></span><span>Complaint</span><span>Department</span><span>Area</span><span>Prepared by</span><span>Status</span><span style="text-align:right">Reported</span></div>
+            <div class="rp-hybrid-list" id="rp-list"></div>
             <div class="rp-print-panel">
                 <div class="field"><label for="reports-kind">Print</label>
                     <select id="reports-kind">
@@ -1784,6 +1826,11 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
         // of truth for the numbers instead of the dashboard and the printout drifting apart.
         const reportsDialog=$("reports-dialog"),reportsUserSelect=$("reports-user"),reportsStatusField=$("reports-status-field"),reportsStatusLine=$("reports-status-line");
         let reportsPeriodMode="day",reportsEncodersLoaded=false;
+        // [HYBRID] Client-side slice on top of whatever the server already returned — department/
+        // status/category narrow the list instantly with no refetch; area and prepared-by stay
+        // server params (their own selects already refetch), so a bar click there just sets the
+        // matching select instead of adding a second, conflicting filter path.
+        let reportsCrossFilter={department:null,status:null,type:null};
         async function loadReportEncoders(){
             if(reportsEncodersLoaded)return;
             try{const response=await fetch(`${complaintsApi}?action=report_encoders`,{credentials:"same-origin",headers:authHeaders()}),result=await response.json().catch(()=>({ok:false}));
@@ -1813,14 +1860,16 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
         // filter changes; a request token guards an older, slower fetch from overwriting a newer
         // one when filters change quickly.
         let reportsDashboardToken=0,reportsLastDashboard=null;
-        function rpBarRows(target,rows,emptyText){
+        function rpBarRows(target,rows,emptyText,activeValue,onClick){
             if(!rows.length){target.innerHTML=`<p class="rp-empty">${emptyText}</p>`;return}
             const max=Math.max(...rows.map(r=>r.count),1);
-            target.innerHTML=rows.map(r=>`<div class="rp-bar-row"><span class="rp-bar-label" title="${r.label}">${r.label}</span><span class="rp-bar-track"><span class="rp-bar-fill" style="width:${Math.round(r.count/max*100)}%"></span></span><span class="rp-bar-count">${r.count}</span></div>`).join("");
+            target.innerHTML=rows.map(r=>`<button type="button" class="rp-bar-row${activeValue===r.label?" active":""}" data-val="${r.label}"><span class="rp-bar-label" title="${r.label}">${r.label}</span><span class="rp-bar-track"><span class="rp-bar-fill" style="width:${Math.round(r.count/max*100)}%"></span></span><span class="rp-bar-count">${r.count}</span></button>`).join("");
+            if(onClick)target.querySelectorAll(".rp-bar-row").forEach(btn=>btn.addEventListener("click",()=>onClick(btn.dataset.val)));
         }
-        function rpRanked(target,rows,emptyText){
+        function rpRanked(target,rows,emptyText,activeValue,onClick){
             if(!rows.length){target.innerHTML=`<p class="rp-empty">${emptyText}</p>`;return}
-            target.innerHTML=rows.map((r,i)=>`<div class="rp-rank-row"><span class="r-n">${String(i+1).padStart(2,"0")}</span><strong title="${r.label}">${r.label}</strong><span class="r-count">${r.count}</span></div>`).join("");
+            target.innerHTML=rows.map((r,i)=>`<button type="button" class="rp-rank-row${activeValue===r.label?" active":""}" data-val="${r.label}"><span class="r-n">${String(i+1).padStart(2,"0")}</span><strong title="${r.label}">${r.label}</strong><span class="r-count">${r.count}</span></button>`).join("");
+            if(onClick)target.querySelectorAll(".rp-rank-row").forEach(btn=>btn.addEventListener("click",()=>onClick(btn.dataset.val)));
         }
         const rpStatusColor=label=>({"New":"var(--st-new)","Pending":"var(--st-pending)","In Progress":"var(--st-progress)","Released":"var(--st-released)","Done":"var(--st-done)"}[label]||"var(--muted)");
         function rpDonut(rows,total){
@@ -1835,8 +1884,10 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
                 circle.setAttribute("cx","60");circle.setAttribute("cy","60");circle.setAttribute("r",r);
                 circle.style.stroke=color;circle.setAttribute("stroke-dasharray",`${len} ${c-len}`);circle.setAttribute("stroke-dashoffset",String(-offset));
                 segsEl.appendChild(circle);offset+=len;
-                const legendRow=el("div","rp-legend-row");
+                const legendRow=el("button","rp-legend-row"+(reportsCrossFilter.status===row.label?" active":""));
+                legendRow.type="button";
                 legendRow.innerHTML=`<i style="background:${color}"></i><span class="l-name">${row.label}</span><span class="l-val">${row.count}</span>`;
+                legendRow.addEventListener("click",()=>setCrossFilter("status",row.label));
                 legendEl.appendChild(legendRow);
             });
         }
@@ -1857,6 +1908,79 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
             const showEvery=Math.max(1,Math.ceil(rows.length/6));
             rows.forEach((row,i)=>{if(i%showEvery!==0&&i!==rows.length-1)return;const span=el("span","",row.label.slice(5));labelsEl.appendChild(span)});
         }
+        // [HYBRID] currentAreaLabel/currentPreparedByLabel read the two selects that already
+        // drive the server fetch, so their bars can show the matching row as active without a
+        // second source of truth for "what's currently selected."
+        function currentAreaLabel(){const v=$("reports-area").value;return v==="ALL"?null:reportAreaLabel(v)}
+        function currentPreparedByLabel(){const opt=reportsUserSelect.selectedOptions[0];return opt&&opt.value!=="ALL"?opt.textContent:null}
+        function selectReportsArea(label){
+            const clean=label==="No area"?"":label;
+            const opt=[...$("reports-area").options].find(o=>o.value===clean||o.textContent===label);
+            if(!opt)return;
+            $("reports-area").value=opt.value;loadReportDashboard();
+        }
+        function selectReportsPreparedBy(label){
+            const opt=[...reportsUserSelect.options].find(o=>o.textContent===label);
+            if(!opt)return;
+            reportsUserSelect.value=opt.value;loadReportDashboard();
+        }
+        function reportsCrossFilterMatch(item){
+            return (!reportsCrossFilter.department||item.department===reportsCrossFilter.department)
+                &&(!reportsCrossFilter.status||item.status===reportsCrossFilter.status)
+                &&(!reportsCrossFilter.type||item.type===reportsCrossFilter.type);
+        }
+        function renderReportsChips(){
+            const bar=$("rp-chipbar"),labels={department:"Department",status:"Status",type:"Category"};
+            const active=Object.entries(reportsCrossFilter).filter(([,v])=>v);
+            if(!active.length){bar.innerHTML="";return}
+            bar.innerHTML=active.map(([k,v])=>`<span class="rp-chip">${labels[k]}: ${v}<button type="button" data-clear="${k}" aria-label="Clear ${labels[k]} filter">×</button></span>`).join("")+`<button type="button" class="rp-chip-clear" id="rp-chip-clear-all">Clear all</button>`;
+            bar.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{reportsCrossFilter[b.dataset.clear]=null;applyCrossFilterChange()}));
+            $("rp-chip-clear-all").addEventListener("click",()=>{reportsCrossFilter={department:null,status:null,type:null};applyCrossFilterChange()});
+        }
+        function populateReportsTypeOptions(){
+            const select=$("reports-type");
+            const types=[...new Set((reportsLastDashboard?.listItems||[]).map(i=>i.type).filter(Boolean))].sort();
+            const wanted=reportsCrossFilter.type&&types.includes(reportsCrossFilter.type)?reportsCrossFilter.type:"ALL";
+            select.innerHTML=`<option value="ALL">All categories</option>`+types.map(t=>`<option${t===wanted?" selected":""}>${t}</option>`).join("");
+        }
+        const reportListStatusColor=status=>rpStatusColor(status);
+        function renderReportList(){
+            const items=(reportsLastDashboard?.listItems||[]).filter(reportsCrossFilterMatch);
+            $("rp-list-count").textContent=items.length?`(${items.length})`:"";
+            const target=$("rp-list");
+            if(!items.length){target.innerHTML=`<p class="rp-empty">No complaints match these filters.</p>`;return}
+            const sorted=[...items].sort((a,b)=>String(b.reportedAt||"").localeCompare(String(a.reportedAt||"")));
+            // ponytail: renders at most the first 300 matching rows — the charts above still cover
+            // the full period, this is just how many cards a person can usefully scroll through.
+            target.innerHTML=sorted.slice(0,300).map(item=>{
+                const color=reportListStatusColor(item.status);
+                return `<button type="button" class="rp-hrow" data-id="${item.id}" style="--row-color:${color}">
+                    <span class="rp-hrow-stripe"></span>
+                    <span class="rp-hrow-who"><span class="ref">${item.id}</span><strong title="${item.type}">${item.type}</strong><small>${item.consumer}${item.address?" · "+item.address:""}</small></span>
+                    <span class="rp-tag">${item.department}</span>
+                    <span class="rp-tag">${reportAreaLabel(item.area)}</span>
+                    <span class="rp-prepared" title="${item.preparedBy}">${item.preparedBy}</span>
+                    <span class="rp-status-pill" style="color:${color}"><i style="background:${color}"></i>${item.status}</span>
+                    <span class="rp-when">${item.reportedAt?apiDate(item.reportedAt):"—"}</span>
+                </button>`;
+            }).join("");
+            target.querySelectorAll(".rp-hrow").forEach(row=>row.addEventListener("click",async()=>{reportsDialog.close();await openComplaintById(row.dataset.id)}));
+        }
+        function applyCrossFilterChange(){populateReportsTypeOptions();renderReportsChips();renderReportList()}
+        function refreshCrossFilterPanels(){
+            if(!reportsLastDashboard)return;
+            rpDonut(reportsLastDashboard.statusBreakdown,reportsLastDashboard.total);
+            rpBarRows($("rp-department"),reportsLastDashboard.departmentBreakdown,"No complaints in this period.",reportsCrossFilter.department,label=>setCrossFilter("department",label));
+            rpRanked($("rp-types"),reportsLastDashboard.topTypes,"No complaints in this period.",reportsCrossFilter.type,label=>setCrossFilter("type",label));
+        }
+        function setCrossFilter(key,value){
+            reportsCrossFilter[key]=reportsCrossFilter[key]===value?null:value;
+            refreshCrossFilterPanels();applyCrossFilterChange();
+        }
+        $("reports-type").addEventListener("change",()=>{
+            reportsCrossFilter.type=$("reports-type").value==="ALL"?null:$("reports-type").value;
+            refreshCrossFilterPanels();applyCrossFilterChange();
+        });
         function renderReportDashboard(result){
             reportsLastDashboard=result;
             $("rp-live").textContent=`${result.total} tracked`;
@@ -1866,19 +1990,18 @@ HUWAG BAGUHIN: Ang [HUWAG] LOCAL SAVE block ang nag-iingat ng preview updates.
                 <div class="rp-kpi" style="--kpi-color:var(--st-progress)"><span>In progress</span><strong>${inProgress}</strong><small>Assigned &amp; being worked</small></div>
                 <div class="rp-kpi" style="--kpi-color:var(--st-pending)"><span>Pending</span><strong>${pending}</strong><small>New + not yet completed</small></div>
                 <div class="rp-kpi" style="--kpi-color:var(--st-done)"><span>Completed</span><strong>${done}</strong><small>${result.total?Math.round(done/result.total*100):0}% of this period</small></div>`;
-            rpDonut(result.statusBreakdown,result.total);
-            rpBarRows($("rp-department"),result.departmentBreakdown,"No complaints in this period.");
-            rpBarRows($("rp-area"),result.areaBreakdown.map(r=>({...r,label:reportAreaLabel(r.label)})),"No complaints in this period.");
-            rpBarRows($("rp-preparedby"),result.preparedByBreakdown,"No complaints in this period.");
-            rpRanked($("rp-types"),result.topTypes,"No complaints in this period.");
+            rpBarRows($("rp-area"),result.areaBreakdown.map(r=>({...r,label:reportAreaLabel(r.label)})),"No complaints in this period.",currentAreaLabel(),selectReportsArea);
+            rpBarRows($("rp-preparedby"),result.preparedByBreakdown,"No complaints in this period.",currentPreparedByLabel(),selectReportsPreparedBy);
+            refreshCrossFilterPanels();
             rpTrendChart(result.trend);
+            applyCrossFilterChange();
             reportsStatusLine.textContent=result.truncated?"Showing the first 5,000 complaints in this period.":"";
         }
         async function loadReportDashboard(){
             const parsed=reportsParams();const token=++reportsDashboardToken;
             reportsStatusLine.textContent=parsed?"Loading dashboard…":"Choose a valid date.";
             if(!parsed)return;
-            try{const result=await fetchReportDashboard(parsed.params);if(token!==reportsDashboardToken)return;renderReportDashboard(result)}
+            try{const result=await fetchReportDashboard(parsed.params);if(token!==reportsDashboardToken)return;reportsCrossFilter={department:null,status:null,type:null};renderReportDashboard(result)}
             catch(error){if(token!==reportsDashboardToken)return;reportsStatusLine.textContent=error.message||"Dashboard is unavailable.";reportsLastDashboard=null}
         }
         $("reports-open").addEventListener("click",()=>{loadReportEncoders();if(!$("reports-day").value)$("reports-day").value=localDateValue();if(!$("reports-month").value)$("reports-month").value=localDateValue().slice(0,7);syncReportsPeriodFields();syncReportsKindFields();reportsStatusLine.textContent="";reportsDialog.showModal();loadReportDashboard()});

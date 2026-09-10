@@ -517,20 +517,31 @@ const AUTH_API = `${NODE_API_BASE}/auth`;
     // ponytail: "All departments" fires one monthly_final request PER employee (300+), which is
     // what actually makes that load slow — not the roster fetch. Persisting each employee's rows in
     // localStorage means that cost is only paid once per month/date-range; every load after that
-    // (including across page reloads) reads the cache instantly. "Update data" is the only thing
-    // that pays the cost again, on purpose.
+    // (including across page reloads) reads the cache instantly. "Update data" used to be the only
+    // thing that paid the cost again — on purpose, but that meant a server-side data fix (corrected
+    // travel dates, a payroll recompute) silently never showed up for anyone who already had that
+    // month cached, indefinitely, until someone remembered to click it. A 15-minute TTL keeps the
+    // same-session perf win (the 300-employee load stays instant while you're actively using the
+    // page) while making a stale cache heal itself shortly after any backend fix, with no manual step.
     const DTR_CACHE_PREFIX = "samelcii_dtr_rows:";
+    const DTR_CACHE_TTL_MS = 15 * 60 * 1000;
     function readPersistedRows(key) {
         try {
             const raw = localStorage.getItem(DTR_CACHE_PREFIX + key);
-            return raw ? JSON.parse(raw) : null;
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            // Pre-TTL entries were a bare array with no timestamp — treat as expired so every
+            // already-cached month naturally refreshes once, rather than trusting an unknown age.
+            if (!parsed || Array.isArray(parsed) || !Array.isArray(parsed.items)) return null;
+            if (Date.now() - Number(parsed.savedAt || 0) > DTR_CACHE_TTL_MS) return null;
+            return parsed.items;
         } catch (_error) {
             return null;
         }
     }
     function writePersistedRows(key, items) {
         try {
-            localStorage.setItem(DTR_CACHE_PREFIX + key, JSON.stringify(items));
+            localStorage.setItem(DTR_CACHE_PREFIX + key, JSON.stringify({ items, savedAt: Date.now() }));
         } catch (_error) {
             // ponytail: quota exceeded or storage disabled — in-memory cache (state.rowCache) still
             // works for this session, we just lose the across-reload benefit. Not worth surfacing.
@@ -2164,15 +2175,10 @@ const AUTH_API = `${NODE_API_BASE}/auth`;
         // value if every column in the row is genuinely in use.
         let cells;
         if (special && !anyPunch) {
-            // No punch anywhere this day — the classic full EPASS/LEAVE/HOLIDAY day. Keep the wide
-            // merged badge; there's no time data it could ever be hiding.
-            cells = [
-                `<td>${values[0]}</td>`,
-                `<td colspan="2"><span class="dtr-print-inline-special">${escapeHtml(special)}</span></td>`,
-                `<td>${values[3]}</td>`,
-                `<td>${values[4]}</td>`,
-                `<td>${values[5]}</td>`,
-            ];
+            // No punch anywhere this day — the classic full EPASS/LEAVE/TRAVEL day. Same one-row
+            // merged treatment as HOLIDAY/rest-day above, per request — there's no time data any of
+            // the 6 columns could be hiding, so splitting them with visible dividers was misleading.
+            return `<tr class="dtr-print-special dtr-print-special--travel"><th>${item.day}</th><td colspan="6">${escapeHtml(special)}</td><td></td></tr>`;
         } else if (special && !values[1] && !values[2]) {
             // AM-OUT and PM-IN (the usual lunch-break pair) are both empty — e.g. a single AM-IN
             // punch before leaving for travel. Merge that pair into one wide cell instead of
@@ -2560,12 +2566,13 @@ const AUTH_API = `${NODE_API_BASE}/auth`;
     }
 
     function resetFilters() {
-        if (els.dateFrom) {
-            els.dateFrom.value = monthStart();
-        }
-        if (els.dateTo) {
-            els.dateTo.value = today();
-        }
+        // ponytail: used to hardcode dateFrom=monthStart()/dateTo=today() — "so far this month" —
+        // which silently hid every future day (a pre-approved Travel/EPASS spanning days later this
+        // month included) until the user touched the month/year dropdown at least once, since THAT
+        // change handler is the only other place applyMonthYearToDates() ran. Calling the same
+        // function here makes first load match post-interaction behavior: the full current month,
+        // matching what populateMonthYearControls() just set the dropdown to.
+        applyMonthYearToDates();
         if (els.departmentFilter) {
             els.departmentFilter.value = "__ALL__";
         }
