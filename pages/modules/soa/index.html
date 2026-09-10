@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOA | SAMELCII</title>
+    <!-- SOA module page ito; placeholder layout muna ang laman nito. -->
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+</head>
+<body>
+    <main class="page">
+        <div class="top">
+            <h1>SOA</h1>
+            <div class="actions">
+                <a class="btn" href="../../dashboard/index.html">Dashboard</a>
+                <button class="btn secondary" id="logout-btn" type="button">Logout</button>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="meta">
+                <div><strong>Logged user:</strong> <span id="logged-user">-</span></div>
+                <div><strong>Legacy source mapping:</strong> SOA / SAMELCOII_SOA_MAIN_FORM</div>
+                <div><strong>Status:</strong> Modern UI template aligned with all modules.</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Record Entry</h2>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Employee ID</label>
+                    <input class="input" type="text" placeholder="Enter employee id" />
+                </div>
+                <div class="field">
+                    <label>Employee Name</label>
+                    <input class="input" type="text" placeholder="Enter employee name" />
+                </div>
+                <div class="field">
+                    <label>Department</label>
+                    <select class="select">
+                        <option value="">Select department</option>
+                        <option>IT</option>
+                        <option>MEMBERSHIP</option>
+                        <option>WAREHOUSE</option>
+                        <option>FUEL</option>
+                        <option>ACCOUNTING</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Status</label>
+                    <select class="select">
+                        <option value="">Select status</option>
+                        <option>Active</option>
+                        <option>Pending</option>
+                        <option>Closed</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Date From</label>
+                    <input class="input" type="date" />
+                </div>
+                <div class="field">
+                    <label>Date To</label>
+                    <input class="input" type="date" />
+                </div>
+                <div class="field full">
+                    <label>Remarks / Notes</label>
+                    <textarea class="textarea" placeholder="Enter notes..."></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn" type="button">Save</button>
+                <button class="btn secondary" type="button">Update</button>
+                <button class="btn light" type="button">Clear</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Records List</h2>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <!-- GABAY: logout dito ay nag-a-clear ng shared session bago bumalik sa login. -->
+    <script>
+        (function () {
+            const logoutBtn = document.getElementById("logout-btn");
+            if (!logoutBtn) {
+                return;
+            }
+            logoutBtn.addEventListener("click", () => {
+                localStorage.removeItem("samelcii_session");
+                localStorage.removeItem("samelcii_token");
+                localStorage.removeItem("samelcii_user");
+                window.location.href = "../../auth/index.html";
+            });
+        })();
+    </script>
+    <script src="../module.js"></script>
+</body>
+</html>

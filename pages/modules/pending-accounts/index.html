@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pending Accounts | SAMELCII</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../module.css?v=20260910-pending-accounts-v1" />
+</head>
+<body>
+    <main class="page">
+        <div class="top">
+            <h1><i class="fa fa-user-clock" aria-hidden="true"></i> Pending Accounts</h1>
+            <div class="actions">
+                <button type="button" class="btn light" id="refresh-btn"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <p class="meta">
+                New self-registrations wait here until an admin approves them — closes the hole where
+                anyone could look up an employee's ID and register as them first. Privilege 10 only.
+            </p>
+            <div class="table-wrap">
+                <table class="table" id="pending-table">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Department</th>
+                            <th>Registered username</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-body">
+                        <tr><td colspan="6">Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="message" id="pending-message"></p>
+        </div>
+    </main>
+    <script src="pending-accounts.js?v=20260910-pending-accounts-v1"></script>
+</body>
+</html>

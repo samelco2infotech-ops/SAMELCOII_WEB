@@ -1,0 +1,24 @@
+{
+  "name": "SAMELCII Web System",
+  "short_name": "SAMELCII",
+  "description": "SAMELCO II Web System — Fuel, HR, and Operations",
+  "start_url": "./pages/modules/fuel/index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef2f7",
+  "theme_color": "#2b69e8",
+  "icons": [
+    {
+      "src": "./assets/images/samelco-mark.svg",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/images/samelco-main.svg",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

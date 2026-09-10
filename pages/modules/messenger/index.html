@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messenger | SAMELCII</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260615-sam-live-v1" />
+</head>
+<body>
+    <main class="messenger-shell">
+        <aside class="chat-sidebar" aria-label="Messenger conversations">
+            <div class="search-wrap">
+                <i class="fa fa-search"></i>
+                <input type="search" placeholder="Search..." aria-label="Search messages" />
+            </div>
+
+            <section class="sidebar-section">
+                <div class="section-title">
+                    <h2>Messages</h2>
+                    <button id="refresh-conversations" type="button" aria-label="Refresh messages"><i class="fa fa-refresh"></i></button>
+                </div>
+                <form class="start-chat-form" id="start-chat-form">
+                    <input id="employee-search" type="search" placeholder="Find employee..." autocomplete="off" aria-label="Find employee" />
+                    <button type="submit" aria-label="Search employee"><i class="fa fa-search"></i></button>
+                    <div class="user-results" id="user-results"></div>
+                </form>
+                <div class="group-create-panel" id="group-create-panel" hidden>
+                    <div class="group-create-top">
+                        <strong>Create group chat</strong>
+                        <button type="button" id="cancel-group-button" aria-label="Cancel group creation">&times;</button>
+                    </div>
+                    <input id="group-name-input" type="text" placeholder="Group name (optional)" aria-label="Group name" />
+                    <div class="group-create-meta">
+                        <span id="group-selection-count">0 selected</span>
+                        <button type="button" id="create-group-button">Create group</button>
+                    </div>
+                    <div class="group-selection" id="group-selection"></div>
+                </div>
+                <div class="group-create-actions">
+                    <button type="button" id="new-group-button"><i class="fa fa-users"></i> New group</button>
+                </div>
+                <div class="chat-tabs" role="tablist" aria-label="Message filters">
+                    <button class="active" type="button">All Chats</button>
+                    <button type="button">Groups</button>
+                    <button type="button">Contacts</button>
+                </div>
+
+                <div class="conversation-list" id="conversation-list"></div>
+            </section>
+
+            <section class="sidebar-section calls-section">
+                <div class="section-title">
+                    <h2>Calls</h2>
+                    <button class="new-meet" type="button"><i class="fa fa-video-camera"></i> New meet</button>
+                </div>
+                <div class="call-list">
+                    <div class="empty-state compact">No active calls</div>
+                </div>
+            </section>
+        </aside>
+
+        <section class="chat-panel" aria-label="Current conversation">
+            <header class="chat-header">
+                <div class="room-title">
+                    <span class="avatar gradient-pink" id="room-avatar">M</span>
+                    <div>
+                        <h1 id="chat-title">Messenger</h1>
+                        <p id="chat-status">Select a conversation</p>
+                    </div>
+                </div>
+                <div class="member-stack" id="member-stack" aria-label="Conversation members"></div>
+                <div class="header-actions">
+                    <button id="start-audio-call" type="button" aria-label="Start call"><i class="fa fa-phone"></i></button>
+                    <button id="start-video-call" type="button" aria-label="Start video call"><i class="fa fa-video-camera"></i></button>
+                    <button id="add-to-group-button" type="button" aria-label="Add employee to a new group" title="Add to group"><i class="fa fa-users"></i></button>
+                    <button type="button" aria-label="Conversation details"><i class="fa fa-columns"></i></button>
+                    <button type="button" aria-label="More options"><i class="fa fa-ellipsis-h"></i></button>
+                </div>
+            </header>
+
+            <div class="message-thread" id="message-thread"></div>
+
+            <form class="composer" id="message-form">
+                <div class="reply-preview" id="reply-preview" hidden></div>
+                <button id="attach-image" type="button" aria-label="Send image"><i class="fa fa-picture-o"></i></button>
+                <input id="image-input" type="file" accept="image/*" hidden />
+                <input id="message-input" type="text" placeholder="Write a message..." aria-label="Message" autocomplete="off" maxlength="1000" disabled />
+                <button class="send-btn" type="submit" aria-label="Send message"><i class="fa fa-paper-plane"></i></button>
+            </form>
+        </section>
+
+    </main>
+
+    <div class="call-modal" id="call-modal" aria-hidden="true">
+        <div class="call-card-modal" role="dialog" aria-modal="true" aria-labelledby="call-title">
+            <div class="call-modal-head">
+                <div>
+                    <p id="call-kicker">Messenger Call</p>
+                    <h2 id="call-title">Calling...</h2>
+                </div>
+                <button id="close-call" type="button" aria-label="Close call">&times;</button>
+            </div>
+            <div class="call-preview">
+                <video id="local-video" autoplay muted playsinline></video>
+                <div class="audio-call-icon" id="audio-call-icon"><i class="fa fa-phone"></i></div>
+            </div>
+            <p class="call-status" id="call-status-message">Waiting for device permission...</p>
+            <div class="call-controls">
+                <button id="toggle-mic" type="button"><i class="fa fa-microphone"></i><span>Mic</span></button>
+                <button id="toggle-camera" type="button"><i class="fa fa-video-camera"></i><span>Camera</span></button>
+                <button id="end-call" class="danger" type="button"><i class="fa fa-phone"></i><span>End</span></button>
+            </div>
+        </div>
+    </div>
+    <div class="image-modal" id="image-modal" aria-hidden="true">
+        <div class="image-modal-card" role="dialog" aria-modal="true" aria-label="Image preview">
+            <button id="close-image-modal" type="button" aria-label="Close image preview">&times;</button>
+            <img id="preview-image" src="" alt="Image preview" />
+        </div>
+    </div>
+    <div class="forward-modal" id="forward-modal" aria-hidden="true">
+        <div class="forward-card" role="dialog" aria-modal="true" aria-labelledby="forward-title">
+            <div class="forward-head">
+                <div>
+                    <p>Forward message</p>
+                    <h2 id="forward-title">Choose conversation</h2>
+                </div>
+                <button id="close-forward-modal" type="button" aria-label="Close forward dialog">&times;</button>
+            </div>
+            <div class="forward-list" id="forward-list"></div>
+        </div>
+    </div>
+    <script src="../module.js"></script>
+    <script src="./script.js?v=20260729-ai-fail-bubble-v1"></script>
+</body>
+</html>

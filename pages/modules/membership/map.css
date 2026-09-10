@@ -1,0 +1,340 @@
+/* CSS ng membership map — satellite overlay na may floating controls */
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+/* Punuin ng map ang buong screen, walang scroll */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  background: #09111f; /* EDIT GUIDE: kulay habang naglo-load ang mapa */
+}
+
+body {
+  position: relative;
+  display: block;
+}
+
+/* ── Left panel — floating control box ────────────────────────────────────── */
+/* Panel na lumulutang sa kaliwang bahagi ng mapa */
+.left-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1100; /* HUWAG BAGUHIN: dapat nasa itaas ng Leaflet layers */
+  width: 292px; /* EDIT GUIDE: palitan kung gusto mong mas maluwag ang panel */
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 16px 14px;
+  display: grid;
+  grid-auto-rows: min-content;
+  gap: 10px;
+  background: rgba(11, 18, 32, 0.76); /* EDIT GUIDE: transparency ng panel */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px); /* HUWAG BAGUHIN: kailangan para sa glass effect */
+  color: #f8fbff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Itinatago ang panel sa kaliwa kapag naka-collapse */
+.left-panel.is-hidden {
+  transform: translateX(calc(-100% - 24px));
+  opacity: 0;
+  pointer-events: none; /* HUWAG BAGUHIN: para makapag-click sa mapa kahit naka-hide */
+}
+
+/* ── Panel header ─────────────────────────────────────────────────────────── */
+/* Row ng title at collapse button */
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Malaking pamagat ng panel */
+.left-panel h3 {
+  margin: 4px 2px 8px;
+  font-size: 36px; /* EDIT GUIDE: laki ng pamagat */
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Toggle buttons ───────────────────────────────────────────────────────── */
+/* Shared na estilo ng dalawang toggle buttons */
+.panel-toggle-btn,
+.panel-open-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(12, 19, 34, 0.88);
+  color: #f3f7ff;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+/* Button para i-collapse ang panel */
+.panel-toggle-btn {
+  min-width: 56px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+/* Button para buksan muli ang panel — nakatago hangga't naka-collapse */
+.panel-open-btn {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  z-index: 1150;
+  height: 40px;
+  min-width: 92px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Ipakita ang open button kapag naka-collapse ang panel */
+body.panel-collapsed .panel-open-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+/* Ilipat ang search bar kapag naka-collapse ang panel */
+body.panel-collapsed .search-floating {
+  left: 18px;
+  width: min(420px, calc(100vw - 40px));
+}
+
+/* ── Map canvas ───────────────────────────────────────────────────────────── */
+/* Wrapper ng mapa — sumasaklaw sa buong screen */
+.map-canvas-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0a1220;
+}
+
+/* ── Map at Street View panels ───────────────────────────────────────────── */
+/* Parehong sumasaklaw sa buong screen — JS ang nagpapalit ng visible */
+/* HUWAG BAGUHIN: ang position at inset values dito */
+#map, .streetview-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Nakatago ang Street View hanggang pinindot ng user */
+.streetview-panel {
+  display: none;
+  background: #0f172a;
+}
+
+/* Google Maps iframe ay pumapalaman sa buong panel */
+.streetview-panel img,
+.streetview-panel iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border: 0;
+}
+
+/* ── Camera row — filename display ───────────────────────────────────────── */
+/* 3-column grid: icon | pangalan ng file | capture button */
+/* HUWAG BAGUHIN: ang grid-template-columns — masisira ang layout */
+.camera-row {
+  height: 36px;
+  display: grid;
+  grid-template-columns: 22px 1fr 30px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0 6px;
+  color: #eaf1fb;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Ang mahabang filename ay tinitipid ng ellipsis */
+.camera-row span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 4px;
+}
+
+/* ── Icon buttons ─────────────────────────────────────────────────────────── */
+/* Maliliit na transparent buttons sa loob ng camera row */
+.icon-btn {
+  border: 0;
+  background: transparent;
+  color: #eaf1fb;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Disabled state habang may capture na nagaganap */
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Form inputs ──────────────────────────────────────────────────────────── */
+/* Search box, landmark field, at municipality dropdown */
+.map-input, .map-select {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+  caret-color: #7dd3fc;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.map-input::placeholder { color: #94a3c8; }
+
+.map-input:hover:not(:read-only):not(:disabled),
+.map-select:hover:not(:disabled) {
+  border-color: rgba(125, 211, 252, 0.45);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.map-input:focus,
+.map-select:focus {
+  outline: none;
+  border-color: rgba(125, 211, 252, 0.85);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(56, 189, 248, 0.25);
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.map-input:focus-visible,
+.map-select:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.map-input:read-only {
+  opacity: 0.92;
+  cursor: default;
+}
+
+.map-select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3c8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+/* ── Status bar ───────────────────────────────────────────────────────────── */
+/* Nagpapakita ng progreso o error ng capture */
+.map-capture-status {
+  margin: 0;
+  min-height: 2.25em; /* HUWAG BAGUHIN: para hindi mag-jump ang layout */
+  font-size: 12px;
+  line-height: 1.35;
+  color: #e8f0fb;
+}
+
+/* Pulang kulay kapag may error — itinatoggle ng JS */
+.map-capture-status.is-error {
+  color: #ffb4b4; /* EDIT GUIDE: palitan kung gusto mong ibang kulay ng error */
+  font-weight: 600;
+}
+
+/* ── Save button ──────────────────────────────────────────────────────────── */
+/* Pangunahing button para mag-save ng record */
+.save-btn {
+  margin-top: 8px;
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(90deg, #ff7a2f, #ffb021); /* EDIT GUIDE: kulay ng save button */
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(255, 131, 36, 0.28);
+}
+
+/* ── Floating search bar ──────────────────────────────────────────────────── */
+/* Nakalutang sa itaas ng mapa, katabi ng panel */
+.search-floating {
+  position: absolute;
+  top: 60px; /* EDIT GUIDE: taas ng search bar mula sa tuktok */
+  left: 320px; /* HUWAG BAGUHIN: nakadepende sa lapad ng panel (292px) */
+  z-index: 900;
+  width: min(420px, calc(100vw - 392px));
+}
+
+/* ── Zoom hint ────────────────────────────────────────────────────────────── */
+/* Maliit na label na nagpapakita ng zoom instruction */
+.zoom-hint {
+  position: absolute;
+  left: 2px;
+  top: 42px;
+  font-size: 11px; /* EDIT GUIDE: palitan ang laki ng hint text */
+  color: #d8e3f3;
+  background: rgba(10, 17, 31, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+/* ── View toggle buttons (Top / Street) ───────────────────────────────────── */
+/* Nasa kanang bahagi ng mapa, nakastacked */
+.view-buttons {
+  position: absolute;
+  top: 80px; /* EDIT GUIDE: posisyon mula sa tuktok */
+  right: 18px;
+  z-index: 1000;
+  display: grid;
+  gap: 8px;
+}
+
+/* Bilog na button para sa Top View at Street View toggle */
+.map-btn {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(12, 19, 34, 0.88);
+  color: #f3f7ff;
+  font-size: 21px; /* EDIT GUIDE: laki ng icon sa loob ng button */
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* Kulay ng aktibong view button */
+.map-btn.active {
+  background: linear-gradient(135deg, #ff7a2f, #ffb021); /* EDIT GUIDE: kulay ng aktibong button */
+  color: #fff;
+}
+
+/* ── Leaflet popup override ───────────────────────────────────────────────── */
+/* HUWAG BAGUHIN: kailangan para hindi mag-overflow ang coordinate input */
+.leaflet-popup-content input {
+  width: 100%;
+  box-sizing: border-box;
+}

@@ -1,0 +1,12 @@
+# ponytail: Apache sent no Cache-Control on .js/.css/.html, so Chrome fell back to heuristic
+# caching and kept serving stale pages/scripts across edits even with a bumped ?v= cache-buster —
+# the browser wasn't always revalidating with the server. .html is included because a stale-cached
+# *page* still embeds the OLD <script src="...?v=old-version"> tag, so bumping the JS file's own
+# cache-buster does nothing if the HTML that points to it never gets re-fetched. Force revalidation
+# on every request site-wide; the app already cache-busts via query string for real version bumps,
+# so this only adds a guarantee against silent staleness.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|html)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

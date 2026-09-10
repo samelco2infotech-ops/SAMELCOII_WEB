@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 320" role="img" aria-labelledby="title desc">
+  <title id="title">SAMELCO II logo</title>
+  <desc id="desc">Atom-style SAMELCO II wordmark with matching icon.</desc>
+  <defs>
+    <linearGradient id="markBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#e5e7eb"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b6472"/>
+      <stop offset="1" stop-color="#9098a5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1100" height="320" fill="#ffffff"/>
+  <g transform="translate(32 26)">
+    <rect width="220" height="220" rx="30" fill="url(#markBg)"/>
+    <circle cx="110" cy="110" r="20" fill="#23272f"/>
+    <ellipse cx="110" cy="110" rx="64" ry="24" fill="none" stroke="url(#ring)" stroke-width="7"/>
+    <ellipse cx="110" cy="110" rx="64" ry="24" fill="none" stroke="url(#ring)" stroke-width="7" transform="rotate(60 110 110)"/>
+    <ellipse cx="110" cy="110" rx="64" ry="24" fill="none" stroke="url(#ring)" stroke-width="7" transform="rotate(-60 110 110)"/>
+    <circle cx="110" cy="46" r="9" fill="#d6dbe2"/>
+    <circle cx="166" cy="138" r="9" fill="#d6dbe2"/>
+    <circle cx="60" cy="154" r="9" fill="#d6dbe2"/>
+    <circle cx="132" cy="70" r="6" fill="#ffffff"/>
+  </g>
+  <g fill="#222222">
+    <text x="284" y="144" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="1.5">SAMELCO II</text>
+    <text x="287" y="208" font-family="Segoe UI, Arial, sans-serif" font-size="36" font-weight="700" letter-spacing="0.5">SAMAR II ELECTRIC COOPERATIVE, INC.</text>
+  </g>
+</svg>

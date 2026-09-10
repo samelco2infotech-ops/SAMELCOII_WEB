@@ -1,0 +1,674 @@
+<!--
+FILE: index.html
+PURPOSE: Phase 2 Payroll foundation workspace using the existing dashboard session.
+EDIT GUIDE: Page sections are labeled with [SECTION]; asset versions live in the head.
+HUWAG BAGUHIN: Dashboard and API must both enforce privilege-10 Payroll access.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payroll Control Room | SAMELCII</title>
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <!-- [EDIT] Bump both Payroll asset versions after UI or behavior changes. -->
+    <link rel="stylesheet" href="styles.css?v=20260803-hybrid-v1" />
+</head>
+<body>
+    <main class="payroll-shell">
+        <!-- ============================================================
+             [SECTION] PAGE HEADER — Phase 2 scope and service state
+             ============================================================ -->
+        <header class="payroll-header" hidden aria-hidden="true">
+            <div class="payroll-title-block">
+                <p class="payroll-kicker">Payroll operations workspace</p>
+                <h1>Payroll control room</h1>
+                <p class="payroll-lead">Move from employee setup to payroll release, reconciliation, operational testing, and compliance through focused workspaces.</p>
+            </div>
+            <div class="service-state" id="service-state" data-state="checking" role="status" aria-live="polite">
+                <span class="service-dot" aria-hidden="true"></span>
+                <span id="service-state-label">Checking Node service</span>
+            </div>
+        </header>
+
+        <div class="notice" id="payroll-notice" data-state="info" role="status" aria-live="polite" hidden></div>
+
+        <!-- ============================================================
+             [SECTION] FOUNDATION WORKSPACE — dashboard session is reused
+             ============================================================ -->
+        <div id="payroll-workspace">
+            <nav class="payroll-hybrid-nav" id="payroll-hybrid-nav" aria-label="Payroll workspaces" role="tablist">
+                <button type="button" role="tab" data-hybrid-tab="overview" aria-selected="true">Overview</button>
+                <button type="button" role="tab" data-hybrid-tab="setup" aria-selected="false">Setup</button>
+                <button type="button" role="tab" data-hybrid-tab="run" aria-selected="false">Run Payroll</button>
+                <button type="button" role="tab" data-hybrid-tab="payments" aria-selected="false">Payments &amp; Close</button>
+                <button type="button" role="tab" data-hybrid-tab="testing" aria-selected="false">Testing &amp; Operations</button>
+                <button type="button" role="tab" data-hybrid-tab="compliance" aria-selected="false">Compliance</button>
+            </nav>
+            <div class="payroll-hybrid-panels" id="payroll-hybrid-panels">
+                <section class="hybrid-panel" id="hybrid-panel-overview" data-hybrid-panel="overview" role="tabpanel"><div class="hybrid-subnav" role="tablist"></div><div class="hybrid-panel-body"></div></section>
+                <section class="hybrid-panel" id="hybrid-panel-setup" data-hybrid-panel="setup" role="tabpanel" hidden><div class="hybrid-subnav" role="tablist"></div><div class="hybrid-panel-body"></div></section>
+                <section class="hybrid-panel" id="hybrid-panel-run" data-hybrid-panel="run" role="tabpanel" hidden><div class="hybrid-subnav" role="tablist"></div><div class="hybrid-panel-body"></div></section>
+                <section class="hybrid-panel" id="hybrid-panel-payments" data-hybrid-panel="payments" role="tabpanel" hidden><div class="hybrid-subnav" role="tablist"></div><div class="hybrid-panel-body"></div></section>
+                <section class="hybrid-panel" id="hybrid-panel-testing" data-hybrid-panel="testing" role="tabpanel" hidden><div class="hybrid-subnav" role="tablist"></div><div class="hybrid-panel-body"></div></section>
+                <section class="hybrid-panel" id="hybrid-panel-compliance" data-hybrid-panel="compliance" role="tabpanel" hidden><div class="hybrid-subnav" role="tablist"></div><div class="hybrid-panel-body"></div></section>
+            </div>
+            <section class="metric-strip" aria-label="Payroll readiness">
+                <article class="metric-block">
+                    <span>Employee records</span>
+                    <strong id="metric-employees">—</strong>
+                    <small>Current rows in employee master</small>
+                </article>
+                <article class="metric-block">
+                    <span>Salaries configured</span>
+                    <strong id="metric-salaries">—</strong>
+                    <small>Effective-dated payroll rates</small>
+                </article>
+                <article class="metric-block">
+                    <span>Identity issues</span>
+                    <strong id="metric-identities">—</strong>
+                    <small>Missing employee or biometric keys</small>
+                </article>
+                <article class="metric-block">
+                    <span>Schedule rows</span>
+                    <strong id="metric-schedules">—</strong>
+                    <small>Required before attendance payroll</small>
+                </article>
+            </section>
+
+            <section class="readiness-panel" aria-labelledby="readiness-title">
+                <div>
+                    <p class="section-number">01</p>
+                    <h2 id="readiness-title">Foundation gate</h2>
+                    <p id="readiness-summary">Loading the technical prerequisites for payroll computation.</p>
+                </div>
+                <ol class="gate-list">
+                    <li id="gate-schema" data-state="waiting"><span>Database foundation</span><strong>Checking</strong></li>
+                    <li id="gate-salary" data-state="waiting"><span>Employee salary coverage</span><strong>Checking</strong></li>
+                    <li id="gate-schedule" data-state="waiting"><span>Work schedules</span><strong>Checking</strong></li>
+                    <li id="gate-multiplier" data-state="waiting"><span>Holiday multiplier decision</span><strong>Checking</strong></li>
+                </ol>
+            </section>
+
+            <section class="master-data-panel" aria-labelledby="master-data-title">
+                <div class="section-heading"><div><p class="section-number">02</p><h2 id="master-data-title">Payroll master data</h2><p>Import effective salaries and assign repeatable work schedules before calculating a real run.</p></div></div>
+                <div class="master-data-grid">
+                    <form id="salary-import-form" class="master-card" novalidate>
+                        <h3>Salary CSV import</h3>
+                        <p>Required headers: <code>usercode,basicPay,effectiveDate,reason</code></p>
+                        <label class="control"><span>CSV file</span><input id="salary-file" type="file" accept=".csv,text/csv" required /></label>
+                        <button class="button button-primary" id="salary-import-button" type="submit"><span class="button-label">Validate and import</span><span class="button-progress">Importing…</span></button>
+                        <output id="salary-import-result" class="master-result" hidden></output>
+                    </form>
+                    <form id="schedule-template-form" class="master-card" novalidate>
+                        <h3>Schedule template</h3>
+                        <div class="control-pair"><label class="control"><span>Code</span><input id="schedule-code" placeholder="REG-8H" required /></label><label class="control"><span>Name</span><input id="schedule-name" placeholder="Regular 8 hours" required /></label></div>
+                        <div class="control-pair"><label class="control"><span>Start</span><input id="schedule-start" type="time" value="08:00" required /></label><label class="control"><span>End</span><input id="schedule-end" type="time" value="17:00" required /></label></div>
+                        <div class="control-pair"><label class="control"><span>Break minutes</span><input id="schedule-break" type="number" min="0" max="240" value="60" required /></label><label class="control"><span>Work days</span><input id="schedule-days" value="1,2,3,4,5" required /></label></div>
+                        <button class="button button-primary" id="schedule-save" type="submit">Save template</button>
+                    </form>
+                    <form id="schedule-assign-form" class="master-card" novalidate>
+                        <h3>Bulk schedule assignment</h3>
+                        <label class="control"><span>Template</span><select id="schedule-template" required><option value="">Create a template first</option></select></label>
+                        <label class="control"><span>Employee codes</span><input id="schedule-usercodes" placeholder="S2-001, S2-002" required /><small class="control-message">Comma-separated employee codes.</small></label>
+                        <label class="control"><span>Effective from</span><input id="schedule-effective" type="date" required /></label>
+                        <button class="button button-primary" id="schedule-assign" type="submit">Assign employees</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="phase5-panel" aria-labelledby="phase5-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">03</p>
+                        <h2 id="phase5-title">Earnings and deductions</h2>
+                        <p>Configure reusable pay components, employee assignments, loans, statutory brackets, and run adjustments. Government rates remain empty until an approved effective-dated table is entered.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase5-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase5-grid">
+                    <form id="component-form" class="phase5-card" novalidate>
+                        <h3>Component catalog</h3>
+                        <div class="control-pair"><label class="control"><span>Code</span><input id="component-code" maxlength="40" placeholder="RICE_ALLOW" required /></label><label class="control"><span>Name</span><input id="component-name" maxlength="120" placeholder="Rice allowance" required /></label></div>
+                        <div class="control-pair"><label class="control"><span>Type</span><select id="component-type"><option value="EARNING">Earning</option><option value="DEDUCTION">Deduction</option></select></label><label class="control"><span>Amount mode</span><select id="component-mode"><option value="FIXED_PER_RUN">Fixed per run</option><option value="MONTHLY_PRORATED">Monthly · prorated</option></select></label></div>
+                        <div class="check-row"><label><input id="component-statutory" type="checkbox" /> Statutory deduction</label><label><input id="component-taxable" type="checkbox" /> Taxable earning</label></div>
+                        <button class="button button-primary" type="submit">Save component</button>
+                    </form>
+
+                    <form id="component-assignment-form" class="phase5-card" novalidate>
+                        <h3>Employee recurring item</h3>
+                        <div class="control-pair"><label class="control"><span>Employee code</span><input id="assignment-usercode" placeholder="S2-001" required /></label><label class="control"><span>Component</span><select id="assignment-component" required><option value="">Create a component first</option></select></label></div>
+                        <div class="control-pair"><label class="control"><span>Amount</span><input id="assignment-amount" inputmode="decimal" placeholder="0.00" required /></label><label class="control"><span>Effective from</span><input id="assignment-from" type="date" required /></label></div>
+                        <label class="control"><span>Effective to · optional</span><input id="assignment-to" type="date" /></label>
+                        <button class="button button-primary" type="submit">Assign recurring item</button>
+                    </form>
+
+                    <form id="loan-form" class="phase5-card" novalidate>
+                        <h3>Employee loan</h3>
+                        <div class="control-pair"><label class="control"><span>Employee code</span><input id="loan-usercode" placeholder="S2-001" required /></label><label class="control"><span>Loan code</span><input id="loan-code" maxlength="40" placeholder="PAGIBIG-001" required /></label></div>
+                        <label class="control"><span>Lender</span><input id="loan-lender" maxlength="120" placeholder="Approved lender" required /></label>
+                        <div class="control-pair"><label class="control"><span>Original amount</span><input id="loan-original" inputmode="decimal" placeholder="0.00" required /></label><label class="control"><span>Installment per run</span><input id="loan-installment" inputmode="decimal" placeholder="0.00" required /></label></div>
+                        <label class="control"><span>Effective from</span><input id="loan-from" type="date" required /></label>
+                        <button class="button button-primary" type="submit">Save loan</button>
+                    </form>
+
+                    <form id="statutory-rule-form" class="phase5-card" novalidate>
+                        <h3>Statutory bracket</h3>
+                        <div class="control-pair"><label class="control"><span>Deduction</span><select id="statutory-component" required><option value="">Create a statutory component first</option></select></label><label class="control"><span>Rule code</span><input id="statutory-code" maxlength="40" placeholder="2026-BRACKET-01" required /></label></div>
+                        <div class="control-pair"><label class="control"><span>Effective from</span><input id="statutory-from" type="date" required /></label><label class="control"><span>Effective to · optional</span><input id="statutory-to" type="date" /></label></div>
+                        <div class="control-pair"><label class="control"><span>Gross from</span><input id="statutory-salary-from" inputmode="decimal" value="0.00" required /></label><label class="control"><span>Gross to · blank = no ceiling</span><input id="statutory-salary-to" inputmode="decimal" /></label></div>
+                        <div class="control-pair"><label class="control"><span>Fixed amount</span><input id="statutory-fixed" inputmode="decimal" value="0.00" required /></label><label class="control"><span>Rate percent</span><input id="statutory-rate" type="number" min="0" max="100" step="0.0001" value="0" required /></label></div>
+                        <button class="button button-primary" type="submit">Save statutory bracket</button>
+                    </form>
+
+                    <form id="adjustment-form" class="phase5-card phase5-card-wide" novalidate>
+                        <h3>Draft run adjustment</h3>
+                        <div class="adjustment-grid"><label class="control"><span>Draft run</span><select id="adjustment-run" required><option value="">Create a draft first</option></select></label><label class="control"><span>Employee code</span><input id="adjustment-usercode" placeholder="S2-001" required /></label><label class="control"><span>Code</span><input id="adjustment-code" maxlength="40" placeholder="MANUAL_ADJ" required /></label><label class="control"><span>Type</span><select id="adjustment-type"><option value="EARNING">Earning</option><option value="DEDUCTION">Deduction</option></select></label><label class="control"><span>Amount</span><input id="adjustment-amount" inputmode="decimal" placeholder="0.00" required /></label></div>
+                        <label class="control"><span>Reason / authority</span><input id="adjustment-reason" maxlength="255" placeholder="Approved correction reference" required /></label>
+                        <button class="button button-primary" type="submit">Save adjustment</button>
+                    </form>
+                </div>
+                <div class="phase5-summary" id="phase5-summary" aria-live="polite">Phase 5 master data will load after service verification.</div>
+            </section>
+
+            <section class="phase6-panel" aria-labelledby="phase6-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">04</p>
+                        <h2 id="phase6-title">Approval, release, and payslips</h2>
+                        <p>Approval validates locked totals. Release seals a SHA-256 register snapshot before payslips and CSV export become available.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase6-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase6-grid">
+                    <form id="phase6-action-form" class="phase6-card" novalidate>
+                        <h3>Release control</h3>
+                        <label class="control"><span>Locked, approved, or released run</span><select id="phase6-run" required><option value="">Select a payroll run</option></select></label>
+                        <label class="control"><span>Approval / release note</span><input id="phase6-note" maxlength="255" placeholder="Reviewed register and supporting approvals" required /></label>
+                        <div class="phase6-actions">
+                            <button class="button button-primary" id="phase6-approve" type="button">Approve</button>
+                            <button class="button button-quiet" id="phase6-release" type="button">Release</button>
+                            <button class="button button-quiet" id="phase6-register" type="button">Open register</button>
+                        </div>
+                    </form>
+                    <div class="phase6-card">
+                        <h3>Released employee document</h3>
+                        <label class="control"><span>Employee</span><select id="phase6-employee" disabled><option value="">Open a released register first</option></select></label>
+                        <div class="phase6-actions">
+                            <button class="button button-primary" id="phase6-payslip" type="button" disabled>View payslip</button>
+                            <button class="button button-quiet" id="phase6-export" type="button" disabled>Download CSV</button>
+                        </div>
+                        <p class="phase6-summary" id="phase6-summary" aria-live="polite">Phase 6 status will load after service verification.</p>
+                    </div>
+                </div>
+                <div class="phase6-output" id="phase6-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="phase7-panel" aria-labelledby="phase7-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">05</p>
+                        <h2 id="phase7-title">Payment and remittance reconciliation</h2>
+                        <p>Prepare tracking batches from released payroll and record external confirmations. This workspace does not transmit funds.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase7-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase7-grid">
+                    <div class="phase7-card">
+                        <h3>Prepare reconciliation</h3>
+                        <label class="control"><span>Released payroll run</span><select id="phase7-run"><option value="">Select a released run</option></select></label>
+                        <div class="control-pair"><label class="control"><span>Batch code</span><input id="phase7-batch-code" maxlength="60" placeholder="DISB-2026-07-B" /></label><label class="control"><span>Payment method</span><select id="phase7-method"><option value="BANK_TRANSFER">Bank transfer</option><option value="CHECK">Check</option><option value="CASH">Cash</option><option value="OTHER">Other</option></select></label></div>
+                        <div class="phase7-actions">
+                            <button class="button button-primary" id="phase7-prepare" type="button">Prepare disbursement</button>
+                            <button class="button button-quiet" id="phase7-remittances" type="button">Prepare remittances</button>
+                            <button class="button button-quiet" id="phase7-refresh" type="button">Reconcile</button>
+                        </div>
+                    </div>
+                    <div class="phase7-card">
+                        <h3>Record external status</h3>
+                        <div class="control-pair"><label class="control"><span>Disbursement status</span><select id="phase7-batch-status"><option value="TRANSMITTED">Transmitted</option><option value="CONFIRMED">Confirmed</option><option value="FAILED">Failed</option><option value="CANCELLED">Cancelled</option></select></label><label class="control"><span>Reference</span><input id="phase7-reference" maxlength="120" placeholder="External transaction reference" /></label></div>
+                        <label class="control"><span>Failure / cancellation reason</span><input id="phase7-reason" maxlength="255" placeholder="Required only for failed or cancelled items" /></label>
+                        <button class="button button-primary" id="phase7-update-batch" type="button" disabled>Update disbursement</button>
+                        <div class="control-pair"><label class="control"><span>Remittance</span><select id="phase7-remittance" disabled><option value="">Reconcile a run first</option></select></label><label class="control"><span>Remittance status</span><select id="phase7-remittance-status"><option value="REMITTED">Remitted</option><option value="CONFIRMED">Confirmed</option><option value="FAILED">Failed</option></select></label></div>
+                        <button class="button button-quiet" id="phase7-update-remittance" type="button" disabled>Update remittance</button>
+                    </div>
+                </div>
+                <p class="phase7-summary" id="phase7-summary" aria-live="polite">Phase 7 status will load after service verification.</p>
+                <div class="phase7-output" id="phase7-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="phase8-panel" aria-labelledby="phase8-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">06</p>
+                        <h2 id="phase8-title">Accounting reports and period closing</h2>
+                        <p>Configure effective account mappings before journal export. Closing requires confirmed disbursement, reconciled remittances, and verified evidence.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase8-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase8-grid">
+                    <form id="phase8-mapping-form" class="phase8-card" novalidate>
+                        <h3>Account mapping</h3>
+                        <div class="control-pair"><label class="control"><span>Component code</span><input id="phase8-component" maxlength="40" placeholder="BASIC or NET_PAY" required /></label><label class="control"><span>Component type</span><select id="phase8-component-type"><option value="EARNING">Earning</option><option value="DEDUCTION">Deduction</option><option value="NET_PAY">Net pay</option></select></label></div>
+                        <div class="control-pair"><label class="control"><span>Debit account code</span><input id="phase8-debit-code" maxlength="40" placeholder="Approved chart code" required /></label><label class="control"><span>Debit account name</span><input id="phase8-debit-name" maxlength="120" placeholder="Approved account name" required /></label></div>
+                        <div class="control-pair"><label class="control"><span>Credit account code</span><input id="phase8-credit-code" maxlength="40" placeholder="Approved chart code" required /></label><label class="control"><span>Credit account name</span><input id="phase8-credit-name" maxlength="120" placeholder="Approved account name" required /></label></div>
+                        <label class="control"><span>Effective from</span><input id="phase8-effective" type="date" required /></label>
+                        <button class="button button-primary" id="phase8-save-mapping" type="submit">Save mapping</button>
+                    </form>
+                    <div class="phase8-card">
+                        <h3>Reports and closing</h3>
+                        <label class="control"><span>Released payroll run</span><select id="phase8-run"><option value="">Select a released run</option></select></label>
+                        <div class="phase8-actions"><button class="button button-primary" id="phase8-reports" type="button">Reports</button><button class="button button-quiet" id="phase8-journal" type="button">Journal preview</button><button class="button button-quiet" id="phase8-export" type="button">Download journal</button></div>
+                        <div class="control-pair"><label class="control"><span>YTD employee code</span><input id="phase8-ytd-user" maxlength="64" placeholder="S2-001" /></label><label class="control"><span>Year</span><input id="phase8-ytd-year" type="number" min="2000" max="2100" /></label></div>
+                        <button class="button button-quiet" id="phase8-ytd" type="button">View YTD ledger</button>
+                        <label class="control"><span>Period-close note</span><input id="phase8-close-note" maxlength="255" placeholder="Final reconciliation reviewed and authorized" /></label>
+                        <label class="phase8-confirm"><input id="phase8-close-confirm" type="checkbox" /> I understand that this period cannot be reopened from Payroll.</label>
+                        <button class="button button-danger" id="phase8-close" type="button" disabled>Close payroll period</button>
+                    </div>
+                </div>
+                <p class="phase8-summary" id="phase8-summary" aria-live="polite">Phase 8 status will load after service verification.</p>
+                <div class="phase8-output" id="phase8-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="phase9-panel" aria-labelledby="phase9-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">07</p>
+                        <h2 id="phase9-title">Parallel payroll and cutover readiness</h2>
+                        <p>Import an independently prepared register and compare every released employee total. This control room records evidence and signoffs; it does not activate production payroll.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase9-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase9-grid">
+                    <form id="phase9-test-form" class="phase9-card" novalidate>
+                        <h3>Parallel payroll comparison</h3>
+                        <label class="control"><span>Released payroll run</span><select id="phase9-run" required><option value="">Select a released run</option></select></label>
+                        <div class="control-pair"><label class="control"><span>Test code</span><input id="phase9-test-code" maxlength="60" placeholder="PARALLEL-2026-07-B" required /></label><label class="control"><span>Allowed variance</span><input id="phase9-tolerance" inputmode="decimal" value="0.00" required /></label></div>
+                        <p>Required CSV headers: <code>usercode,grossPay,deductions,netPay</code></p>
+                        <label class="control"><span>Independent register CSV</span><input id="phase9-file" type="file" accept=".csv,text/csv" required /></label>
+                        <button class="button button-primary" id="phase9-compare" type="submit" disabled>Compare registers</button>
+                    </form>
+                    <div class="phase9-card">
+                        <h3>Cutover evidence and signoff</h3>
+                        <label class="control"><span>Parallel test</span><select id="phase9-test"><option value="">Select a completed test</option></select></label>
+                        <div class="phase9-actions"><button class="button button-primary" id="phase9-view-test" type="button" disabled>View comparison</button><button class="button button-quiet" id="phase9-readiness" type="button">Refresh readiness</button></div>
+                        <div class="control-pair"><label class="control"><span>Signoff role</span><select id="phase9-role"><option value="HR">HR</option><option value="PAYROLL">Payroll</option><option value="FINANCE">Finance</option><option value="MANAGEMENT">Management</option></select></label><label class="control"><span>Signoff statement</span><input id="phase9-statement" maxlength="255" placeholder="Reviewed evidence and approved cutover readiness" /></label></div>
+                        <label class="phase9-confirm"><input id="phase9-confirm" type="checkbox" /> I confirm this signoff is accountable and based on the displayed evidence.</label>
+                        <button class="button button-quiet" id="phase9-sign" type="button" disabled>Record signoff</button>
+                    </div>
+                </div>
+                <p class="phase9-summary" id="phase9-summary" aria-live="polite">Phase 9 status will load after service verification.</p>
+                <div class="phase9-output" id="phase9-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="phase10-panel" aria-labelledby="phase10-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">08</p>
+                        <h2 id="phase10-title">UAT and controlled go-live authorization</h2>
+                        <p>Phase 9 approval is required before UAT begins. Every required area must pass with evidence, all issues must be resolved, and backup/rollback must be proven before authorization.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase10-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase10-toolbar"><label class="control"><span>Active UAT cycle</span><select id="phase10-cycle"><option value="">Select a UAT cycle</option></select></label><button class="button button-quiet" id="phase10-refresh" type="button">Refresh readiness</button></div>
+                <div class="phase10-grid">
+                    <form id="phase10-cycle-form" class="phase10-card" novalidate>
+                        <h3>Open UAT cycle</h3>
+                        <label class="control"><span>Phase 9 parallel test</span><select id="phase10-test" required><option value="">Select an approved test</option></select></label>
+                        <label class="control"><span>Cycle code</span><input id="phase10-cycle-code" maxlength="60" placeholder="UAT-2026-07-B" required /></label>
+                        <label class="control"><span>UAT scope</span><input id="phase10-scope" maxlength="255" placeholder="End-to-end payroll, payslip, accounting, payment, security, and rollback testing" required /></label>
+                        <button class="button button-primary" id="phase10-create" type="submit" disabled>Open UAT cycle</button>
+                    </form>
+                    <form id="phase10-case-form" class="phase10-card" novalidate>
+                        <h3>Record test-case evidence</h3>
+                        <div class="control-pair"><label class="control"><span>Case code</span><input id="phase10-case-code" maxlength="60" placeholder="UAT-PAYSLIP-01" required /></label><label class="control"><span>Area</span><select id="phase10-case-type"><option value="PAYSLIP">Payslip</option><option value="ATTENDANCE">Attendance</option><option value="OVERTIME">Overtime</option><option value="EARNINGS">Earnings</option><option value="DEDUCTIONS">Deductions</option><option value="ACCOUNTING">Accounting</option><option value="PAYMENT">Payment</option><option value="SECURITY">Security</option><option value="BACKUP_ROLLBACK">Backup / rollback</option></select></label></div>
+                        <label class="control"><span>Scenario</span><input id="phase10-scenario" maxlength="255" placeholder="Employee reviews released payslip totals" required /></label>
+                        <div class="control-pair"><label class="control"><span>Expected result</span><input id="phase10-expected" maxlength="500" required /></label><label class="control"><span>Actual result</span><input id="phase10-actual" maxlength="500" required /></label></div>
+                        <div class="control-pair"><label class="control"><span>Evidence reference</span><input id="phase10-evidence" maxlength="255" placeholder="Ticket, report, screenshot, or backup log reference" /></label><label class="control"><span>Status</span><select id="phase10-case-status"><option value="PASSED">Passed</option><option value="FAILED">Failed</option><option value="BLOCKED">Blocked</option><option value="PENDING">Pending</option></select></label></div>
+                        <button class="button button-primary" id="phase10-save-case" type="submit" disabled>Record test case</button>
+                    </form>
+                    <form id="phase10-issue-form" class="phase10-card" novalidate>
+                        <h3>Track or resolve UAT issue</h3>
+                        <div class="control-pair"><label class="control"><span>Issue code</span><input id="phase10-issue-code" maxlength="60" placeholder="UAT-ISSUE-01" required /></label><label class="control"><span>Severity</span><select id="phase10-severity"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></label></div>
+                        <label class="control"><span>Issue summary</span><input id="phase10-issue-summary" maxlength="255" required /></label>
+                        <label class="control"><span>Resolution / accepted-risk authority</span><input id="phase10-resolution" maxlength="500" /></label>
+                        <label class="control"><span>Issue status</span><select id="phase10-issue-status"><option value="OPEN">Open</option><option value="RESOLVED">Resolved</option><option value="ACCEPTED_RISK">Accepted risk</option></select></label>
+                        <button class="button button-quiet" id="phase10-save-issue" type="submit" disabled>Record issue status</button>
+                    </form>
+                    <form id="phase10-authorize-form" class="phase10-card" novalidate>
+                        <h3>Controlled go-live authorization</h3>
+                        <div class="control-pair"><label class="control"><span>Authorization code</span><input id="phase10-auth-code" maxlength="60" placeholder="GO-LIVE-2026-07-B" required /></label><label class="control"><span>Scheduled date and time</span><input id="phase10-scheduled" type="datetime-local" required /></label></div>
+                        <label class="control"><span>Rollback plan reference</span><input id="phase10-rollback" maxlength="255" placeholder="Approved backup and rollback runbook reference" required /></label>
+                        <label class="control"><span>Authorization statement</span><input id="phase10-auth-statement" maxlength="500" placeholder="All UAT evidence reviewed and controlled activation approved" required /></label>
+                        <label class="phase10-confirm"><input id="phase10-confirm" type="checkbox" /> I confirm this records authorization only and does not switch production payroll.</label>
+                        <button class="button button-danger" id="phase10-authorize" type="submit" disabled>Record go-live authorization</button>
+                    </form>
+                </div>
+                <p class="phase10-summary" id="phase10-summary" aria-live="polite">Phase 10 status will load after service verification.</p>
+                <div class="phase10-output" id="phase10-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="phase11-panel" aria-labelledby="phase11-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">09</p>
+                        <h2 id="phase11-title">Production payroll operations</h2>
+                        <p>Every window requires Phase 10 authorization. Status changes are audit records only: they do not activate banking, employee updates, or any external production service.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase11-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase11-toolbar"><label class="control"><span>Active operations window</span><select id="phase11-window"><option value="">Select an operations window</option></select></label><button class="button button-quiet" id="phase11-refresh" type="button">Refresh operations</button></div>
+                <div class="phase11-grid">
+                    <form id="phase11-window-form" class="phase11-card" novalidate>
+                        <h3>Plan production window</h3>
+                        <label class="control"><span>Unused Phase 10 authorization</span><select id="phase11-authorization" required><option value="">Select an authorization</option></select></label>
+                        <label class="control"><span>Window code</span><input id="phase11-window-code" maxlength="60" placeholder="OPS-2026-07-B" required /></label>
+                        <div class="control-pair"><label class="control"><span>Period start</span><input id="phase11-period-start" type="date" required /></label><label class="control"><span>Period end</span><input id="phase11-period-end" type="date" required /></label></div>
+                        <label class="control"><span>Operational cutoff</span><input id="phase11-cutoff" type="datetime-local" required /></label>
+                        <button class="button button-primary" id="phase11-create-window" type="submit" disabled>Plan operations window</button>
+                    </form>
+                    <form id="phase11-checklist-form" class="phase11-card" novalidate>
+                        <h3>Record operational checklist</h3>
+                        <div class="control-pair"><label class="control"><span>Stage</span><select id="phase11-stage"><option value="PRE_RUN">Pre-run</option><option value="POST_RUN">Post-run</option></select></label><label class="control"><span>Required item</span><select id="phase11-item-code"><option value="BACKUP_VERIFIED">Backup verified</option><option value="ACCESS_REVIEWED">Access reviewed</option><option value="MASTER_DATA_FROZEN">Master data frozen</option><option value="RUN_CONTROL_APPROVED">Run control approved</option><option value="PAYMENT_RECONCILED">Payment reconciled</option><option value="REPORTS_ARCHIVED">Reports archived</option><option value="PAYSLIPS_RELEASED">Payslips released</option><option value="PERIOD_CLOSED">Period closed</option></select></label></div>
+                        <label class="control"><span>Checklist label</span><input id="phase11-item-label" maxlength="255" placeholder="Verified database backup and restoration point" required /></label>
+                        <div class="control-pair"><label class="control"><span>Evidence reference</span><input id="phase11-check-evidence" maxlength="255" placeholder="Approved log, ticket, or archive reference" /></label><label class="control"><span>Status</span><select id="phase11-check-status"><option value="PASSED">Passed</option><option value="FAILED">Failed</option><option value="PENDING">Pending</option><option value="NOT_APPLICABLE">Not applicable</option></select></label></div>
+                        <button class="button button-primary" id="phase11-save-check" type="submit" disabled>Record checklist item</button>
+                    </form>
+                    <form id="phase11-incident-form" class="phase11-card" novalidate>
+                        <h3>Production incident log</h3>
+                        <div class="control-pair"><label class="control"><span>Incident code</span><input id="phase11-incident-code" maxlength="60" placeholder="OPS-INC-01" required /></label><label class="control"><span>Severity</span><select id="phase11-incident-severity"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></label></div>
+                        <label class="control"><span>Summary</span><input id="phase11-incident-summary" maxlength="255" required /></label>
+                        <label class="control"><span>Resolution</span><input id="phase11-incident-resolution" maxlength="500" /></label>
+                        <label class="control"><span>Status</span><select id="phase11-incident-status"><option value="OPEN">Open</option><option value="RESOLVED">Resolved</option></select></label>
+                        <button class="button button-quiet" id="phase11-save-incident" type="submit" disabled>Record incident</button>
+                    </form>
+                    <form id="phase11-action-form" class="phase11-card" novalidate>
+                        <h3>Exceptional payroll action</h3>
+                        <div class="control-pair"><label class="control"><span>Action code</span><input id="phase11-action-code" maxlength="60" placeholder="OPS-CORR-01" required /></label><label class="control"><span>Action type</span><select id="phase11-action-type"><option value="CORRECTION">Correction</option><option value="REVERSAL">Reversal</option><option value="OFF_CYCLE">Off-cycle</option><option value="RECOVERY">Recovery</option></select></label></div>
+                        <label class="control"><span>Reason</span><input id="phase11-action-reason" maxlength="500" required /></label>
+                        <div class="control-pair"><label class="control"><span>Authority reference</span><input id="phase11-action-authority" maxlength="255" /></label><label class="control"><span>Evidence reference</span><input id="phase11-action-evidence" maxlength="255" /></label></div>
+                        <label class="control"><span>Status</span><select id="phase11-action-status"><option value="REQUESTED">Requested</option><option value="APPROVED">Approved</option><option value="COMPLETED">Completed</option><option value="REJECTED">Rejected</option></select></label>
+                        <button class="button button-quiet" id="phase11-save-action" type="submit" disabled>Record operational action</button>
+                    </form>
+                    <form id="phase11-status-form" class="phase11-card phase11-card-wide" novalidate>
+                        <h3>Operations status control</h3>
+                        <div class="phase11-status-grid"><label class="control"><span>Target status</span><select id="phase11-target-status"><option value="ACTIVE">Active</option><option value="HOLD">Hold</option><option value="CLOSED">Closed</option></select></label><label class="control"><span>Control statement</span><input id="phase11-status-statement" maxlength="500" placeholder="Required controls reviewed and operational state approved" required /></label></div>
+                        <label class="phase11-confirm"><input id="phase11-confirm" type="checkbox" /> I confirm this records an internal operations status only; no external system will be activated.</label>
+                        <button class="button button-danger" id="phase11-save-status" type="submit" disabled>Record operations status</button>
+                    </form>
+                </div>
+                <p class="phase11-summary" id="phase11-summary" aria-live="polite">Phase 11 status will load after service verification.</p>
+                <div class="phase11-output" id="phase11-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="phase12-panel" aria-labelledby="phase12-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">10</p>
+                        <h2 id="phase12-title">Compliance reporting and year-end records</h2>
+                        <p>Reports use released payroll and explicitly selected approved statutory components. Exports are controlled evidence files, not agency-native forms, and nothing is filed automatically.</p>
+                    </div>
+                    <span class="readiness-badge" id="phase12-status" data-state="waiting">Checking schema</span>
+                </div>
+                <div class="phase12-toolbar"><label class="control"><span>Active compliance period</span><select id="phase12-period"><option value="">Select a compliance period</option></select></label><button class="button button-quiet" id="phase12-refresh" type="button">Refresh compliance</button></div>
+                <div class="phase12-grid">
+                    <form id="phase12-period-form" class="phase12-card" novalidate>
+                        <h3>Open compliance period</h3>
+                        <div class="control-pair"><label class="control"><span>Period code</span><input id="phase12-period-code" maxlength="60" placeholder="COMP-2026-07" required /></label><label class="control"><span>Type</span><select id="phase12-period-type"><option value="MONTHLY">Monthly</option><option value="YEAR_END">Year-end</option></select></label></div>
+                        <div class="control-pair"><label class="control"><span>Year</span><input id="phase12-year" type="number" min="2000" max="2100" required /></label><label class="control"><span>Month</span><input id="phase12-month" type="number" min="1" max="12" required /></label></div>
+                        <label class="control"><span>Scope / authority note</span><input id="phase12-period-note" maxlength="255" required /></label>
+                        <button class="button button-primary" id="phase12-create-period" type="submit">Open compliance period</button>
+                    </form>
+                    <form id="phase12-report-form" class="phase12-card" novalidate>
+                        <h3>Prepare statutory report evidence</h3>
+                        <div class="control-pair"><label class="control"><span>Released payroll run</span><select id="phase12-run" required><option value="">Select a released run</option></select></label><label class="control"><span>Agency</span><select id="phase12-agency"><option value="SSS">SSS</option><option value="PHILHEALTH">PhilHealth</option><option value="PAGIBIG">Pag-IBIG</option><option value="BIR">BIR</option><option value="OTHER">Other</option></select></label></div>
+                        <div class="control-pair"><label class="control"><span>Report type</span><input id="phase12-report-type" maxlength="80" placeholder="Monthly contribution summary" required /></label><label class="control"><span>Report code</span><input id="phase12-report-code" maxlength="60" placeholder="SSS-2026-07-B" required /></label></div>
+                        <label class="control"><span>Approved statutory component codes</span><input id="phase12-components" maxlength="500" placeholder="SSS_EE, SSS_LOAN" required /><small class="control-message">Comma-separated. The system will not infer agency mappings.</small></label>
+                        <label class="control"><span>Amends filed report · optional</span><select id="phase12-amendment"><option value="">Original report</option></select></label>
+                        <button class="button button-primary" id="phase12-prepare-report" type="submit" disabled>Prepare controlled report</button>
+                    </form>
+                    <form id="phase12-filing-form" class="phase12-card" novalidate>
+                        <h3>Verify or record external filing</h3>
+                        <label class="control"><span>Compliance report</span><select id="phase12-report"><option value="">Select a report</option></select></label>
+                        <div class="control-pair"><label class="control"><span>Target status</span><select id="phase12-report-status"><option value="VERIFIED">Verified</option><option value="FILED">Filed externally</option></select></label><label class="control"><span>External filing date</span><input id="phase12-filing-date" type="date" /></label></div>
+                        <label class="control"><span>External filing reference</span><input id="phase12-filing-reference" maxlength="255" placeholder="Agency confirmation or receipt reference" /></label>
+                        <label class="phase12-confirm"><input id="phase12-filing-confirm" type="checkbox" /> I confirm this status reflects reviewed evidence; this action does not submit a filing.</label>
+                        <div class="phase12-actions"><button class="button button-primary" id="phase12-save-filing" type="submit" disabled>Record report status</button><button class="button button-quiet" id="phase12-download-report" type="button" disabled>Download controlled CSV</button></div>
+                    </form>
+                    <form id="phase12-year-end-form" class="phase12-card" novalidate>
+                        <h3>Annual employee payroll records</h3>
+                        <label class="control"><span>Approved withholding component codes</span><input id="phase12-withholding-codes" maxlength="500" placeholder="WITHHOLDING_TAX" required /></label>
+                        <button class="button button-primary" id="phase12-generate-year-end" type="button" disabled>Generate annual records</button>
+                        <label class="control"><span>Employee annual record</span><select id="phase12-year-record"><option value="">Generate or select a year-end period</option></select></label>
+                        <div class="control-pair"><label class="control"><span>Target status</span><select id="phase12-year-status"><option value="VERIFIED">Verified</option><option value="ISSUED">Issued</option></select></label><label class="control"><span>Issue reference</span><input id="phase12-issue-reference" maxlength="255" /></label></div>
+                        <div class="phase12-actions"><button class="button button-quiet" id="phase12-save-year-status" type="submit" disabled>Record annual status</button><button class="button button-quiet" id="phase12-download-year-end" type="button" disabled>Download annual CSV</button></div>
+                    </form>
+                    <form id="phase12-close-form" class="phase12-card phase12-card-wide" novalidate>
+                        <h3>Close compliance period</h3>
+                        <label class="control"><span>Close statement</span><input id="phase12-close-statement" maxlength="500" placeholder="All current reports filed and annual records issued where required" required /></label>
+                        <label class="phase12-confirm"><input id="phase12-close-confirm" type="checkbox" /> I confirm this irreversible close after reviewing all filing and annual-record evidence.</label>
+                        <button class="button button-danger" id="phase12-close" type="submit" disabled>Close compliance period</button>
+                    </form>
+                </div>
+                <p class="phase12-summary" id="phase12-summary" aria-live="polite">Phase 12 status will load after service verification.</p>
+                <div class="phase12-output" id="phase12-output" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="run-panel" aria-labelledby="runs-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-number">11</p>
+                        <h2 id="runs-title">Draft payroll runs</h2>
+                        <p>Create a cutoff, calculate employee snapshots, review exceptions, then lock only when every blocking gate is resolved.</p>
+                    </div>
+                </div>
+                <form id="payroll-run-form" class="run-form" novalidate>
+                    <label class="control"><span>Run code</span><input id="run-code" maxlength="40" placeholder="PAY-2026-07-B" required /></label>
+                    <label class="control"><span>Cutoff start</span><input id="run-start" type="date" required /></label>
+                    <label class="control"><span>Cutoff end</span><input id="run-end" type="date" required /></label>
+                    <label class="control"><span>Pay date</span><input id="run-pay-date" type="date" required /></label>
+                    <label class="control"><span>Basic-pay factor</span><input id="run-factor" type="number" min="0.0001" max="1" step="0.0001" value="0.5000" required /><small class="control-message">0.5 for a semi-monthly basic-pay share.</small></label>
+                    <button class="button button-primary" id="run-create" type="submit"><span class="button-label">Create draft</span><span class="button-progress">Creating…</span></button>
+                </form>
+                <div class="table-shell run-table-shell" tabindex="0">
+                    <table class="payroll-table run-table">
+                        <thead><tr><th>Run</th><th>Cutoff</th><th>Status</th><th>Employees</th><th>Exceptions</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Actions</th></tr></thead>
+                        <tbody id="payroll-run-body"><tr><td colspan="9" class="table-message">Loading payroll runs…</td></tr></tbody>
+                    </table>
+                </div>
+                <div id="payroll-run-detail" class="run-detail" hidden></div>
+            </section>
+
+            <div class="workspace-grid">
+                <!-- ============================================================
+                     [SECTION] EMPLOYEE PAYROLL MASTER
+                     ============================================================ -->
+                <section class="workspace-main" aria-labelledby="employees-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="section-number">12</p>
+                            <h2 id="employees-title">Employee payroll master</h2>
+                            <p>Add a new effective-dated basic pay entry without overwriting history.</p>
+                        </div>
+                        <button class="button button-quiet" id="refresh-employees" type="button">Refresh</button>
+                    </div>
+
+                    <label class="search-control" for="employee-search">
+                        <span>Search employees</span>
+                        <input id="employee-search" type="search" placeholder="Employee code, name, department, or position" autocomplete="off" />
+                    </label>
+
+                    <div class="table-shell" tabindex="0" aria-label="Employee payroll master table">
+                        <table class="payroll-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Pay basis</th>
+                                    <th>Effective basic pay</th>
+                                    <th>Readiness</th>
+                                    <th><span class="visually-hidden">Action</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="employee-table-body">
+                                <tr><td colspan="6" class="table-message">Sign in to load employee payroll records.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="table-footnote">The list is limited to 50 matches. Salary values come from payroll history—not the incomplete legacy basic-pay field.</p>
+                </section>
+
+                <!-- ============================================================
+                     [SECTION] OT RULES AND PREVIEW
+                     ============================================================ -->
+                <aside class="workspace-side">
+                    <section class="side-section" aria-labelledby="rates-title">
+                        <div class="section-heading compact">
+                            <div>
+                                <p class="section-number">13</p>
+                                <h2 id="rates-title">OT multipliers</h2>
+                            </div>
+                        </div>
+                        <div class="rate-list" id="overtime-rate-list">
+                            <p class="empty-copy">Rates load after verification.</p>
+                        </div>
+                    </section>
+
+                    <section class="side-section formula-section" aria-labelledby="calculator-title">
+                        <div class="section-heading compact">
+                            <div>
+                                <p class="section-number">14</p>
+                                <h2 id="calculator-title">OT formula preview</h2>
+                            </div>
+                        </div>
+                        <p class="formula-copy">Basic × 12 ÷ 365 ÷ 8 × payable hours × multiplier</p>
+                        <form id="overtime-calculator" class="calculator-form" novalidate>
+                            <label class="control">
+                                <span>Basic monthly pay</span>
+                                <input id="calculator-basic" type="text" inputmode="decimal" placeholder="30000.00" required />
+                                <small class="control-message">Use an approved monthly basic-pay value.</small>
+                            </label>
+                            <div class="control-pair">
+                                <label class="control">
+                                    <span>Approved start</span>
+                                    <input id="calculator-approved-start" type="time" value="17:01" required />
+                                    <small class="control-message">Regular office OT threshold is 5:01 PM.</small>
+                                </label>
+                                <label class="control">
+                                    <span>Approved end</span>
+                                    <input id="calculator-approved-end" type="time" value="19:01" required />
+                                    <small class="control-message">Use the approved request end.</small>
+                                </label>
+                            </div>
+                            <div class="control-pair">
+                                <label class="control">
+                                    <span>Actual OT IN</span>
+                                    <input id="calculator-actual-in" type="time" value="17:01" required />
+                                    <small class="control-message">From accepted biometric evidence.</small>
+                                </label>
+                                <label class="control">
+                                    <span>Actual OT OUT</span>
+                                    <input id="calculator-actual-out" type="time" value="19:01" required />
+                                    <small class="control-message">Missing OT OUT produces no automatic pay.</small>
+                                </label>
+                            </div>
+                            <label class="control">
+                                <span>Multiplier</span>
+                                <select id="calculator-multiplier" required>
+                                    <option value="1.30">Office day · 1.30</option>
+                                </select>
+                                <small class="control-message">Unconfirmed holiday sets are disabled.</small>
+                            </label>
+                            <button class="button button-primary" id="calculate-ot-button" type="submit">
+                                <span class="button-label">Preview OT amount</span>
+                                <span class="button-progress" aria-hidden="true">Calculating…</span>
+                            </button>
+                        </form>
+                        <output class="calculation-result" id="calculation-result" aria-live="polite" hidden>
+                            <span>Supported payable time</span>
+                            <strong id="calculation-time">—</strong>
+                            <span>OT amount</span>
+                            <strong id="calculation-amount">—</strong>
+                        </output>
+                    </section>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <aside class="hybrid-drawer" id="payroll-hybrid-drawer" role="dialog" aria-modal="true" aria-labelledby="hybrid-drawer-title" hidden>
+        <button class="hybrid-drawer-backdrop" id="hybrid-drawer-backdrop" type="button" aria-label="Close task drawer"></button>
+        <section class="hybrid-drawer-card">
+            <header class="hybrid-drawer-header"><div><p>Payroll task</p><h2 id="hybrid-drawer-title">Task</h2></div><button class="icon-button" id="hybrid-drawer-close" type="button" aria-label="Close task drawer">×</button></header>
+            <div class="hybrid-drawer-body" id="hybrid-drawer-body"></div>
+        </section>
+    </aside>
+
+    <!-- ============================================================
+         [FORM] COMPENSATION DIALOG — append-only effective salary
+         ============================================================ -->
+    <div class="modal" id="compensation-modal" role="dialog" aria-modal="true" aria-labelledby="compensation-title" hidden>
+        <button class="modal-backdrop" id="compensation-backdrop" type="button" aria-label="Close compensation dialog"></button>
+        <section class="modal-card">
+            <header class="modal-header">
+                <div>
+                    <p class="section-number">Effective-dated change</p>
+                    <h2 id="compensation-title">Add basic pay</h2>
+                    <p id="compensation-employee-name">Employee</p>
+                </div>
+                <button class="icon-button" id="compensation-close" type="button" aria-label="Close compensation dialog">×</button>
+            </header>
+            <form id="compensation-form" class="modal-form" novalidate>
+                <input id="compensation-usercode" type="hidden" />
+                <label class="control">
+                    <span>Employee code</span>
+                    <input id="compensation-code-display" type="text" readonly />
+                    <small class="control-message">Employee identity cannot be changed here.</small>
+                </label>
+                <div class="control-pair">
+                    <label class="control">
+                        <span>Payroll group</span>
+                        <input id="compensation-group" type="text" value="REGULAR" maxlength="40" required />
+                        <small class="control-message">Use the approved payroll grouping.</small>
+                    </label>
+                    <label class="control">
+                        <span>Pay basis</span>
+                        <select id="compensation-basis" required>
+                            <option value="MONTHLY">Monthly</option>
+                            <option value="DAILY">Daily</option>
+                            <option value="HOURLY">Hourly</option>
+                        </select>
+                        <small class="control-message">The supplied OT formula expects monthly basic pay.</small>
+                    </label>
+                </div>
+                <div class="control-pair">
+                    <label class="control">
+                        <span>Basic pay</span>
+                        <input id="compensation-basic" type="text" inputmode="decimal" placeholder="0.00" required />
+                        <small class="control-message">Positive amount with two decimal places.</small>
+                    </label>
+                    <label class="control">
+                        <span>Effective date</span>
+                        <input id="compensation-date" type="date" required />
+                        <small class="control-message">History is appended; old rows are preserved.</small>
+                    </label>
+                </div>
+                <label class="control">
+                    <span>Reason / authority</span>
+                    <input id="compensation-reason" type="text" maxlength="255" placeholder="Board resolution, appointment, or salary adjustment reference" required />
+                    <small class="control-message">Required for the audit trail.</small>
+                </label>
+                <div class="modal-actions">
+                    <button class="button button-quiet" id="compensation-cancel" type="button">Cancel</button>
+                    <button class="button button-primary" id="compensation-save" type="submit">
+                        <span class="button-label">Save effective rate</span>
+                        <span class="button-progress" aria-hidden="true">Saving…</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <script src="script.js?v=20260803-hybrid-v1"></script>
+</body>
+</html>

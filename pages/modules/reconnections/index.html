@@ -1,0 +1,1815 @@
+<!--
+============================================================
+FILE: index.html
+PURPOSE: Digital at print-ready na Reconnection Order form para sa ISD workflow.
+EDIT GUIDE: Hanapin ang [EDIT] para sa office details, default fees, at signatory labels.
+HUWAG BAGUHIN: Ang [HUWAG] draft storage at total calculation nang hindi tine-test ang restore at print.
+============================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reconnection Order | SAMELCII</title>
+    <style>
+        /* ============================================================
+        [SECTION] DESIGN TOKENS â€” SAMELCII Professional hybrid workspace
+        ============================================================ */
+        :root {
+            --color-primary: #6366f1;
+            --color-primary-hover: #4f46e5;
+            --color-primary-soft: #eef2ff;
+            --color-ink: #1f2937;
+            --color-body: #374151;
+            --color-muted: #6b7280;
+            --color-canvas: #f9fafb;
+            --color-surface: #ffffff;
+            --color-elevated: #f3f4f6;
+            --color-success: #10b981;
+            --color-success-soft: #ecfdf5;
+            --color-warning: #f59e0b;
+            --color-warning-soft: #fffbeb;
+            --color-info: #0ea5e9;
+            --color-info-soft: #f0f9ff;
+            --color-error: #ef4444;
+            --color-border: #e5e7eb;
+            --color-border-strong: #d1d5db;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 24px;
+            --spacing-xxl: 32px;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-2: 0 4px 12px rgba(31, 41, 55, 0.08);
+            --font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { min-height: 100%; margin: 0; }
+
+        body {
+            background: var(--color-canvas);
+            color: var(--color-ink);
+            font-family: var(--font-family);
+            font-size: 14px;
+        }
+
+        button, input, select, textarea { font: inherit; }
+        button { cursor: pointer; }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid rgba(99, 102, 241, 0.24);
+            outline-offset: 2px;
+        }
+
+        /* ============================================================
+        [SECTION] WORKSPACE â€” digital guide sa kaliwa, form sa kanan
+        ============================================================ */
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 440px);
+            gap: var(--spacing-xl);
+            width: 100%;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+        }
+
+        .main-column { min-width: 0; }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .eyebrow {
+            margin: 0 0 var(--spacing-xs);
+            color: var(--color-primary);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1, h2, h3, p { margin-top: 0; }
+        h1 { margin-bottom: var(--spacing-xs); font-size: 28px; line-height: 1.2; }
+        h2 { margin-bottom: 0; font-size: 17px; line-height: 1.3; }
+        h3 { margin-bottom: var(--spacing-xs); font-size: 14px; }
+
+        .subtitle { margin: 0; color: var(--color-muted); line-height: 1.5; }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            flex: 0 0 auto;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: var(--color-warning-soft);
+            color: #92400e;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-warning); }
+
+        .action-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: var(--shadow-1);
+            backdrop-filter: blur(10px);
+        }
+
+        .action-copy { color: var(--color-muted); font-size: 12px; }
+        .actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+
+        .btn {
+            min-height: 40px;
+            padding: 9px var(--spacing-lg);
+            border: 1px solid var(--color-border-strong);
+            border-radius: var(--radius-sm);
+            background: var(--color-surface);
+            color: var(--color-ink);
+            font-weight: 700;
+        }
+
+        .btn:hover { background: var(--color-elevated); }
+        .btn-primary { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-surface); }
+        .btn-primary:hover { border-color: var(--color-primary-hover); background: var(--color-primary-hover); }
+
+        /* ============================================================
+        [UI] SECTION TABS — color-coded steps; all panels remain available when printing
+        ============================================================ */
+        .section-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-1);
+        }
+
+        .section-tab {
+            --tab-color: var(--color-primary);
+            --tab-soft: var(--color-primary-soft);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            min-width: 0;
+            min-height: 48px;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            background: transparent;
+            color: var(--color-body);
+            font-weight: 800;
+            text-align: left;
+        }
+
+        .section-tab:hover { background: var(--tab-soft); }
+        .section-tab[aria-selected="true"] { border-color: var(--tab-color); background: var(--tab-soft); color: var(--color-ink); }
+        .section-tab.is-complete .tab-number { color: var(--color-surface); background: var(--color-success); }
+        .section-tab.tab-payment { --tab-color: var(--color-warning); --tab-soft: var(--color-warning-soft); }
+        .section-tab.tab-field { --tab-color: var(--color-info); --tab-soft: var(--color-info-soft); }
+        .section-tab.tab-approval { --tab-color: var(--color-success); --tab-soft: var(--color-success-soft); }
+
+        .tab-number {
+            display: inline-grid;
+            flex: 0 0 auto;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--tab-soft);
+            color: var(--tab-color);
+            font-size: 12px;
+        }
+
+        .tab-copy { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* ============================================================
+        [SECTION] FORM CARDS â€” malinaw na grouping para mabilis punan
+        ============================================================ */
+        .order-form { display: grid; gap: var(--spacing-lg); }
+
+        .form-card {
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-1);
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+            background: var(--color-canvas);
+        }
+
+        .section-number {
+            display: inline-grid;
+            width: 28px;
+            height: 28px;
+            margin-right: var(--spacing-sm);
+            place-items: center;
+            border-radius: 50%;
+            background: var(--color-primary-soft);
+            color: var(--color-primary-hover);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .section-title { display: flex; align-items: center; }
+        .card-hint { color: var(--color-muted); font-size: 12px; }
+        .card-body { padding: var(--spacing-lg); }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .field { grid-column: span 4; min-width: 0; }
+        .field.half { grid-column: span 6; }
+        .field.wide { grid-column: span 8; }
+        .field.full { grid-column: 1 / -1; }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--color-body);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .required { color: var(--color-error); }
+
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid var(--color-border-strong);
+            border-radius: var(--radius-sm);
+            background: var(--color-surface);
+            color: var(--color-ink);
+        }
+
+        input, select { min-height: 42px; padding: 8px var(--spacing-md); }
+        textarea { min-height: 92px; padding: var(--spacing-md); line-height: 1.5; resize: vertical; }
+        input::placeholder, textarea::placeholder { color: #9ca3af; }
+        input:focus, select:focus, textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+        .field-help { display: block; margin-top: 5px; color: var(--color-muted); font-size: 11px; }
+
+        .consumer-search-field { position: relative; z-index: 12; }
+        /* [EDIT] Account number is the starting point of the whole form (drives the consumer
+           lookup/autofill) — highlighted so it reads as "start here", not just another field. */
+        .field-start label { color: var(--color-primary-hover); }
+        .field-start input {
+            border-color: var(--color-primary);
+            background: var(--color-primary-soft);
+        }
+        .field-start input:focus { box-shadow: 0 0 0 3px var(--color-primary-soft), inset 0 0 0 1px var(--color-primary); }
+        .consumer-search-results {
+            position: absolute;
+            top: calc(100% - 1px);
+            right: 0;
+            left: 0;
+            z-index: 30;
+            overflow: hidden;
+            border: 1px solid var(--color-border-strong);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-2);
+        }
+
+        .consumer-search-results[hidden] { display: none; }
+        .consumer-result, .consumer-result-message {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 0;
+            border-bottom: 1px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-ink);
+            text-align: left;
+        }
+
+        .consumer-result:last-child { border-bottom: 0; }
+        .consumer-result:hover, .consumer-result:focus-visible { background: var(--color-primary-soft); }
+        .consumer-result-top { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+        .consumer-result strong, .consumer-result span { display: block; }
+        .consumer-result-account { flex: 0 0 auto; color: var(--color-primary-hover); font-size: 12px; font-weight: 800; }
+        .consumer-result-meta { margin-top: var(--spacing-xs); overflow: hidden; color: var(--color-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+        .consumer-result-message { border-bottom: 0; color: var(--color-muted); font-size: 12px; }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: minmax(160px, 1fr) 150px minmax(150px, 0.8fr) 160px;
+            gap: var(--spacing-sm) var(--spacing-md);
+            align-items: end;
+        }
+
+        .payment-head { color: var(--color-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+        .fee-label { align-self: center; color: var(--color-body); font-weight: 700; }
+        .fee-label-input { font-weight: 700; }
+
+        .add-charge-btn {
+            margin-top: var(--spacing-sm);
+            padding: 6px 12px;
+            border: 1px dashed var(--color-border-strong);
+            border-radius: var(--radius-sm);
+            background: var(--color-surface);
+            color: var(--color-primary-hover);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .add-charge-btn:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
+
+        .total-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .total-label { color: var(--color-muted); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        .total-value { color: var(--color-ink); font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+        /* ============================================================
+        [SECTION] GUIDE PANEL â€” progress, reminders, at paper/digital context
+        ============================================================ */
+        .guide-panel { position: sticky; top: var(--spacing-xl); align-self: start; display: grid; gap: var(--spacing-md); }
+
+        .guide-card {
+            padding: var(--spacing-lg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-1);
+        }
+
+        .guide-card p { margin-bottom: 0; color: var(--color-muted); font-size: 12px; line-height: 1.55; }
+        .guide-list { display: grid; gap: var(--spacing-md); margin: var(--spacing-lg) 0 0; padding: 0; list-style: none; }
+        .guide-step { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: var(--spacing-sm); align-items: start; }
+
+        .guide-icon {
+            display: grid;
+            width: 26px;
+            height: 26px;
+            place-items: center;
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            background: var(--color-canvas);
+            color: var(--color-muted);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .guide-step strong, .guide-step span { display: block; }
+        .guide-step span { margin-top: 2px; color: var(--color-muted); font-size: 11px; line-height: 1.45; }
+        .guide-step.is-complete .guide-icon { border-color: var(--color-success); background: var(--color-success-soft); color: #047857; }
+
+        .paper-note { border-left: 3px solid var(--color-primary); }
+        .save-state { margin-top: var(--spacing-md); color: var(--color-muted); font-size: 11px; }
+
+        /* ============================================================
+        [SECTION] REQUEST INDEX — 20 browser-local requests bawat page
+        ============================================================ */
+        .request-panel { position: sticky; top: var(--spacing-xl); align-self: start; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-2); }
+        .request-panel::before { content: ""; display: block; height: 4px; background: var(--color-primary); }
+        .request-header { padding: var(--spacing-lg); border-bottom: 1px solid var(--color-border); }
+        .request-title-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+        .request-title-row h2 { font-size: 16px; }
+        .request-count { padding: 4px 8px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-hover); font-size: 11px; font-weight: 800; }
+        .request-subtitle { margin: var(--spacing-xs) 0 var(--spacing-md); color: var(--color-muted); font-size: 11px; line-height: 1.45; }
+        .request-search { position: relative; }
+        .request-search input { min-height: 38px; padding-left: 34px; background: var(--color-canvas); }
+        .request-search-icon { position: absolute; top: 50%; left: var(--spacing-md); color: var(--color-muted); transform: translateY(-50%); pointer-events: none; }
+        .request-list { display: grid; gap: var(--spacing-sm); max-height: min(64vh, 690px); padding: var(--spacing-md); overflow-y: auto; }
+        .request-item { position: relative; width: 100%; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-ink); text-align: left; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease; }
+        .request-item::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-warning); }
+        .request-item.is-complete::before { background: var(--color-success); }
+        .request-item:hover, .request-item:focus-within { border-color: var(--color-primary-accent); background: var(--color-primary-soft); box-shadow: var(--shadow-2); transform: translateY(-2px); }
+        .request-item.is-selected { border-color: var(--color-primary); background: var(--color-primary-soft); box-shadow: inset 0 0 0 1px var(--color-primary); }
+        .request-open { width: 100%; padding: var(--spacing-md) var(--spacing-md) 7px; border: 0; background: transparent; color: inherit; text-align: left; }
+        .request-open:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -3px; }
+        .request-item-top, .request-item-bottom, .request-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+        .request-item-bottom { padding: 0 var(--spacing-md) var(--spacing-md); }
+        .request-item strong { display: block; margin: 6px 0 3px; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+        .request-ref { color: var(--color-primary-hover); font-size: 10px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+        .request-date { color: var(--color-muted); font-size: 10px; white-space: nowrap; }
+        .request-account { overflow: hidden; color: var(--color-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+        .request-status { padding: 3px 7px; border-radius: 999px; background: var(--color-warning-soft); color: #92400e; font-size: 10px; font-weight: 800; }
+        .request-status.complete { background: var(--color-success-soft); color: #047857; }
+        .request-print-btn { min-height: 28px; padding: 4px 9px; border: 1px solid var(--color-primary); border-radius: var(--radius-sm); background: var(--color-primary); color: var(--color-surface); font-size: 10px; font-weight: 800; }
+        .request-print-btn:hover, .request-print-btn:focus-visible { background: var(--color-primary-hover); box-shadow: var(--shadow-1); transform: translateY(-1px); }
+        .request-delete-btn { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-error); font-size: 12px; font-weight: 800; line-height: 1; }
+        .request-delete-btn:hover, .request-delete-btn:focus-visible { background: var(--color-error); border-color: var(--color-error); color: var(--color-surface); }
+        .request-delete-btn:disabled { border-color: var(--color-border); color: var(--color-border-strong); background: var(--color-elevated); cursor: not-allowed; }
+        .request-empty { padding: var(--spacing-xl) var(--spacing-md); color: var(--color-muted); font-size: 12px; line-height: 1.5; text-align: center; }
+        .request-pagination { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-md); border-top: 1px solid var(--color-border); background: var(--color-canvas); }
+        .request-page-btn { min-width: 64px; min-height: 34px; padding: 6px var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-body); font-size: 11px; font-weight: 800; }
+        .request-page-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary-hover); transform: translateY(-1px); }
+        .request-page-btn:disabled { cursor: not-allowed; opacity: 0.45; }
+        .request-page-status { color: var(--color-muted); font-size: 10px; font-weight: 700; text-align: center; }
+        .employee-load-note { grid-column: 1 / -1; margin: calc(var(--spacing-sm) * -1) 0 0; color: var(--color-muted); font-size: 11px; }
+        .employee-load-note.is-ready { color: var(--color-success); }
+
+        .toast {
+            position: fixed;
+            right: var(--spacing-xl);
+            bottom: var(--spacing-xl);
+            z-index: 100;
+            max-width: 360px;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            background: var(--color-ink);
+            color: var(--color-surface);
+            box-shadow: var(--shadow-2);
+            font-weight: 700;
+        }
+
+        .toast[hidden] { display: none; }
+
+        /* [SAVE CONFLICT] centered popup — native <dialog> auto-centers via showModal(); ::backdrop
+           dims the page behind it. */
+        .save-conflict-dialog {
+            width: min(420px, calc(100vw - 48px));
+            padding: 0;
+            border: 0;
+            border-radius: var(--radius-lg);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-2);
+        }
+        .save-conflict-dialog::backdrop { background: rgb(15 23 42 / 45%); }
+        .save-conflict-body { padding: var(--spacing-xl); }
+        .save-conflict-body h3 { margin: 0 0 var(--spacing-sm); color: var(--color-ink); font-size: 17px; }
+        .save-conflict-body p { margin: 0; color: var(--color-body); font-size: 13px; line-height: 1.6; }
+        .save-conflict-actions { display: flex; justify-content: flex-end; gap: var(--spacing-sm); margin-top: var(--spacing-xl); }
+
+        /* ============================================================
+        [SECTION] RESPONSIVE â€” mobile, tablet, at desktop behavior
+        ============================================================ */
+        @media (max-width: 1023px) {
+            .workspace { grid-template-columns: 1fr; padding: var(--spacing-lg); }
+            .guide-panel { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .guide-card:first-child { grid-column: 1 / -1; }
+            .request-panel { position: static; }
+            .request-list { max-height: 420px; }
+        }
+
+        @media (max-width: 720px) {
+            .workspace { padding: var(--spacing-md); }
+            .page-header, .action-bar { align-items: stretch; flex-direction: column; }
+            .actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .btn { padding-inline: var(--spacing-sm); }
+            .field, .field.half, .field.wide { grid-column: 1 / -1; }
+            .payment-grid { grid-template-columns: 1fr; }
+            .payment-head { display: none; }
+            .fee-label { margin-top: var(--spacing-sm); }
+            .guide-panel { grid-template-columns: 1fr; }
+            .section-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        /* ============================================================
+        [PRINT] A4 output â€” kahawig ng paper order pero galing sa digital form
+        ============================================================ */
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background: var(--color-surface); font-size: 11px; }
+            .workspace { display: block; width: 100%; padding: 0; }
+            .page-header { margin-bottom: 8px; text-align: center; }
+            .page-header > div:first-child { width: 100%; }
+            .eyebrow::before { content: "SAMAR II ELECTRIC COOPERATIVE, INC.\A Poblacion 6, Paranas, Samar\A "; white-space: pre; }
+            h1 { font-size: 20px; text-transform: uppercase; }
+            .subtitle, .status-pill, .action-bar, .section-tabs, .guide-panel, .field-help, .toast, .consumer-search-results, .add-charge-btn { display: none !important; }
+            .order-form { gap: 8px; }
+            .form-card[hidden] { display: block !important; }
+            .form-card { break-inside: avoid; border-color: var(--color-ink); border-radius: 0; box-shadow: none; }
+            .card-heading { padding: 7px 9px; border-color: var(--color-ink); background: var(--color-surface); }
+            .card-hint, .section-number { display: none; }
+            .card-body { padding: 9px; }
+            .field-grid { gap: 7px 10px; }
+            label { margin-bottom: 2px; font-size: 10px; }
+            input, select, textarea { min-height: 25px; padding: 3px 5px; border: 0; border-bottom: 1px solid var(--color-ink); border-radius: 0; box-shadow: none !important; }
+            textarea { min-height: 44px; }
+            .payment-grid { grid-template-columns: minmax(120px, 1fr) 95px 100px 105px; gap: 5px 8px; }
+            .total-row { margin-top: 8px; padding-top: 7px; border-color: var(--color-ink); }
+            .total-value { font-size: 18px; }
+        }
+        .print-sheet { display: none; }
+
+        /* ============================================================
+        [PRINT] TWO-COPY LONG BOND — ISD at Lineman copy sa isang 8.5 x 13 page
+        ============================================================ */
+        @media print {
+            @page { size: Letter portrait; margin: 0.18in; }
+            html, body { width: 100%; min-height: 0; margin: 0; background: var(--color-surface); }
+            .workspace, .toast { display: none !important; }
+            .print-sheet {
+                position: relative;
+                display: block !important;
+                width: 100%;
+                height: 10.58in;
+                overflow: hidden;
+                color: var(--color-ink);
+                font-family: Arial, sans-serif;
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+            .print-copy {
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                height: 5.29in;
+                min-height: 0;
+                padding: 0.1in 0.14in 0.08in;
+                overflow: hidden;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .print-copy:first-child { border-bottom: 1px dashed var(--color-muted); }
+            .print-copy:nth-child(2) { top: 5.29in; }
+            .print-copy-label { position: absolute; top: 0.08in; right: 0.12in; font-size: 8pt; font-weight: 800; }
+            .print-brand { display: grid; grid-template-columns: 0.48in 1fr 0.48in; align-items: start; min-height: 0.72in; text-align: center; }
+            .print-logo { width: 0.39in; height: 0.48in; margin-top: 0.02in; object-fit: contain; }
+            .print-brand-copy strong, .print-brand-copy span { display: block; }
+            .print-brand-copy strong { font-size: 11pt; line-height: 1.05; }
+            .print-brand-copy span { font-size: 7.5pt; line-height: 1.2; }
+            .print-order-title { margin: 0.03in 0 0.06in; font-size: 12pt; line-height: 1; text-align: center; text-transform: uppercase; }
+            .print-details { display: grid; grid-template-columns: 1fr 1fr; gap: 0.04in 0.22in; padding-bottom: 0.07in; border-bottom: 1px solid var(--color-ink); }
+            .print-detail-column { display: grid; gap: 0.025in; }
+            .print-line { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: end; gap: 0.06in; min-height: 0.19in; font-size: 7.8pt; }
+            .print-line.dual { grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 0.65fr); }
+            .print-line-label { font-weight: 800; white-space: nowrap; }
+            .print-line-value { min-width: 0; min-height: 0.16in; padding: 0 0.025in 0.015in; overflow: hidden; border-bottom: 1px solid var(--color-muted); font-weight: 700; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+            .print-work-grid { display: grid; grid-template-columns: 1.18fr 0.82fr; min-height: 2.18in; border-bottom: 1px solid var(--color-ink); }
+            .print-payment { padding: 0.08in 0.12in 0.04in 0; border-right: 1px solid var(--color-ink); }
+            .print-field-work { padding: 0.08in 0 0.04in 0.12in; }
+            .print-charge-head, .print-charge-row { display: grid; grid-template-columns: 1fr 0.52in 0.68in 0.62in; gap: 0.06in; align-items: end; }
+            .print-charge-head { margin-bottom: 0.03in; font-size: 7pt; font-weight: 800; text-align: center; text-transform: uppercase; }
+            .print-charge-row { min-height: 0.23in; font-size: 7.6pt; }
+            .print-charge-row > span:not(:first-child) { min-height: 0.16in; padding-bottom: 0.01in; overflow: hidden; border-bottom: 1px solid var(--color-muted); font-weight: 700; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+            .print-payment-bottom { display: grid; grid-template-columns: 1fr 0.9fr; gap: 0.12in; align-items: end; margin-top: 0.08in; }
+            .print-total { display: flex; align-items: end; justify-content: space-between; gap: 0.08in; font-size: 8pt; font-weight: 800; }
+            .print-total strong { min-width: 0.76in; padding-bottom: 0.015in; border-bottom: 1px solid var(--color-ink); font-size: 9pt; text-align: center; }
+            .print-issued { font-size: 7.4pt; }
+            .print-field-work .print-line { min-height: 0.31in; }
+            .print-reading { display: grid; grid-template-columns: max-content 1fr 1fr; gap: 0.06in; align-items: end; min-height: 0.31in; font-size: 7.8pt; }
+            .print-remark { display: grid; grid-template-columns: max-content 1fr; gap: 0.06in; align-items: start; min-height: 0.55in; padding-top: 0.05in; font-size: 7.8pt; }
+            .print-remark-value { min-height: 0.48in; border-bottom: 1px solid var(--color-muted); white-space: pre-wrap; }
+            .print-signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.28in; margin-top: 0.12in; padding: 0.04in 0.12in 0; }
+            .print-signature { min-width: 0; text-align: center; }
+            .print-signature-label { display: block; margin-bottom: 0.14in; font-size: 7.4pt; text-align: left; }
+            .print-signature-name { display: block; min-height: 0.18in; padding-bottom: 0.015in; overflow: hidden; border-bottom: 1px solid var(--color-ink); font-size: 8pt; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+            .print-signature-title { display: block; margin-top: 0.02in; font-size: 6.8pt; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================
+    [SECTION] PAGE HEADER â€” digital form controls at current status
+    ============================================================ -->
+    <main class="workspace">
+        <section class="main-column" aria-labelledby="page-title">
+            <header class="page-header">
+                <div>
+                    <p class="eyebrow">ISD Â· Service Restoration</p>
+                    <h1 id="page-title">Reconnection Order</h1>
+                    <p class="subtitle">Complete once, save as a browser draft, then print the official field copy.</p>
+                </div>
+                <span class="status-pill"><span class="status-dot"></span><span id="status-text">Draft</span></span>
+            </header>
+
+            <div class="action-bar">
+                <span class="action-copy" id="completion-copy">Start with the consumer information.</span>
+                <div class="actions">
+                    <button class="btn" id="new-btn" type="button">+ New</button>
+                    <button class="btn btn-primary" id="save-btn" type="button">Save request</button>
+                </div>
+            </div>
+
+            <!-- ============================================================
+            [UI] SECTION TABS — bawat kulay ay isang bahagi ng Reconnection workflow
+            ============================================================ -->
+            <nav class="section-tabs" role="tablist" aria-label="Reconnection form sections">
+                <button class="section-tab tab-consumer" id="consumer-tab" type="button" role="tab" aria-selected="true" aria-controls="consumer-section" data-section-target="consumer">
+                    <span class="tab-number">1</span><span class="tab-copy">Consumer</span>
+                </button>
+                <button class="section-tab tab-payment" id="payment-tab" type="button" role="tab" aria-selected="false" aria-controls="payment-section" data-section-target="payment" tabindex="-1">
+                    <span class="tab-number">2</span><span class="tab-copy">Payment</span>
+                </button>
+                <button class="section-tab tab-field" id="field-tab" type="button" role="tab" aria-selected="false" aria-controls="field-section" data-section-target="field" tabindex="-1">
+                    <span class="tab-number">3</span><span class="tab-copy">Field work</span>
+                </button>
+                <button class="section-tab tab-approval" id="approval-tab" type="button" role="tab" aria-selected="false" aria-controls="approval-section" data-section-target="approval" tabindex="-1">
+                    <span class="tab-copy">Approval</span>
+                </button>
+            </nav>
+
+            <!-- ============================================================
+            [FORM] RECONNECTION ORDER â€” fields mula sa kasalukuyang paper form
+            ============================================================ -->
+            <form class="order-form" id="reconnection-form">
+                <section class="form-card" id="consumer-section" role="tabpanel" aria-labelledby="consumer-tab" data-tab-panel="consumer">
+                    <div class="card-heading">
+                        <div class="section-title"><span class="section-number">1</span><h2>Consumer &amp; service details</h2></div>
+                        <span class="card-hint">Identify the account and exact service location.</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="field-grid">
+                            <div class="field consumer-search-field field-start">
+                                <label for="account-number">Account number <span class="required">*</span></label>
+                                <input id="account-number" name="accountNumber" type="search" required maxlength="30" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="consumer-search-results" aria-expanded="false" placeholder="Type account no. or consumer name" />
+                                <div class="consumer-search-results" id="consumer-search-results" role="listbox" aria-label="Best matching consumers" hidden></div>
+                                <span class="field-help" id="account-search-note">Type at least 2 characters. Up to 3 best matches will appear.</span>
+                            </div>
+                            <div class="field">
+                                <label for="reconn-id">Reconnection ID <span class="required">*</span></label>
+                                <input id="reconn-id" name="reconnId" required maxlength="50" placeholder="e.g. RC00001" autocomplete="off" />
+                            </div>
+                            <div class="field">
+                                <label for="order-date">Order date <span class="required">*</span></label>
+                                <input id="order-date" name="orderDate" type="date" required />
+                            </div>
+                            <div class="field">
+                                <label for="office">Issuing office</label>
+                                <!-- [EDIT] Palitan ang default office kung ibang district ang gumagamit ng form. -->
+                                <input id="office" name="office" maxlength="80" value="Paranas Main Office" />
+                            </div>
+                            <div class="field wide">
+                                <label for="consumer-name">Consumer name <span class="required">*</span></label>
+                                <input id="consumer-name" name="consumerName" required maxlength="120" placeholder="Last name, first name, middle name" autocomplete="name" />
+                            </div>
+                            <div class="field">
+                                <label for="serial-number">Meter serial no.</label>
+                                <input id="serial-number" name="serialNumber" maxlength="40" autocomplete="off" />
+                            </div>
+                            <div class="field wide">
+                                <label for="address">Address <span class="required">*</span></label>
+                                <input id="address" name="address" required maxlength="180" autocomplete="street-address" />
+                            </div>
+                            <div class="field half">
+                                <label for="location">Location / landmark</label>
+                                <input id="location" name="location" maxlength="160" placeholder="Nearest school, barangay hall, or landmark" />
+                            </div>
+                            <div class="field half">
+                                <label for="contact-number">Contact number</label>
+                                <input id="contact-number" name="contactNumber" type="tel" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="09XX XXX XXXX" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-card" id="payment-section" role="tabpanel" aria-labelledby="payment-tab" data-tab-panel="payment" hidden>
+                    <div class="card-heading">
+                        <div class="section-title"><span class="section-number">2</span><h2>Payment details</h2></div>
+                        <span class="card-hint">Encode each official receipt beside its charge.</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="payment-grid" id="payment-grid">
+                            <span class="payment-head">Charge</span><span class="payment-head">Amount</span><span class="payment-head">OR number</span><span class="payment-head">OR date</span>
+                            <span class="fee-label">Reconnection fee</span>
+                            <!-- [EDIT] Default fees follow the photographed order; update here when the approved rates change. -->
+                            <input aria-label="Reconnection fee amount" name="reconnectionFee" class="money-input" type="number" min="0" step="0.01" value="40.00" />
+                            <!-- [EDIT] OR number/date are filled in once the teller actually collects payment —
+                                 not required at Save, since an order is often saved/printed before that happens. -->
+                            <input aria-label="Reconnection fee OR number" name="reconnectionOr" maxlength="30" />
+                            <input aria-label="Reconnection fee OR date" name="reconnectionOrDate" type="date" />
+
+                            <span class="fee-label">Sealing lead</span>
+                            <input aria-label="Sealing lead amount" name="sealingLead" class="money-input" type="number" min="0" step="0.01" value="75.00" />
+                            <input aria-label="Sealing lead OR number" name="sealingOr" maxlength="30" />
+                            <input aria-label="Sealing lead OR date" name="sealingOrDate" type="date" />
+
+                            <span class="fee-label">Others</span>
+                            <input aria-label="Other charges amount" name="otherFee" class="money-input" type="number" min="0" step="0.01" value="0.00" />
+                            <input aria-label="Other charges OR number" name="otherOr" maxlength="30" />
+                            <input aria-label="Other charges OR date" name="otherOrDate" type="date" />
+                        </div>
+                        <!-- [EDIT] Appends more "Other charge" rows into #payment-grid — see addOtherChargeRow(). -->
+                        <button type="button" class="add-charge-btn" id="add-other-charge-btn">+ Add another charge</button>
+                        <div class="total-row" aria-live="polite">
+                            <span class="total-label">Total payment</span>
+                            <output class="total-value" id="total-payment">â‚±115.00</output>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-card" id="field-section" role="tabpanel" aria-labelledby="field-tab" data-tab-panel="field" hidden>
+                    <div class="card-heading">
+                        <div class="section-title"><span class="section-number">3</span><h2>Field completion</h2></div>
+                        <span class="card-hint">Lineman completes this after service restoration.</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="field-grid">
+                            <div class="field half">
+                                <label for="reconnected-at">Date and time reconnected</label>
+                                <input id="reconnected-at" name="reconnectedAt" type="datetime-local" />
+                            </div>
+                            <div class="field half">
+                                <label for="reconnected-by">Reconnected by</label>
+                                <input id="reconnected-by" name="reconnectedBy" maxlength="100" placeholder="Lineman / crew name" />
+                            </div>
+                            <div class="field half">
+                                <label for="reading-before">Meter reading before</label>
+                                <input id="reading-before" name="readingBefore" inputmode="decimal" maxlength="30" />
+                            </div>
+                            <div class="field half">
+                                <label for="reading-after">Meter reading after</label>
+                                <input id="reading-after" name="readingAfter" inputmode="decimal" maxlength="30" />
+                            </div>
+                            <div class="field full">
+                                <label for="lineman-remark">Lineman's remark</label>
+                                <textarea id="lineman-remark" name="linemanRemark" maxlength="600" placeholder="Condition found, work performed, seal number, or follow-up needed"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-card" id="approval-section" role="tabpanel" aria-labelledby="approval-tab" data-tab-panel="approval" hidden>
+                    <div class="card-heading">
+                        <div class="section-title"><h2>Issuance &amp; approval</h2></div>
+                        <span class="card-hint">Optional — names print as signature labels on the order if filled in.</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="field-grid">
+                            <div class="field half">
+                                <label for="issued-by">Issued by</label>
+                                <input id="issued-by" name="issuedBy" type="search" list="employee-signatory-options" maxlength="100" autocomplete="off" placeholder="Search employee name or number" />
+                                <input id="issued-position" name="issuedPosition" type="hidden" />
+                            </div>
+                            <div class="field half">
+                                <label for="prepared-by">Prepared by</label>
+                                <input id="prepared-by" name="preparedBy" maxlength="100" readonly aria-readonly="true" />
+                                <input id="prepared-position" name="preparedPosition" type="hidden" />
+                            </div>
+                            <!-- [EDIT] Ilagay ang kasalukuyang approving officers bago mag-print. -->
+                            <div class="field half">
+                                <label for="recommended-by">Recommending approval</label>
+                                <input id="recommended-by" name="recommendedBy" maxlength="100" readonly aria-readonly="true" />
+                                <input id="recommended-position" name="recommendedPosition" type="hidden" />
+                            </div>
+                            <div class="field half">
+                                <label for="approved-by">Approved by</label>
+                                <input id="approved-by" name="approvedBy" maxlength="100" readonly aria-readonly="true" />
+                                <input id="approved-position" name="approvedPosition" type="hidden" />
+                            </div>
+                            <datalist id="employee-signatory-options"></datalist>
+                            <p class="employee-load-note" id="employee-load-note" role="status">Loading assigned signatories and employee directory...</p>
+                        </div>
+                    </div>
+                </section>
+            </form>
+        </section>
+
+        <!-- ============================================================
+        [UI] RECONNECTION REQUESTS â€” searchable browser-local work queue
+        ============================================================ -->
+        <aside class="request-panel" aria-label="Reconnection requests">
+            <header class="request-header">
+                <div class="request-title-row"><h2>Reconnection requests</h2><span class="request-count" id="request-count">0</span></div>
+                <p class="request-subtitle">Saved requests appear here. Select one to continue editing or printing.</p>
+                <div class="request-search"><span class="request-search-icon" aria-hidden="true">⌕</span><input id="request-search" type="search" maxlength="80" autocomplete="off" aria-label="Search Reconnection requests" placeholder="Search name, account, or ID" /></div>
+            </header>
+            <div class="request-list" id="request-list" aria-live="polite"></div>
+            <footer class="request-pagination">
+                <button class="request-page-btn" id="request-previous" type="button">Previous</button>
+                <span class="request-page-status" id="request-page-status">Page 1 of 1</span>
+                <button class="request-page-btn" id="request-next" type="button">Next</button>
+            </footer>
+        </aside>
+    </main>
+
+    <!-- ============================================================
+    [PRINT] LONG-BOND TEMPLATE — kino-clone nang dalawang beses bago buksan ang print dialog
+    ============================================================ -->
+    <div class="print-sheet" id="print-sheet" aria-hidden="true"></div>
+    <template id="reconnection-print-template">
+        <section class="print-copy">
+            <span class="print-copy-label" data-print="copyLabel"></span>
+            <header class="print-brand">
+                <img class="print-logo" src="../../../assets/images/LOGO.png" alt="" />
+                <div class="print-brand-copy">
+                    <strong>SAMAR II ELECTRIC COOPERATIVE, INC.</strong>
+                    <span>Poblacion 6, Paranas, Samar</span>
+                    <span>Tel. No. 0916-660-3276 / 0956-596-2788</span>
+                    <span>samelcotwo@yahoo.com</span>
+                </div>
+                <span aria-hidden="true"></span>
+            </header>
+            <h2 class="print-order-title">Reconnection Order</h2>
+
+            <div class="print-details">
+                <div class="print-detail-column">
+                    <div class="print-line dual"><span class="print-line-label">Reconn ID:</span><span class="print-line-value" data-print="reconnId"></span><span class="print-line-label">Office:</span><span class="print-line-value" data-print="office"></span></div>
+                    <div class="print-line"><span class="print-line-label">Name:</span><span class="print-line-value" data-print="consumerName"></span></div>
+                    <div class="print-line dual"><span class="print-line-label">Account No.:</span><span class="print-line-value" data-print="accountNumber"></span><span class="print-line-label">Serial No.:</span><span class="print-line-value" data-print="serialNumber"></span></div>
+                </div>
+                <div class="print-detail-column">
+                    <div class="print-line"><span class="print-line-label">Date:</span><span class="print-line-value" data-print="orderDate"></span></div>
+                    <div class="print-line"><span class="print-line-label">Address:</span><span class="print-line-value" data-print="address"></span></div>
+                    <div class="print-line"><span class="print-line-label">Location:</span><span class="print-line-value" data-print="location"></span></div>
+                    <div class="print-line"><span class="print-line-label">Contact #:</span><span class="print-line-value" data-print="contactNumber"></span></div>
+                </div>
+            </div>
+
+            <div class="print-work-grid">
+                <section class="print-payment">
+                    <div class="print-charge-head"><span></span><span>Amount</span><span>OR #</span><span>Date</span></div>
+                    <div class="print-charge-row"><span>Reconnection Fee:</span><span data-print="reconnectionFee"></span><span data-print="reconnectionOr"></span><span data-print="reconnectionOrDate"></span></div>
+                    <div class="print-charge-row"><span>Sealing Lead:</span><span data-print="sealingLead"></span><span data-print="sealingOr"></span><span data-print="sealingOrDate"></span></div>
+                    <div class="print-charge-row"><span>Others:</span><span data-print="otherFee"></span><span data-print="otherOr"></span><span data-print="otherOrDate"></span></div>
+                    <div class="print-payment-bottom">
+                        <div class="print-total"><span>Total Payment:</span><strong data-print="totalPayment"></strong></div>
+                        <div class="print-line print-issued"><span class="print-line-label">Issued by:</span><span class="print-line-value" data-print="issuedBy"></span></div>
+                    </div>
+                </section>
+                <section class="print-field-work">
+                    <div class="print-line"><span class="print-line-label">Date / Time Reconnected:</span><span class="print-line-value" data-print="reconnectedAt"></span></div>
+                    <div class="print-line"><span class="print-line-label">Reconnected by:</span><span class="print-line-value" data-print="reconnectedBy"></span></div>
+                    <div class="print-reading"><span class="print-line-label">Reading:</span><span class="print-line-value" data-print="readingBefore"></span><span class="print-line-value" data-print="readingAfter"></span></div>
+                    <div class="print-remark"><span class="print-line-label">Lineman's Remark:</span><span class="print-remark-value" data-print="linemanRemark"></span></div>
+                </section>
+            </div>
+
+            <footer class="print-signatures">
+                <div class="print-signature"><span class="print-signature-label">Prepared By:</span><span class="print-signature-name" data-print="preparedBy"></span><span class="print-signature-title" data-print="preparedPosition"></span></div>
+                <div class="print-signature"><span class="print-signature-label">Recommending Approval:</span><span class="print-signature-name" data-print="recommendedBy"></span><span class="print-signature-title" data-print="recommendedPosition"></span></div>
+                <div class="print-signature"><span class="print-signature-label">Approved By:</span><span class="print-signature-name" data-print="approvedBy"></span><span class="print-signature-title" data-print="approvedPosition"></span></div>
+            </footer>
+        </section>
+    </template>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- Save asks this before silently overwriting a request that already matches the form
+         (same Reconnection ID, or the one currently open) — see saveDraft() below. -->
+    <dialog class="save-conflict-dialog" id="save-conflict-dialog">
+        <div class="save-conflict-body">
+            <h3>This request is already saved</h3>
+            <p><strong id="save-conflict-reconn-id"></strong> already exists. Update that record, or save this as a separate new request?</p>
+            <div class="save-conflict-actions">
+                <button type="button" class="btn" data-save-conflict-cancel>Cancel</button>
+                <button type="button" class="btn" data-save-conflict-new>Save as new</button>
+                <button type="button" class="btn btn-primary" data-save-conflict-overwrite>Update existing</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        /* ============================================================
+        [STATE] FORM REFERENCES â€” isang source para sa save, restore, at progress
+        ============================================================ */
+        const STORAGE_KEY = "samelcii-reconnection-draft-v1";
+        const REQUEST_PAGE_SIZE = 20;
+        const form = document.getElementById("reconnection-form");
+        const totalPayment = document.getElementById("total-payment");
+        const paymentGrid = document.getElementById("payment-grid");
+        const addOtherChargeBtn = document.getElementById("add-other-charge-btn");
+        const saveConflictDialog = document.getElementById("save-conflict-dialog");
+        const saveConflictReconnId = document.getElementById("save-conflict-reconn-id");
+        const statusText = document.getElementById("status-text");
+        const completionCopy = document.getElementById("completion-copy");
+        const toast = document.getElementById("toast");
+        const sectionTabs = Array.from(document.querySelectorAll(".section-tab"));
+        const sectionPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+        const accountInput = document.getElementById("account-number");
+        const consumerSearchResults = document.getElementById("consumer-search-results");
+        const accountSearchNote = document.getElementById("account-search-note");
+        const printSheet = document.getElementById("print-sheet");
+        const printTemplate = document.getElementById("reconnection-print-template");
+        const requestList = document.getElementById("request-list");
+        const requestSearch = document.getElementById("request-search");
+        const requestCount = document.getElementById("request-count");
+        const requestPageStatus = document.getElementById("request-page-status");
+        const requestPrevious = document.getElementById("request-previous");
+        const requestNext = document.getElementById("request-next");
+        const nodeApiBase = String(window.SAMELCII_NODE_API_BASE || `${window.location.protocol}//${window.location.hostname}:3000/api`).replace(/\/+$/, "");
+        const membershipApi = `${nodeApiBase}/membership`;
+        const authApi = `${nodeApiBase}/auth`;
+        const reconnectionsApi = `${nodeApiBase}/reconnections`;
+        const employeeOptions = document.getElementById("employee-signatory-options");
+        const employeeLoadNote = document.getElementById("employee-load-note");
+        const employeeFields = [form.elements.issuedBy];
+        const employeePositionFields = {
+            issuedBy: form.elements.issuedPosition,
+            preparedBy: form.elements.preparedPosition,
+            recommendedBy: form.elements.recommendedPosition,
+            approvedBy: form.elements.approvedPosition
+        };
+        const employeeDirectory = new Map();
+        let toastTimer = 0;
+        let consumerSearchTimer = 0;
+        let consumerSearchController = null;
+        let employeeSearchTimer = 0;
+        let employeeSearchController = null;
+        let requests = [];
+        let requestPage = 1;
+        let selectedRequestId = "";
+
+        /* ============================================================
+        [HELPER] UI FEEDBACK â€” maikli at screen-reader friendly na confirmation
+        ============================================================ */
+        function showToast(message) {
+            window.clearTimeout(toastTimer);
+            toast.textContent = message;
+            toast.hidden = false;
+            toastTimer = window.setTimeout(() => { toast.hidden = true; }, 2800);
+        }
+
+        function localDateValue(date = new Date()) {
+            const offset = date.getTimezoneOffset() * 60000;
+            return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+        }
+
+        /* ============================================================
+        [UI] TAB NAVIGATION — isang section lang sa screen; lahat ay kasama pa rin sa print
+        ============================================================ */
+        function activateSection(sectionKey, focusTab = false) {
+            sectionTabs.forEach((tab) => {
+                const active = tab.dataset.sectionTarget === sectionKey;
+                tab.setAttribute("aria-selected", String(active));
+                tab.tabIndex = active ? 0 : -1;
+                if (active && focusTab) tab.focus();
+            });
+            sectionPanels.forEach((panel) => { panel.hidden = panel.dataset.tabPanel !== sectionKey; });
+        }
+
+        sectionTabs.forEach((tab, index) => {
+            tab.addEventListener("click", () => activateSection(tab.dataset.sectionTarget));
+            tab.addEventListener("keydown", (event) => {
+                const last = sectionTabs.length - 1;
+                const nextIndex = event.key === "ArrowRight" ? (index === last ? 0 : index + 1)
+                    : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1)
+                    : event.key === "Home" ? 0
+                    : event.key === "End" ? last
+                    : -1;
+                if (nextIndex < 0) return;
+                event.preventDefault();
+                activateSection(sectionTabs[nextIndex].dataset.sectionTarget, true);
+            });
+        });
+
+        /* ============================================================
+        [SEARCH] CONSUMER LOOKUP — real Membership API, best 3 matches only
+        ============================================================ */
+        function authHeaders() {
+            const headers = {};
+            const token = String(localStorage.getItem("samelcii_token") || "").trim();
+            const session = String(localStorage.getItem("samelcii_session") || "").trim();
+            if (token.split(".").length === 3) {
+                headers.Authorization = `Bearer ${token}`;
+                headers["X-SAMELCII-TOKEN"] = token;
+            }
+            if (session) headers["X-SAMELCII-SESSION"] = session;
+            return headers;
+        }
+
+        function hideConsumerResults() {
+            consumerSearchResults.hidden = true;
+            accountInput.setAttribute("aria-expanded", "false");
+        }
+
+        function consumerName(member) {
+            return String(member.fullName || "").trim() || "Unnamed consumer";
+        }
+
+        function createSearchNode(tag, className, text) {
+            const node = document.createElement(tag);
+            node.className = className || "";
+            if (text !== undefined) node.textContent = text;
+            return node;
+        }
+
+        function renderConsumerResults(items, message = "") {
+            consumerSearchResults.replaceChildren();
+            if (message) {
+                consumerSearchResults.append(createSearchNode("div", "consumer-result-message", message));
+            } else {
+                items.slice(0, 3).forEach((member) => {
+                    const button = createSearchNode("button", "consumer-result");
+                    const top = createSearchNode("span", "consumer-result-top");
+                    const name = consumerName(member);
+                    button.type = "button";
+                    button.role = "option";
+                    button.memberRecord = member;
+                    top.append(
+                        createSearchNode("strong", "", name),
+                        createSearchNode("span", "consumer-result-account", member.accountNumber || "No account")
+                    );
+                    button.append(
+                        top,
+                        createSearchNode("span", "consumer-result-meta", [member.address, member.status].filter(Boolean).join(" / ") || "No service details")
+                    );
+                    button.setAttribute("aria-label", `Select ${name}, account ${member.accountNumber || "not recorded"}`);
+                    consumerSearchResults.append(button);
+                });
+            }
+            consumerSearchResults.hidden = false;
+            accountInput.setAttribute("aria-expanded", "true");
+        }
+
+        async function fetchConsumerMatches(query) {
+            consumerSearchController?.abort();
+            consumerSearchController = new AbortController();
+            const params = new URLSearchParams({ action: "consumer_search", search: query, limit: "3" });
+            const response = await fetch(`${membershipApi}?${params.toString()}`, {
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: authHeaders(),
+                signal: consumerSearchController.signal
+            });
+            const result = await response.json().catch(() => ({ ok: false }));
+            if (!response.ok || !result.ok) throw new Error(result.message || "Consumer lookup unavailable.");
+            return Array.isArray(result.items) ? result.items.slice(0, 3) : [];
+        }
+
+        async function searchConsumers(query) {
+            try {
+                const items = await fetchConsumerMatches(query);
+                renderConsumerResults(items, items.length ? "" : "No matching consumer found.");
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                renderConsumerResults([], "Consumer search is unavailable. Check the API connection.");
+                console.warn("Reconnection consumer lookup failed:", error);
+            }
+        }
+
+        function queueConsumerSearch() {
+            const query = accountInput.value.trim();
+            window.clearTimeout(consumerSearchTimer);
+            if (query.length < 2) {
+                consumerSearchController?.abort();
+                hideConsumerResults();
+                accountSearchNote.textContent = "Type at least 2 characters. Up to 3 best matches will appear.";
+                return;
+            }
+            renderConsumerResults([], "Searching consumers...");
+            consumerSearchTimer = window.setTimeout(() => searchConsumers(query), 220);
+        }
+
+        function selectConsumer(member) {
+            const name = consumerName(member);
+            form.elements.accountNumber.value = member.accountNumber || "";
+            form.elements.consumerName.value = name;
+            form.elements.address.value = member.address || "";
+            form.elements.serialNumber.value = member.meterNumber || "";
+            form.elements.contactNumber.value = member.contactNo || "";
+            if (!form.elements.location.value) {
+                form.elements.location.value = [member.areaCode ? `Area ${member.areaCode}` : "", member.bookCode ? `Book ${member.bookCode}` : ""].filter(Boolean).join(" / ");
+            }
+            accountSearchNote.textContent = `Selected ${name}${member.status ? ` / ${member.status}` : ""}`;
+            hideConsumerResults();
+            updateProgress();
+            form.elements.consumerName.focus();
+        }
+
+        accountInput.addEventListener("input", queueConsumerSearch);
+        accountInput.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") hideConsumerResults();
+            if (event.key === "ArrowDown") {
+                const first = consumerSearchResults.querySelector(".consumer-result");
+                if (first) { event.preventDefault(); first.focus(); }
+            }
+        });
+        consumerSearchResults.addEventListener("click", (event) => {
+            const button = event.target.closest(".consumer-result");
+            if (button?.memberRecord) selectConsumer(button.memberRecord);
+        });
+        consumerSearchResults.addEventListener("keydown", (event) => {
+            const options = Array.from(consumerSearchResults.querySelectorAll(".consumer-result"));
+            const index = options.indexOf(document.activeElement);
+            if (event.key === "Escape") { event.preventDefault(); hideConsumerResults(); accountInput.focus(); return; }
+            if (index < 0 || !["ArrowDown", "ArrowUp"].includes(event.key)) return;
+            event.preventDefault();
+            const next = event.key === "ArrowDown" ? Math.min(options.length - 1, index + 1) : Math.max(0, index - 1);
+            options[next].focus();
+        });
+        document.addEventListener("click", (event) => {
+            if (!event.target.closest(".consumer-search-field")) hideConsumerResults();
+        });
+
+        /* ============================================================
+        [SEARCH] EMPLOYEE SIGNATORIES — shared searchable directory with assigned defaults
+        ============================================================ */
+        function renderEmployeeOptions(items) {
+            employeeOptions.replaceChildren();
+            items.forEach((employee) => {
+                const name = String(employee.name || employee.usercode || "").trim();
+                if (!name) return;
+                employeeDirectory.set(name.toLowerCase(), employee);
+                employeeDirectory.set(String(employee.usercode || "").trim().toLowerCase(), employee);
+                const option = document.createElement("option");
+                option.value = name;
+                option.label = [employee.usercode, employee.position].filter(Boolean).join(" · ");
+                employeeOptions.append(option);
+            });
+        }
+
+        function applyEmployeeSelection(field) {
+            const employee = employeeDirectory.get(field.value.trim().toLowerCase());
+            if (!employee) return false;
+            field.value = String(employee.name || employee.usercode || "").trim();
+            const positionField = employeePositionFields[field.name];
+            if (positionField && employee.position) positionField.value = String(employee.position).trim();
+            updateProgress();
+            buildPrintCopies();
+            return true;
+        }
+
+        async function fetchEmployees(params = {}) {
+            const query = new URLSearchParams({ action: "search_employee", limit: "100", ...params });
+            const response = await fetch(`${authApi}?${query.toString()}`, {
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: authHeaders(),
+                signal: employeeSearchController?.signal
+            });
+            const result = await response.json().catch(() => ({ ok: false }));
+            if (!response.ok || !result.ok) throw new Error(result.message || "Employee directory unavailable.");
+            return Array.isArray(result.items) ? result.items : [];
+        }
+
+        async function searchEmployees(query, sourceField) {
+            employeeSearchController?.abort();
+            employeeSearchController = new AbortController();
+            try {
+                renderEmployeeOptions(await fetchEmployees({ q: query }));
+                if (sourceField) applyEmployeeSelection(sourceField);
+            } catch (error) {
+                if (error.name !== "AbortError") console.warn("Reconnection employee search failed:", error);
+            }
+        }
+
+        employeeFields.forEach((field) => {
+            field.addEventListener("input", () => {
+                window.clearTimeout(employeeSearchTimer);
+                employeePositionFields[field.name].value = "";
+                const query = field.value.trim();
+                if (query.length < 2) return;
+                employeeSearchTimer = window.setTimeout(() => searchEmployees(query, field), 180);
+            });
+            field.addEventListener("change", () => applyEmployeeSelection(field));
+            field.addEventListener("blur", () => applyEmployeeSelection(field));
+        });
+
+        function findNamedEmployee(items, requiredParts) {
+            return items.find((employee) => {
+                const name = String(employee.name || "").toLowerCase();
+                return requiredParts.every((part) => name.includes(part));
+            }) || null;
+        }
+
+        async function fetchCurrentEmployee() {
+            const response = await fetch(`${authApi}?action=me`, {
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: authHeaders()
+            });
+            const result = await response.json().catch(() => ({ ok: false }));
+            if (response.ok && result.ok && result.user) return result.user;
+            try {
+                const session = JSON.parse(localStorage.getItem("samelcii_session") || "{}");
+                const code = String(session.usercode || session.accountnumber || "").trim();
+                if (code) {
+                    const matches = await fetchEmployees({ q: code });
+                    return matches.find((employee) => String(employee.usercode).toLowerCase() === code.toLowerCase()) || null;
+                }
+            } catch (_error) { /* session fallback unavailable */ }
+            return null;
+        }
+
+        async function loadEmployeeSignatories() {
+            employeeSearchController?.abort();
+            employeeSearchController = new AbortController();
+            try {
+                const [employees, currentEmployee, recommendedMatches, approvedMatches] = await Promise.all([
+                    fetchEmployees({ department: "ISD" }),
+                    fetchCurrentEmployee(),
+                    fetchEmployees({ q: "Raquel" }),
+                    fetchEmployees({ q: "Dickson" })
+                ]);
+                const recommended = findNamedEmployee(recommendedMatches, ["raquel", "borja"])
+                    || findNamedEmployee(employees, ["raquel", "borja"]);
+                const approved = findNamedEmployee(approvedMatches, ["dickson", "bernales"])
+                    || findNamedEmployee(employees, ["dickson", "bernales"]);
+                renderEmployeeOptions([...employees, currentEmployee, recommended, approved].filter(Boolean));
+                employeeFields.forEach(applyEmployeeSelection);
+                if (currentEmployee?.name) {
+                    form.elements.preparedBy.value = currentEmployee.name;
+                    form.elements.preparedPosition.value = currentEmployee.position || "";
+                }
+                if (recommended?.name) {
+                    form.elements.recommendedBy.value = recommended.name;
+                    form.elements.recommendedPosition.value = recommended.position || "";
+                }
+                if (approved?.name) {
+                    form.elements.approvedBy.value = approved.name;
+                    form.elements.approvedPosition.value = approved.position || "";
+                }
+                employeeLoadNote.textContent = "Prepared and approving signatories loaded automatically. Search only the Issued by employee when needed.";
+                employeeLoadNote.classList.add("is-ready");
+                updateProgress();
+                buildPrintCopies();
+            } catch (error) {
+                console.warn("Reconnection employee directory failed:", error);
+                employeeLoadNote.textContent = "Automatic signatories are temporarily unavailable. Refresh after the employee service reconnects.";
+            }
+        }
+
+        /* ============================================================
+        [LOGIC] TOTAL PAYMENT â€” pinagsasama ang tatlong non-negative charges
+        ============================================================ */
+        function updateTotal() {
+            const total = Array.from(form.querySelectorAll(".money-input"), (input) => Math.max(0, Number(input.value) || 0))
+                .reduce((sum, amount) => sum + amount, 0);
+            totalPayment.value = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(total);
+            return total;
+        }
+
+        /* ============================================================
+        [LOGIC] EXTRA "OTHERS" CHARGES â€” dynamically appended rows beyond the default 3
+        ponytail: appended as plain siblings inside #payment-grid (not wrapped in a per-row div)
+        so the existing 4-column CSS grid keeps auto-flowing them into new rows for free â€” same
+        trick the static 3 rows already rely on. updateTotal()/formDataObject() are both already
+        generic (by .money-input class / by name via FormData), so they need no changes to pick
+        these up; only restoreDraft() and buildPrintCopies() know about "Others" by name and are
+        updated below to loop over every otherCharge index instead of just the bare one.
+        ============================================================ */
+        let otherChargeCount = 1;
+        function addOtherChargeRow(prefill = {}) {
+            otherChargeCount += 1;
+            const index = otherChargeCount;
+
+            const labelInput = document.createElement("input");
+            labelInput.className = "fee-label-input";
+            labelInput.name = `otherLabel${index}`;
+            labelInput.placeholder = "Other charge";
+            labelInput.maxLength = 60;
+            labelInput.setAttribute("aria-label", `Other charge ${index} label`);
+            labelInput.value = prefill.label || "";
+
+            const amountInput = document.createElement("input");
+            amountInput.className = "money-input";
+            amountInput.type = "number";
+            amountInput.min = "0";
+            amountInput.step = "0.01";
+            amountInput.name = `otherFee${index}`;
+            amountInput.setAttribute("aria-label", `Other charge ${index} amount`);
+            amountInput.value = prefill.amount || "0.00";
+
+            const orInput = document.createElement("input");
+            orInput.name = `otherOr${index}`;
+            orInput.maxLength = 30;
+            orInput.setAttribute("aria-label", `Other charge ${index} OR number`);
+            orInput.value = prefill.or || "";
+
+            const dateInput = document.createElement("input");
+            dateInput.type = "date";
+            dateInput.name = `otherOrDate${index}`;
+            dateInput.setAttribute("aria-label", `Other charge ${index} OR date`);
+            dateInput.value = prefill.orDate || "";
+
+            paymentGrid.append(labelInput, amountInput, orInput, dateInput);
+            return { labelInput, amountInput, orInput, dateInput };
+        }
+
+        addOtherChargeBtn.addEventListener("click", () => {
+            addOtherChargeRow();
+            updateTotal();
+        });
+
+        function hasValue(name) {
+            return String(form.elements[name]?.value || "").trim() !== "";
+        }
+
+        /* ============================================================
+        [UI] COMPLETION GUIDE â€” visual checklist na hindi humaharang sa partial draft
+        ============================================================ */
+        // Consumer + Payment are required, Field work is optional (Lineman fills it in later),
+        // Approval is optional and not part of the numbered required flow at all — its own tab
+        // has no number and it never counts toward "X of N sections complete."
+        const REQUIRED_SECTION_KEYS = ["consumer", "payment", "field"];
+        function updateProgress() {
+            const sections = {
+                consumer: ["reconnId", "orderDate", "consumerName", "accountNumber", "address"].every(hasValue),
+                payment: ["reconnectionOr", "reconnectionOrDate", "sealingOr", "sealingOrDate"].every(hasValue),
+                field: hasValue("reconnectedAt") && hasValue("reconnectedBy"),
+                approval: ["issuedBy", "preparedBy", "recommendedBy", "approvedBy"].every(hasValue)
+            };
+            updateTotal();
+            Object.entries(sections).forEach(([key, complete]) => {
+                const item = document.querySelector(`[data-guide="${key}"]`);
+                item?.classList.toggle("is-complete", complete);
+                document.querySelector(`[data-section-target="${key}"]`)?.classList.toggle("is-complete", complete);
+                const icon = item?.querySelector(".guide-icon");
+                if (icon) icon.textContent = complete ? "✓" : String(REQUIRED_SECTION_KEYS.indexOf(key) + 1);
+            });
+            const completed = REQUIRED_SECTION_KEYS.filter((key) => sections[key]).length;
+            const total = REQUIRED_SECTION_KEYS.length;
+            completionCopy.textContent = completed === total ? "Ready to print and route for signatures." : `${completed} of ${total} sections complete.`;
+            statusText.textContent = completed === total ? "Ready" : "Draft";
+        }
+
+        function formDataObject() {
+            return Object.fromEntries(new FormData(form).entries());
+        }
+
+        /* ============================================================
+        [SERVER] REQUEST INDEX — shared across every teller/ISD user, not just this browser.
+        ponytail: replaced the old localStorage-only list (see git history) — that was a
+        single-browser ceiling with no team visibility and nothing survived a cache clear.
+        listRequests() has no server-side pagination; it returns up to 500 most-recently-touched
+        requests and the existing client-side search/pagination (filteredRequests/renderRequests)
+        runs on top unchanged, same as it did against the old localStorage array.
+        ============================================================ */
+        async function refreshRequests() {
+            try {
+                const response = await fetch(`${reconnectionsApi}?action=list`, {
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: authHeaders()
+                });
+                const result = await response.json().catch(() => ({ ok: false }));
+                if (!response.ok || !result.ok) throw new Error(result.message || "Unable to load saved requests.");
+                requests = Array.isArray(result.items) ? result.items : [];
+            } catch (error) {
+                console.warn("Reconnection request list failed to load:", error);
+                showToast("Could not load saved requests from the server.");
+            }
+            renderRequests();
+        }
+
+        // "Completed" (green) means the teller has already collected payment — reconnectionOr and
+        // sealingOr are the same two OR-number fields Save now requires (see the payment-grid's
+        // "required" inputs). This is what "ready to print" actually means for this form: printing
+        // happens once the order is paid, before the lineman does the field work — it doesn't wait
+        // on reconnectedAt/reconnectedBy, which only get filled in afterward.
+        function requestStatus(fields) {
+            return fields.reconnectionOr && fields.sealingOr ? "Completed" : "Pending";
+        }
+
+        /* ============================================================
+        [AUTO] RECONNECTION ID — "RC" + zero-padded 5-digit sequence, e.g. "RC00001".
+        ponytail: auto-FILLED, not locked read-only — reconnectionService.nextReconnId() scans the
+        real table for the next number, but the field stays editable for the rare case ISD needs to
+        match a specific paper-form number by hand. field.dataset.auto tracks whether the current
+        value was set by this code (so it's never overwritten once a person types their own).
+        ============================================================ */
+        async function autoFillReconnId({ force = false } = {}) {
+            const field = form.elements.reconnId;
+            if (!field) return;
+            if (!force && field.value.trim() && !field.dataset.auto) return;
+            try {
+                const response = await fetch(`${reconnectionsApi}?action=next_id`, {
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: authHeaders()
+                });
+                const result = await response.json().catch(() => ({ ok: false }));
+                if (!response.ok || !result.ok) throw new Error(result.message || "Unable to generate a Reconnection ID.");
+                field.value = result.reconnId;
+                field.dataset.auto = "1";
+                updateProgress();
+            } catch (error) {
+                console.warn("Reconnection ID auto-generate failed:", error);
+            }
+        }
+
+        form.elements.reconnId.addEventListener("input", () => {
+            // A real keystroke always means "typed by a person" — programmatic autofill sets
+            // .value directly and never fires this listener, so there's no ambiguity to resolve.
+            delete form.elements.reconnId.dataset.auto;
+        });
+
+        function requestDate(value) {
+            const date = value ? new Date(`${value}T00:00:00`) : null;
+            return date && !Number.isNaN(date.getTime())
+                ? new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric", year: "numeric" }).format(date)
+                : "No date";
+        }
+
+        function filteredRequests() {
+            const query = requestSearch.value.trim().toLowerCase();
+            const sorted = [...requests].sort((a, b) => String(b.savedAt || "").localeCompare(String(a.savedAt || "")));
+            if (!query) return sorted;
+            return sorted.filter((item) => [item.fields.reconnId, item.fields.consumerName, item.fields.accountNumber, item.fields.orderDate]
+                .join(" ").toLowerCase().includes(query));
+        }
+
+        function renderRequests() {
+            const filtered = filteredRequests();
+            const pageCount = Math.max(1, Math.ceil(filtered.length / REQUEST_PAGE_SIZE));
+            requestPage = Math.min(Math.max(1, requestPage), pageCount);
+            const start = (requestPage - 1) * REQUEST_PAGE_SIZE;
+            const pageItems = filtered.slice(start, start + REQUEST_PAGE_SIZE);
+            requestList.replaceChildren();
+            requestCount.textContent = String(filtered.length);
+
+            if (!pageItems.length) {
+                const message = requestSearch.value.trim() ? "No requests match this search." : "No saved Reconnection requests yet. Complete the required fields and select Save request.";
+                requestList.append(createSearchNode("div", "request-empty", message));
+            } else {
+                pageItems.forEach((item) => {
+                    const fields = item.fields;
+                    const status = item.status || requestStatus(fields);
+                    const card = createSearchNode("div", `request-item${status === "Completed" ? " is-complete" : ""}${item.id === selectedRequestId ? " is-selected" : ""}`);
+                    const button = createSearchNode("button", "request-open");
+                    const top = createSearchNode("span", "request-item-top");
+                    const bottom = createSearchNode("span", "request-item-bottom");
+                    const actions = createSearchNode("span", "request-actions");
+                    const printButton = createSearchNode("button", "request-print-btn", "Print");
+                    const deleteButton = createSearchNode("button", "request-delete-btn", "×");
+                    button.type = "button";
+                    card.dataset.requestId = item.id;
+                    button.setAttribute("aria-label", `Open ${fields.reconnId || "Reconnection request"} for ${fields.consumerName || "unnamed consumer"}`);
+                    printButton.type = "button";
+                    printButton.setAttribute("aria-label", `Print ${fields.reconnId || "Reconnection request"} for ${fields.consumerName || "unnamed consumer"}`);
+                    deleteButton.type = "button";
+                    // ponytail: a completed reconnection is a service record (proof of what was
+                    // actually done in the field) — deleting it after that point would erase the
+                    // audit trail, not just tidy up a draft. Disabled, not hidden, so it's clear
+                    // the option exists but is blocked, not missing.
+                    if (status === "Completed") {
+                        deleteButton.disabled = true;
+                        deleteButton.title = "Completed requests cannot be deleted.";
+                        deleteButton.setAttribute("aria-label", "Completed requests cannot be deleted");
+                    } else {
+                        deleteButton.title = "Delete this request";
+                        deleteButton.setAttribute("aria-label", `Delete ${fields.reconnId || "Reconnection request"} for ${fields.consumerName || "unnamed consumer"}`);
+                    }
+                    top.append(createSearchNode("span", "request-ref", fields.reconnId || "No Reconn ID"), createSearchNode("time", "request-date", requestDate(fields.orderDate)));
+                    actions.append(createSearchNode("span", `request-status${status === "Completed" ? " complete" : ""}`, status), printButton, deleteButton);
+                    bottom.append(createSearchNode("span", "request-account", fields.accountNumber || "No account"), actions);
+                    button.append(top, createSearchNode("strong", "", fields.consumerName || "Unnamed consumer"));
+                    card.append(button, bottom);
+                    requestList.append(card);
+                });
+            }
+
+            requestPageStatus.textContent = filtered.length ? `${start + 1}-${Math.min(start + REQUEST_PAGE_SIZE, filtered.length)} of ${filtered.length} / Page ${requestPage} of ${pageCount}` : "Page 1 of 1";
+            requestPrevious.disabled = requestPage <= 1;
+            requestNext.disabled = requestPage >= pageCount;
+        }
+
+        // Shared by restoreDraft() and loadRequestIntoForm(): rebuilds however many dynamic
+        // "Others" rows the saved fields need (from the highest otherFee<N> name present) before
+        // setting values by name — otherwise form.elements[name] finds nothing for any extra row
+        // that doesn't already exist in the live DOM and that value silently never restores.
+        function ensureOtherChargeRows(fields) {
+            let maxIndex = 1;
+            Object.keys(fields).forEach((name) => {
+                const match = /^otherFee(\d+)$/.exec(name);
+                if (match) maxIndex = Math.max(maxIndex, Number(match[1]));
+            });
+            while (otherChargeCount < maxIndex) {
+                addOtherChargeRow();
+            }
+        }
+
+        function applyFieldsToForm(fields) {
+            ensureOtherChargeRows(fields);
+            Object.entries(fields).forEach(([name, value]) => {
+                const field = form.elements[name];
+                if (field && typeof value === "string") field.value = value;
+            });
+        }
+
+        async function loadRequestIntoForm(request) {
+            applyFieldsToForm(request.fields);
+            selectedRequestId = request.id;
+            const draft = { savedAt: request.savedAt, fields: request.fields };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+            accountSearchNote.textContent = `Loaded ${request.fields.reconnId || "saved request"}.`;
+            activateSection("consumer");
+            await loadEmployeeSignatories();
+            updateProgress();
+            buildPrintCopies();
+            renderRequests();
+            showToast("Reconnection request loaded.");
+        }
+
+        requestSearch.addEventListener("input", () => { requestPage = 1; renderRequests(); });
+        requestPrevious.addEventListener("click", () => { requestPage -= 1; renderRequests(); requestList.scrollTop = 0; });
+        requestNext.addEventListener("click", () => { requestPage += 1; renderRequests(); requestList.scrollTop = 0; });
+        requestList.addEventListener("click", async (event) => {
+            const card = event.target.closest(".request-item");
+            const request = requests.find((item) => item.id === card?.dataset.requestId);
+            if (!request) return;
+            if (event.target.closest(".request-print-btn")) {
+                await loadRequestIntoForm(request);
+                window.print();
+                return;
+            }
+            if (event.target.closest(".request-delete-btn")) {
+                // ponytail: re-checked here, not just left to the disabled attribute — the button
+                // is disabled in the DOM for a completed request, but this guard (and the server's
+                // own copy of it in reconnectionService.deleteRequest) is what actually stops the
+                // delete if that ever gets bypassed (stale render, devtools, direct API call).
+                const status = request.status || requestStatus(request.fields);
+                if (status === "Completed") return;
+                if (!window.confirm(`Delete ${request.fields.reconnId || "this request"}? This cannot be undone.`)) return;
+                try {
+                    const response = await fetch(`${reconnectionsApi}?action=delete`, {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: { "Content-Type": "application/json", ...authHeaders() },
+                        body: JSON.stringify({ id: request.id })
+                    });
+                    const result = await response.json().catch(() => ({ ok: false }));
+                    if (!response.ok || !result.ok) throw new Error(result.message || "Unable to delete this request.");
+                    if (selectedRequestId === request.id) selectedRequestId = "";
+                    await refreshRequests();
+                    showToast("Reconnection request deleted.");
+                } catch (error) {
+                    showToast(error.message || "Unable to delete this request.");
+                }
+                return;
+            }
+            if (event.target.closest(".request-open")) await loadRequestIntoForm(request);
+        });
+
+        /* ============================================================
+        [PRINT] COPY BUILDER — parehong form data sa ISD at Lineman copy
+        ============================================================ */
+        function formatPrintDate(value, includeTime = false) {
+            if (!value) return "";
+            const date = new Date(includeTime ? value : `${value}T00:00:00`);
+            if (Number.isNaN(date.getTime())) return value;
+            return new Intl.DateTimeFormat("en-PH", includeTime
+                ? { month: "numeric", day: "numeric", year: "2-digit", hour: "numeric", minute: "2-digit" }
+                : { month: "numeric", day: "numeric", year: "2-digit" }).format(date);
+        }
+
+        function formatPrintMoney(value) {
+            return new Intl.NumberFormat("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.max(0, Number(value) || 0));
+        }
+
+        // Extra "Others" rows (index 2+) beyond the one built into the print template — one
+        // .print-charge-row per addOtherChargeRow() row, read straight off the live form.
+        function buildExtraChargeRow(charge) {
+            const row = document.createElement("div");
+            row.className = "print-charge-row";
+            [`${charge.label}:`, charge.amount, charge.or, charge.orDate].forEach((text) => {
+                const span = document.createElement("span");
+                span.textContent = text;
+                row.append(span);
+            });
+            return row;
+        }
+
+        function buildPrintCopies() {
+            const values = formDataObject();
+            const printValues = {
+                ...values,
+                orderDate: formatPrintDate(values.orderDate),
+                reconnectionOrDate: formatPrintDate(values.reconnectionOrDate),
+                sealingOrDate: formatPrintDate(values.sealingOrDate),
+                otherOrDate: formatPrintDate(values.otherOrDate),
+                reconnectedAt: formatPrintDate(values.reconnectedAt, true),
+                reconnectionFee: formatPrintMoney(values.reconnectionFee),
+                sealingLead: formatPrintMoney(values.sealingLead),
+                otherFee: formatPrintMoney(values.otherFee),
+                totalPayment: formatPrintMoney(updateTotal()),
+                issuedBy: [values.issuedBy, values.issuedPosition].filter(Boolean).join(" / ")
+            };
+            const extraCharges = [];
+            for (let index = 2; index <= otherChargeCount; index += 1) {
+                extraCharges.push({
+                    label: String(values[`otherLabel${index}`] || "Other").trim() || "Other",
+                    amount: formatPrintMoney(values[`otherFee${index}`]),
+                    or: String(values[`otherOr${index}`] || ""),
+                    orDate: formatPrintDate(values[`otherOrDate${index}`])
+                });
+            }
+            printSheet.replaceChildren();
+            ["ISD COPY", "LINEMAN COPY"].forEach((copyLabel) => {
+                const fragment = printTemplate.content.cloneNode(true);
+                fragment.querySelectorAll("[data-print]").forEach((node) => {
+                    const key = node.dataset.print;
+                    node.textContent = key === "copyLabel" ? copyLabel : String(printValues[key] || "");
+                });
+                const bottom = fragment.querySelector(".print-payment-bottom");
+                extraCharges.forEach((charge) => bottom?.before(buildExtraChargeRow(charge)));
+                printSheet.append(fragment);
+            });
+        }
+
+        /* ============================================================
+        [SERVER] SAVE REQUEST â€” persists to reconnection_requests (shared, not per-browser).
+        ponytail: STORAGE_KEY (below) is a SEPARATE, still-local mechanism kept on purpose â€” it's
+        the "recover my unsaved typing after an accidental reload" draft, not the saved-requests
+        list. That's a legitimate single-browser convenience; the actual saved record is now the
+        server's, via reconnectionsApi.
+
+        When the current form matches an already-saved request (same reconnId, or it's the request
+        currently open), Save used to silently overwrite it. That's surprising if you actually meant
+        to log this as a SEPARATE new job under a copied ID â€” so now it stops and asks via the
+        save-conflict-dialog instead of guessing.
+        ============================================================ */
+        let pendingSavePayload = null;
+        let pendingSaveExisting = null;
+
+        function findExistingMatch(fields) {
+            const selected = requests.find((item) => item.id === selectedRequestId);
+            return selected?.fields.reconnId === fields.reconnId
+                ? selected
+                : requests.find((item) => item.fields.reconnId === fields.reconnId);
+        }
+
+        async function commitSave(id, payload, isUpdate) {
+            try {
+                const response = await fetch(`${reconnectionsApi}?action=save`, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json", ...authHeaders() },
+                    body: JSON.stringify({ id, fields: payload.fields })
+                });
+                const result = await response.json().catch(() => ({ ok: false }));
+                if (!response.ok || !result.ok) throw new Error(result.message || "Unable to save this request.");
+
+                selectedRequestId = result.item.id;
+                requestPage = 1;
+                await refreshRequests();
+                showToast(isUpdate ? "Reconnection request updated." : "Reconnection request saved.");
+            } catch (error) {
+                console.warn("Reconnection request save failed:", error);
+                showToast(error.message || "Unable to save this request to the server.");
+            }
+        }
+
+        async function saveDraft() {
+            const payload = { savedAt: new Date().toISOString(), fields: formDataObject() };
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (error) {
+                console.warn("Reconnection local draft cache failed (non-fatal):", error);
+            }
+
+            const existing = findExistingMatch(payload.fields);
+            if (existing) {
+                pendingSavePayload = payload;
+                pendingSaveExisting = existing;
+                saveConflictReconnId.textContent = existing.fields.reconnId || existing.id;
+                saveConflictDialog.showModal();
+                return;
+            }
+
+            const id = crypto.randomUUID?.() || `${Date.now()}-${payload.fields.accountNumber}`;
+            await commitSave(id, payload, false);
+        }
+
+        saveConflictDialog.addEventListener("click", async (event) => {
+            if (event.target.closest("[data-save-conflict-cancel]") || event.target === saveConflictDialog) {
+                saveConflictDialog.close();
+                return;
+            }
+            if (event.target.closest("[data-save-conflict-overwrite]")) {
+                saveConflictDialog.close();
+                await commitSave(pendingSaveExisting.id, pendingSavePayload, true);
+                pendingSavePayload = null;
+                pendingSaveExisting = null;
+                return;
+            }
+            if (event.target.closest("[data-save-conflict-new]")) {
+                saveConflictDialog.close();
+                // A copy must get its OWN Reconnection ID — otherwise two different saved records
+                // would display the same "RC#####" reference, which defeats the point of it being
+                // a unique-looking job number.
+                await autoFillReconnId({ force: true });
+                const freshPayload = { savedAt: new Date().toISOString(), fields: formDataObject() };
+                const newId = crypto.randomUUID?.() || `${Date.now()}-${freshPayload.fields.accountNumber}`;
+                await commitSave(newId, freshPayload, false);
+                pendingSavePayload = null;
+                pendingSaveExisting = null;
+            }
+        });
+
+        function restoreDraft() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return;
+                const payload = JSON.parse(saved);
+                if (!payload || typeof payload.fields !== "object") return;
+                applyFieldsToForm(payload.fields);
+                selectedRequestId = requests.find((item) => item.fields.reconnId === payload.fields.reconnId)?.id || "";
+            } catch (error) {
+                console.warn("Reconnection draft restore skipped:", error);
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        }
+
+        /* ============================================================
+        [EVENT] FORM ACTIONS â€” stable listeners para sa input, clear, save, at print
+        ============================================================ */
+        form.addEventListener("input", updateProgress);
+        document.getElementById("save-btn").addEventListener("click", () => {
+            const firstInvalid = form.querySelector(":invalid");
+            if (firstInvalid) {
+                activateSection(firstInvalid.closest("[data-tab-panel]")?.dataset.tabPanel || "consumer");
+                form.reportValidity();
+                showToast("Complete the required Consumer fields first.");
+                return;
+            }
+            saveDraft();
+        });
+        // buildPrintCopies() still runs on native print (beforeprint) and from each saved
+        // request's own Print button (.request-print-btn) — only the standalone top-level Print
+        // button was removed, not printing itself.
+        window.addEventListener("beforeprint", buildPrintCopies);
+        // "+ New" starts a fresh, empty Reconnection Order with its own auto-generated ID.
+        function resetFormForNewReconnection() {
+            form.reset();
+            form.elements.orderDate.value = localDateValue();
+            localStorage.removeItem(STORAGE_KEY);
+            selectedRequestId = "";
+            accountSearchNote.textContent = "Type at least 2 characters. Up to 3 best matches will appear.";
+            hideConsumerResults();
+            activateSection("consumer");
+            updateProgress();
+            renderRequests();
+            loadEmployeeSignatories();
+            autoFillReconnId({ force: true });
+        }
+
+        document.getElementById("new-btn").addEventListener("click", () => {
+            if (hasValue("consumerName") || hasValue("accountNumber")) {
+                if (!window.confirm("Start a new Reconnection Order? Unsaved changes in the current form will be lost.")) return;
+            }
+            resetFormForNewReconnection();
+            showToast("Started a new Reconnection Order.");
+        });
+        /* ============================================================
+        [INIT] STARTUP SELF-CHECK â€” maliit na runnable check para sa fees at required fields
+        ============================================================ */
+        form.elements.orderDate.value = localDateValue();
+        // ponytail: requests must be fetched BEFORE restoreDraft() runs — it matches an unsaved
+        // draft back to an existing saved request by reconnId (to resume editing the right server
+        // record instead of creating a duplicate), and that lookup is silently a no-op against an
+        // empty `requests` array.
+        (async () => {
+            await refreshRequests();
+            restoreDraft();
+            // Only fills if restoreDraft() didn't already resume a value — see autoFillReconnId's
+            // own empty/dataset.auto guard.
+            await autoFillReconnId();
+            activateSection("consumer");
+            updateProgress();
+            buildPrintCopies();
+            loadEmployeeSignatories();
+        })();
+        console.assert(form.querySelectorAll(".money-input").length >= 3, "Reconnection fee inputs are incomplete.");
+        console.assert(sectionTabs.length === 4 && sectionPanels.length === 4, "Reconnection section tabs are incomplete.");
+        console.assert(printSheet.querySelectorAll(".print-copy").length === 2, "Long-bond print copies are incomplete.");
+        console.assert(Math.abs(updateTotal() - 115) < 0.001 || localStorage.getItem(STORAGE_KEY), "Default total should be PHP 115.00.");
+
+        // "+ Add another charge" must add a money input the total actually picks up, then clean up
+        // after itself (remove the row, roll back the counter) so this check never leaves a stray
+        // empty row sitting in the form on every page load.
+        (function selfCheckAddOtherCharge() {
+            const beforeCount = form.querySelectorAll(".money-input").length;
+            const beforeTotal = updateTotal();
+            const row = addOtherChargeRow({ amount: "25.00" });
+            const afterCount = form.querySelectorAll(".money-input").length;
+            const afterTotal = updateTotal();
+            console.assert(afterCount === beforeCount + 1, "Add-charge button did not add a money input.");
+            console.assert(Math.abs(afterTotal - (beforeTotal + 25)) < 0.001, "New charge row did not add to the total.");
+            [row.labelInput, row.amountInput, row.orInput, row.dateInput].forEach((el) => el.remove());
+            otherChargeCount -= 1;
+            updateTotal();
+        })();
+    </script>
+</body>
+</html>

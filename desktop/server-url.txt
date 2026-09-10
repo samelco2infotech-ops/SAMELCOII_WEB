@@ -1,0 +1,2 @@
+# SAMELCII server login URL. Keep exactly one active HTTP or HTTPS address below.
+http://192.168.1.99/SAMELCII_WEB_SYSTEM/pages/auth/index.html

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        if (window.location.protocol === "file:") {
+            window.location.replace("http://192.168.1.99/SAMELCII_WEB_SYSTEM/SAMELCII_WEB_SYSTEM/pages/modules/dtr/index.html");
+        }
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DTR | SAMELCII</title>
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <link rel="stylesheet" href="styles.css?v=20260908-label-wrap-v1" />
+</head>
+<body>
+    <!-- ponytail: full-screen loading splash — shown for every roster/DTR data load (department
+         change, area/search filter, month/year switch) so a still-loading list doesn't look like
+         a missing/empty one. Blocks the page underneath (pointer-events) and removes itself once
+         every in-flight load finishes — see beginLoading()/endLoading() in script.js. -->
+    <div class="dtr-loading-overlay" id="dtr-loading-overlay" hidden aria-live="polite" aria-label="Loading DTR data">
+        <div class="dtr-loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+    <main class="dtr-page">
+        <section class="dtr-shell">
+            <!-- Month range para sa API; kinokontrol ng month/year sa kanan -->
+            <input type="hidden" id="date-from" />
+            <input type="hidden" id="date-to" />
+
+            <section class="dtr-workbench">
+                <aside class="dtr-sidebar">
+                    <!-- ponytail: Department select and Search roster moved up into the main
+                         header (dtr-head-tools) by request — same elements/IDs, just relocated
+                         in the DOM, so no JS changes needed. Area filter + Select shown, the
+                         "Roster filters" weekend checkbox, and the Employee roster heading block
+                         were removed from the sidebar by request; Area/Select shown moved into
+                         the header alongside them. include-weekends is gone from the DOM, so
+                         showLoadedRows() now always includes weekends (its old checked-by-default
+                         behavior) — see script.js. employee-count span stays in the DOM (unused
+                         visually) since script.js still writes to it. -->
+                    <span id="employee-count" hidden>0</span>
+
+                    <div class="dtr-employee-list" id="employee-list" aria-label="Employee roster" aria-live="polite"></div>
+                </aside>
+
+                <section class="dtr-main">
+                    <div class="dtr-main-head">
+                        <div class="dtr-main-head-copy">
+                            <p class="dtr-record-kicker">HR / Attendance</p>
+                            <h2>Daily time records</h2>
+                        </div>
+                        <div class="dtr-head-tools">
+                            <select class="select" id="department-filter" aria-label="Department" autocomplete="off">
+                                <option value="">All departments</option>
+                            </select>
+                            <button class="dtr-tool-btn" id="dtr-update-data" type="button" title="Refetch DTR data for the current selection from the server">Update data</button>
+                            <label class="dtr-employee-search" for="employee-search">
+                                <span class="sr-only">Search employee roster</span>
+                                <input class="input" id="employee-search" type="search" placeholder="Search roster..." aria-label="Search employee roster" autocomplete="off" />
+                            </label>
+                            <select class="select dtr-head-area" id="area-filter" aria-label="Area" autocomplete="off">
+                                <option value="">All areas</option>
+                            </select>
+                            <div class="dtr-month-controls" aria-label="View monthly DTR">
+                                <select id="dtr-month-select" aria-label="DTR month"></select>
+                                <select id="dtr-year-select" aria-label="DTR year"></select>
+                            </div>
+                            <button class="dtr-icon-btn dtr-picker-btn" id="open-employee-picker" type="button" title="Select employees for print" aria-label="Select employees for print">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                <span class="dtr-picker-badge" id="selected-employee-count">0</span>
+                            </button>
+                            <button class="dtr-tool-btn" id="print-report" type="button">Print DTR</button>
+                            <!-- ponytail: username chip, month/area/finalized badges, Manage Schedules, and
+                                 Export CSV were removed from the toolbar by request (too cluttered). The
+                                 underlying JS handlers are all null-checked (`if (els.x)`), so deleting these
+                                 elements outright — instead of a `hidden` attribute, which CSS classes like
+                                 .form-chip/.dtr-userchip override with `display:inline-flex` — is what actually
+                                 keeps them off the page. Re-add the markup here if any of this is needed again. -->
+                            <template id="dtr-hidden-toolbar-extras">
+                                <span class="dtr-userchip" aria-label="Logged-in user">
+                                    <span id="logged-user">Guest</span>
+                                </span>
+                                <span class="form-chip approved" id="dtr-month-badge">APR 2026</span>
+                                <span class="form-chip" id="dtr-area-badge">All departments</span>
+                                <span class="form-chip" id="dtr-final-badge"></span>
+                                <button class="dtr-tool-btn" id="dtr-finalize-btn" type="button">Finalize this month</button>
+                                <button class="dtr-tool-btn" id="dtr-schedule-btn" type="button">Manage Schedules</button>
+                                <button class="dtr-tool-btn dtr-tool-btn--accent" id="export-report" type="button">Export CSV</button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="dtr-page-bar" id="dtr-page-bar" hidden>
+                        <button class="dtr-tool-btn" id="dtr-page-prev" type="button">‹ Prev</button>
+                        <span id="dtr-page-info">Page 1 of 1</span>
+                        <button class="dtr-tool-btn" id="dtr-page-next" type="button">Next ›</button>
+                    </div>
+
+                    <div class="dtr-table-wrap">
+                        <table class="dtr-table-sheet">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Date</th>
+                                    <th colspan="2">A M</th>
+                                    <th colspan="2">P M</th>
+                                    <th colspan="2">Over Time</th>
+                                    <th rowspan="2">Worked</th>
+                                    <th rowspan="2">Under Time</th>
+                                    <th rowspan="2">Late</th>
+                                    <th rowspan="2">Daily Pay</th>
+                                    <th rowspan="2">Per Hour</th>
+                                    <th rowspan="2">Per Minute</th>
+                                    <th rowspan="2">OT Min</th>
+                                    <th rowspan="2">Late Count</th>
+                                </tr>
+                                <tr>
+                                    <th>IN</th>
+                                    <th>OUT</th>
+                                    <th>IN</th>
+                                    <th>OUT</th>
+                                    <th>IN</th>
+                                    <th>OUT</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtr-table-body"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="8" class="dtr-total-label">Total</td>
+                                    <td id="dtr-total-undertime">0</td>
+                                    <td colspan="6"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+            </section>
+        </section>
+    </main>
+
+    <!-- Employee picker: native dialog keeps focus and Escape behavior accessible. -->
+    <dialog class="dtr-employee-picker" id="employee-picker-dialog" aria-labelledby="employee-picker-title">
+        <div class="dtr-picker-shell">
+            <header class="dtr-picker-header">
+                <div>
+                    <p class="dtr-picker-eyebrow">DTR signatory workspace</p>
+                    <h2 id="employee-picker-title">Select employees</h2>
+                    <p>Check employees, review their current signatories, then assign one signatory to the selection.</p>
+                </div>
+                <button class="dtr-picker-close" id="close-employee-picker" type="button" aria-label="Close employee picker">Close</button>
+            </header>
+
+            <div class="dtr-picker-topbar">
+                <div class="dtr-picker-controls">
+                    <label class="dtr-picker-field" for="picker-department-filter">
+                        <span>Department</span>
+                        <select class="select" id="picker-department-filter">
+                            <option value="__ALL__">All departments</option>
+                        </select>
+                    </label>
+                    <label class="dtr-picker-field" for="picker-search">
+                        <span>Search employee</span>
+                        <input class="input" id="picker-search" type="search" placeholder="Name, employee number, position…" />
+                    </label>
+                </div>
+                <div class="dtr-picker-toolbar">
+                    <span id="picker-results-count">0 employees found</span>
+                    <div>
+                        <button class="dtr-tool-btn" id="picker-select-visible" type="button">Select department</button>
+                        <button class="dtr-tool-btn" id="picker-clear" type="button">Clear selection</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dtr-picker-hybrid">
+                <section class="dtr-picker-directory-pane" aria-label="Employee selection">
+                    <div class="dtr-picker-pane-heading">
+                        <div>
+                            <span>Employee directory</span>
+                            <small>Check one or many employees.</small>
+                        </div>
+                        <strong><span id="picker-selected-count-inline">0</span> checked</strong>
+                    </div>
+                    <div class="dtr-picker-list" id="picker-employee-list" aria-label="Employee directory"></div>
+                </section>
+
+                <aside class="dtr-picker-signatory-pane" aria-label="Selected employee signatories">
+                    <div class="dtr-picker-pane-heading">
+                        <div>
+                            <span>Assigned signatories</span>
+                            <small>All signatories represented by the checked employees.</small>
+                        </div>
+                    </div>
+
+                    <section class="dtr-signatory-panel" id="dtr-signatory-panel" hidden aria-label="Department DTR signatory">
+                        <div class="dtr-signatory-card" id="dtr-signatory-card">
+                            <span class="dtr-signatory-avatar" id="dtr-signatory-avatar">?</span>
+                            <div class="dtr-signatory-copy" id="dtr-signatory-copy">
+                                <strong id="dtr-signatory-name">No signatory assigned</strong>
+                                <span id="dtr-signatory-title">Prints will show a blank signature line</span>
+                            </div>
+                            <div class="dtr-picker-signatory-summary" id="dtr-picker-signatory-summary" hidden></div>
+                            <div class="dtr-signatory-search" id="dtr-signatory-search" hidden>
+                                <input class="dtr-signatory-search-input" id="dtr-signatory-search-input" type="search" placeholder="Search employees…" />
+                                <div class="dtr-signatory-results" id="dtr-signatory-results"></div>
+                            </div>
+                            <div class="dtr-signatory-actions">
+                                <button class="dtr-tool-btn" id="dtr-signatory-change" type="button" hidden>Change</button>
+                                <button class="dtr-tool-btn" id="dtr-signatory-remove" type="button" hidden>Remove</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="dtr-picker-bulk-signatory" id="dtr-picker-bulk-signatory" hidden aria-label="Bulk signatory assign">
+                        <span id="dtr-bulk-signatory-label">Change signatory for <strong id="picker-bulk-signatory-count">0</strong> checked employees:</span>
+                        <div class="dtr-signatory-search" id="dtr-bulk-signatory-search">
+                            <input type="search" class="dtr-roster-signatory-input" id="dtr-bulk-signatory-input" placeholder="Search a new signatory…" />
+                            <div class="dtr-signatory-results" id="dtr-bulk-signatory-results"></div>
+                        </div>
+                        <div class="dtr-signatory-review" id="dtr-bulk-signatory-review" hidden></div>
+                    </section>
+                </aside>
+            </div>
+
+            <footer class="dtr-picker-footer">
+                <strong><span id="picker-selected-count">0</span> selected</strong>
+                <div>
+                    <button class="dtr-tool-btn" id="cancel-employee-picker" type="button">Cancel</button>
+                    <button class="dtr-tool-btn dtr-tool-btn--accent" id="apply-employee-picker" type="button">Apply selection</button>
+                </div>
+            </footer>
+        </div>
+    </dialog>
+
+    <dialog class="dtr-employee-picker" id="schedule-dialog" aria-labelledby="schedule-dialog-title">
+        <div class="dtr-picker-shell">
+            <header class="dtr-picker-header">
+                <div>
+                    <h2 id="schedule-dialog-title">Manage employee schedule</h2>
+                    <p>Set a shift that differs from the standard 8:00-12:00 / 1:00-5:00 template. New entries only apply from their effective date forward — past DTR history keeps using whatever schedule was active then.</p>
+                </div>
+                <button class="dtr-picker-close" id="close-schedule-dialog" type="button" aria-label="Close schedule manager">Close</button>
+            </header>
+            <div class="dtr-picker-body" style="padding:16px;display:grid;gap:14px;">
+                <label class="input-field">
+                    <span>Employee number</span>
+                    <input class="input" id="schedule-usercode" type="text" placeholder="e.g. S2-041" />
+                </label>
+                <div id="schedule-message" class="dtr-message" role="status"></div>
+                <form id="schedule-form" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                    <label class="input-field"><span>AM in</span><input class="input" id="schedule-am-start" type="time" /></label>
+                    <label class="input-field"><span>AM out</span><input class="input" id="schedule-am-end" type="time" /></label>
+                    <label class="input-field"><span>PM in</span><input class="input" id="schedule-pm-start" type="time" /></label>
+                    <label class="input-field"><span>PM out</span><input class="input" id="schedule-pm-end" type="time" /></label>
+                    <label class="input-field" style="grid-column:1/-1;"><span>Effective from</span><input class="input" id="schedule-effective-from" type="date" required /></label>
+                    <button class="dtr-tool-btn dtr-tool-btn--accent" id="schedule-save" type="submit" style="grid-column:1/-1;">Add schedule</button>
+                </form>
+                <div>
+                    <strong>History</strong>
+                    <div id="schedule-history" style="display:grid;gap:6px;margin-top:8px;"></div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="../module.js?v=20260514-dtr-shell-v4"></script>
+    <script src="script.js?v=20260907-hybrid-signatory-workspace-v4"></script>
+    <script src="../../../assets/js/offline-sync.js?v=20260820-sw-registration-fix-v10"></script>
+</body>
+</html>

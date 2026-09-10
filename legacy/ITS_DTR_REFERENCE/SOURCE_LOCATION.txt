@@ -1,0 +1,6 @@
+Original WinForms ITS DTR (working copy on this PC):
+  C:\Users\EC1\Documents\SAMELCO II\SAMELCO II\ITS_SYSTEM\
+
+Files copied into this folder for reference only. Active payroll/DTR logic for the web app is implemented in:
+  SAMELCII_WEB_SYSTEM/api/dtr.php
+  SAMELCII_WEB_SYSTEM/pages/modules/dtr/

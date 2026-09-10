@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Logs Dashboard | SAMELCII</title>
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <style>
+        :root {
+            --billing-page: #edf4ff;
+            --billing-surface: rgba(255, 255, 255, 0.94);
+            --billing-surface-soft: #f5f9ff;
+            --billing-line: #d8e5f5;
+            --billing-text: #12304f;
+            --billing-muted: #5d7390;
+            --billing-accent: #007dff;
+            --billing-accent-strong: #0059d6;
+            --billing-accent-soft: #e9f4ff;
+            --billing-green: #29b36a;
+            --billing-yellow: #e5ad38;
+            --billing-red: #dd5b69;
+            --billing-blue: #1f8fff;
+            --billing-navy: #153862;
+        }
+
+        body {
+            background: var(--billing-page);
+            color: var(--billing-text);
+        }
+
+        .page.billing-page {
+            max-width: 1600px;
+            padding-bottom: 60px;
+        }
+
+        .billing-page::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at top left, rgba(0, 125, 255, 0.14), transparent 26%),
+                radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 24%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(237, 244, 255, 0.9));
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .billing-page .btn {
+            border-radius: 12px;
+            padding: 11px 16px;
+            border: 1px solid var(--billing-line);
+            background: var(--billing-surface);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            color: var(--billing-text);
+        }
+
+        .billing-page .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(31, 47, 38, 0.1);
+            background: #f5f8f6;
+        }
+
+        .billing-page .btn.primary {
+            background: linear-gradient(135deg, var(--billing-accent) 0%, var(--billing-accent-strong) 100%);
+            color: #fff;
+            font-weight: 800;
+            border-color: transparent;
+        }
+
+        .billing-page .btn.secondary {
+            background: var(--billing-surface-soft);
+            color: var(--billing-text);
+        }
+
+        .billing-page .btn.light {
+            background: var(--billing-surface);
+            color: var(--billing-text);
+            border-color: var(--billing-line);
+        }
+
+        .billing-panel {
+            position: relative;
+            overflow: hidden;
+            background: var(--billing-surface);
+            border: 1px solid var(--billing-line);
+            border-radius: 26px;
+            box-shadow: 0 20px 44px rgba(18, 48, 79, 0.1);
+            backdrop-filter: blur(18px);
+        }
+
+        .billing-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 125, 255, 0.08), transparent 42%);
+            pointer-events: none;
+        }
+
+        .billing-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .billing-tab {
+            border: 1px solid var(--billing-line);
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--billing-muted);
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .billing-tab:hover {
+            transform: translateY(-2px);
+            color: var(--billing-text);
+        }
+
+        .billing-tab.active {
+            background: linear-gradient(135deg, var(--billing-accent) 0%, var(--billing-accent-strong) 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 16px 30px rgba(0, 125, 255, 0.24);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .summary-card {
+            position: relative;
+            padding: 18px 18px 16px;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 16px 28px rgba(17, 35, 62, 0.08);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .summary-card.primary {
+            background: linear-gradient(160deg, #1d2b2f 0%, #162226 100%);
+            border-color: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 30px rgba(17, 35, 62, 0.12);
+        }
+
+        .summary-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .summary-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: #fff;
+            background: var(--card-accent, #0ea5e9);
+            box-shadow: 0 12px 20px rgba(14, 165, 233, 0.24);
+        }
+
+        .summary-card.primary .summary-icon {
+            background: #22c55e;
+            box-shadow: none;
+        }
+
+        .summary-label {
+            position: relative;
+            z-index: 1;
+            color: var(--billing-muted);
+            font-size: 12px;
+            letter-spacing: 0;
+            font-weight: 600;
+        }
+
+        .summary-card.primary .summary-label,
+        .summary-card.primary .summary-foot {
+            color: rgba(255,255,255,0.72);
+        }
+
+        .summary-value {
+            position: relative;
+            z-index: 1;
+            margin-top: 12px;
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--billing-text);
+        }
+
+        .summary-card.primary .summary-value {
+            color: #fff;
+        }
+
+        .summary-foot {
+            position: relative;
+            z-index: 1;
+            margin-top: 8px;
+            color: var(--billing-muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .summary-sparkline {
+            width: 92px;
+            height: 42px;
+        }
+
+        .summary-sparkline path.line {
+            fill: none;
+            stroke: var(--card-line, #22c55e);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .summary-sparkline path.area {
+            fill: var(--card-fill, rgba(34, 197, 94, 0.12));
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.92fr);
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .analytics-main,
+        .analytics-side-card {
+            padding: 22px;
+        }
+
+        .analytics-side {
+            display: grid;
+            gap: 18px;
+        }
+
+        .chart-toolbar {
+            display: inline-flex;
+            gap: 8px;
+            background: #fff7ec;
+            border-radius: 14px;
+            padding: 6px;
+        }
+
+        .chart-chip {
+            border: 0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            background: transparent;
+            color: #8c7a63;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .chart-chip.active {
+            background: #ff9800;
+            color: #fff;
+        }
+
+        .analytics-chart {
+            margin-top: 18px;
+            padding: 10px 0 0;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: var(--billing-muted);
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .trend-svg {
+            width: 100%;
+            height: 260px;
+            display: block;
+        }
+
+        .trend-grid-line {
+            stroke: #edf2f7;
+            stroke-width: 1;
+        }
+
+        .trend-axis {
+            fill: #90a0b7;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .trend-line-a,
+        .trend-line-b {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .trend-line-a {
+            stroke: #ff9800;
+        }
+
+        .trend-line-b {
+            stroke: #22c7e8;
+        }
+
+        .trend-point {
+            stroke: #fff;
+            stroke-width: 3;
+        }
+
+        .insight-list {
+            display: grid;
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .insight-row {
+            display: grid;
+            gap: 8px;
+        }
+
+        .insight-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--billing-text);
+        }
+
+        .insight-bar {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: #eef3f8;
+            overflow: hidden;
+        }
+
+        .insight-bar > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--bar-color, #22c7e8), color-mix(in srgb, var(--bar-color, #22c7e8) 65%, white));
+        }
+
+        .donut-wrap {
+            display: grid;
+            grid-template-columns: 140px minmax(0, 1fr);
+            gap: 18px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .donut-chart {
+            width: 132px;
+            height: 132px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: conic-gradient(#ff9800 0deg 120deg, #22c7e8 120deg 280deg, #22c55e 280deg 360deg);
+            position: relative;
+        }
+
+        .donut-chart::after {
+            content: "";
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+        }
+
+        .donut-value {
+            position: relative;
+            z-index: 1;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--billing-text);
+        }
+
+        .filter-panel {
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+
+        .teller-panel {
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+
+        .teller-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .teller-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            padding: 18px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(233,244,255,0.9));
+            border: 1px solid var(--billing-line);
+            box-shadow: 0 14px 30px rgba(18, 48, 79, 0.08);
+        }
+
+        .teller-card::after {
+            content: attr(data-watermark);
+            position: absolute;
+            right: 14px;
+            bottom: 4px;
+            font-size: 54px;
+            font-weight: 900;
+            color: rgba(0, 125, 255, 0.08);
+            letter-spacing: 0.06em;
+            pointer-events: none;
+        }
+
+        .teller-top,
+        .teller-stats {
+            position: relative;
+            z-index: 1;
+        }
+
+        .teller-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .teller-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--billing-navy);
+        }
+
+        .teller-sub {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--billing-muted);
+        }
+
+        .teller-badge {
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: rgba(0, 125, 255, 0.1);
+            color: var(--billing-accent-strong);
+        }
+
+        .teller-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .teller-stat {
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.78);
+            border: 1px solid var(--billing-line);
+        }
+
+        .teller-stat-label {
+            font-size: 11px;
+            color: var(--billing-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+
+        .teller-stat-value {
+            margin-top: 8px;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--billing-navy);
+        }
+
+        .teller-stat-sub {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--billing-muted);
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .section-head h2,
+        .section-head h3 {
+            margin: 0;
+            color: var(--billing-text);
+            letter-spacing: -0.02em;
+        }
+
+        .section-head p {
+            margin: 4px 0 0;
+            color: var(--billing-muted);
+            font-size: 14px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .billing-page .field label {
+            color: var(--billing-muted);
+            font-size: 11px;
+        }
+
+        .billing-page .input,
+        .billing-page .select,
+        .billing-page .textarea {
+            color: var(--billing-text);
+            background: #fff;
+            border: 1px solid var(--billing-line);
+            border-radius: 14px;
+        }
+
+        .billing-page .input::placeholder,
+        .billing-page .textarea::placeholder {
+            color: #a1aaa4;
+        }
+
+        .billing-page .input:focus,
+        .billing-page .select:focus,
+        .billing-page .textarea:focus {
+            border-color: rgba(200, 68, 68, 0.35);
+            box-shadow: 0 0 0 3px rgba(200, 68, 68, 0.12);
+        }
+
+        .filter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .channel-card {
+            position: relative;
+            min-height: 640px;
+            padding: 18px;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 16px 28px rgba(17, 35, 62, 0.08);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 22px 34px rgba(17, 35, 62, 0.12);
+        }
+
+        .channel-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--channel-base, #0d63c5), color-mix(in srgb, var(--channel-base, #0d63c5) 60%, white));
+            transition: transform 0.25s ease;
+        }
+
+        .channel-card:hover::before {
+            transform: scaleX(1.02);
+        }
+
+        .channel-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .channel-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .channel-brand {
+            display: grid;
+            gap: 10px;
+        }
+
+        .channel-logo-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .channel-logo-mark {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            background: var(--channel-base, #0d63c5);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 21px;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            box-shadow: 0 12px 22px color-mix(in srgb, var(--channel-base, #0d63c5) 24%, transparent);
+        }
+
+        .channel-logo-chip {
+            width: fit-content;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: color-mix(in srgb, var(--channel-base, #0d63c5) 10%, white);
+            border: 1px solid color-mix(in srgb, var(--channel-base, #0d63c5) 16%, white);
+            color: var(--channel-base, #0d63c5);
+        }
+
+        .channel-title {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: var(--billing-text);
+        }
+
+        .channel-sub {
+            color: var(--billing-muted);
+            font-size: 13px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .status-posted,
+        .status-verified {
+            background: rgba(67, 211, 158, 0.14);
+            color: #93f2ca;
+        }
+
+        .status-pending {
+            background: rgba(255, 204, 102, 0.16);
+            color: #ffe39f;
+        }
+
+        .status-failed,
+        .status-cancelled {
+            background: rgba(255, 106, 126, 0.16);
+            color: #ffb4bf;
+        }
+
+        .status-reconcile {
+            background: rgba(94, 165, 255, 0.16);
+            color: #acd2ff;
+        }
+
+        .channel-kpis {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .channel-kpi {
+            padding: 14px;
+            border-radius: 18px;
+            background: #f8fbff;
+            border: 1px solid #e7eef7;
+        }
+
+        .channel-kpi-label {
+            color: var(--billing-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+
+        .channel-kpi-value {
+            margin-top: 9px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--billing-text);
+        }
+
+        .channel-list {
+            position: relative;
+            min-height: 380px;
+            max-height: 380px;
+            overflow: auto;
+            padding-right: 6px;
+            display: grid;
+            gap: 10px;
+            scroll-behavior: smooth;
+        }
+
+        .channel-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .channel-list::-webkit-scrollbar-thumb {
+            background: rgba(17, 35, 62, 0.12);
+            border-radius: 999px;
+        }
+
+        .payment-item {
+            display: grid;
+            gap: 8px;
+            padding: 14px;
+            border-radius: 18px;
+            background: #fbfdff;
+            border: 1px solid #ecf2f8;
+            border-left: 4px solid var(--channel-base, #0d63c5);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            animation: fadeInUp 0.45s ease both;
+        }
+
+        .payment-item-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .payment-account {
+            display: grid;
+            gap: 4px;
+        }
+
+        .payment-account strong {
+            color: var(--billing-text);
+            font-size: 14px;
+        }
+
+        .payment-account span,
+        .payment-meta {
+            color: var(--billing-muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .payment-amount {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--billing-text);
+            text-align: right;
+        }
+
+        .payment-watermark {
+            pointer-events: none;
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 10px;
+            font-size: 66px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(17, 35, 62, 0.05);
+            text-align: center;
+            filter: none;
+            transform: translateY(0);
+            transition: transform 0.25s ease;
+        }
+
+        .channel-card:hover .payment-watermark {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .table-panel {
+            padding: 22px;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-tag {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--billing-surface-soft);
+            border: 1px solid var(--billing-line);
+            color: var(--billing-muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .billing-page .table-wrap {
+            border-radius: 20px;
+            border: 1px solid var(--billing-line);
+            overflow: auto;
+            background: #fff;
+        }
+
+        .billing-page .table {
+            min-width: 1460px;
+        }
+
+        .billing-page .table th,
+        .billing-page .table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 12px 10px;
+            color: var(--billing-text);
+            background: transparent;
+            vertical-align: top;
+        }
+
+        .billing-page .table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f6f8f6;
+            color: #4f5652;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .billing-page .table tbody tr:hover td {
+            background: #fafbfa;
+        }
+
+        .channel-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            background: var(--billing-surface-soft);
+        }
+
+        .amount-text {
+            font-weight: 800;
+            color: var(--billing-text);
+        }
+
+        .muted-cell {
+            color: var(--billing-muted);
+            font-size: 12px;
+        }
+
+        .empty-state {
+            padding: 34px 18px;
+            text-align: center;
+            color: var(--billing-muted);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1480px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .filter-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .channel-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 1180px) {
+            .filter-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 820px) {
+            .summary-grid,
+            .channel-grid,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .donut-wrap,
+            .teller-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .section-head,
+            .table-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* ════════════════════════════════════
+           ADVANCED VISUAL EFFECTS
+        ════════════════════════════════════ */
+
+        /* Floating background orbs */
+        .billing-orbs {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .billing-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            animation: orbDrift linear infinite;
+            will-change: transform;
+        }
+        .billing-orb:nth-child(1) {
+            width: 660px; height: 660px;
+            background: radial-gradient(circle, rgba(0, 125, 255, 0.16), transparent 68%);
+            top: -220px; left: -220px;
+            animation-duration: 22s;
+        }
+        .billing-orb:nth-child(2) {
+            width: 540px; height: 540px;
+            background: radial-gradient(circle, rgba(34, 199, 232, 0.13), transparent 68%);
+            top: 26%; right: -200px;
+            animation-duration: 28s;
+            animation-delay: -10s;
+        }
+        .billing-orb:nth-child(3) {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(255, 152, 0, 0.09), transparent 68%);
+            bottom: -100px; left: 26%;
+            animation-duration: 32s;
+            animation-delay: -18s;
+        }
+        .billing-orb:nth-child(4) {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.11), transparent 68%);
+            bottom: 16%; right: 6%;
+            animation-duration: 24s;
+            animation-delay: -7s;
+        }
+        @keyframes orbDrift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%       { transform: translate(38px, -32px) scale(1.05); }
+            66%       { transform: translate(-22px, 44px) scale(0.96); }
+        }
+
+        /* Glass shine layer on panels */
+        .billing-panel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 44%);
+            pointer-events: none;
+        }
+
+        /* 3D tilt support */
+        .tilt-card { transform-style: preserve-3d; }
+        .tilt-shine {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(
+                circle at var(--mx, 50%) var(--my, 50%),
+                rgba(255, 255, 255, 0.2),
+                transparent 58%
+            );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .tilt-card:hover .tilt-shine { opacity: 1; }
+
+        /* Button ripple */
+        .billing-page .btn { overflow: hidden; position: relative; }
+        .btn-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.38);
+            transform: scale(0);
+            pointer-events: none;
+            animation: rippleEffect 0.55s ease-out forwards;
+        }
+        @keyframes rippleEffect {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* Status badge pulsing dot */
+        .status-badge::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+        .status-posted::before,
+        .status-verified::before {
+            animation: dotBlink 1.8s ease-in-out infinite;
+        }
+        .status-pending::before {
+            animation: dotBlink 2.4s ease-in-out infinite;
+        }
+        @keyframes dotBlink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.25; transform: scale(0.65); }
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            position: relative;
+            pointer-events: all;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 18px 20px;
+            border-radius: 16px;
+            background: rgba(12, 22, 48, 0.92);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e8f0fe;
+            font-size: 13px;
+            max-width: 350px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            animation: toastIn 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform-origin: bottom right;
+            overflow: hidden;
+        }
+        .toast.removing { animation: toastOut 0.28s ease forwards; }
+        .toast-icon {
+            width: 30px; height: 30px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            font-style: normal;
+            margin-top: 1px;
+        }
+        .toast-info .toast-icon    { background: rgba(0, 125, 255, 0.22); color: #7ac1ff; }
+        .toast-success .toast-icon { background: rgba(34, 197, 94, 0.22); color: #86efac; }
+        .toast-warn .toast-icon    { background: rgba(255, 152, 0, 0.22);  color: #fcd34d; }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 800; font-size: 13px; line-height: 1.3; }
+        .toast-msg   { margin-top: 3px; font-size: 12px; color: rgba(232, 240, 254, 0.72); line-height: 1.5; }
+        .toast-close {
+            background: none; border: none;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px; cursor: pointer;
+            padding: 0; flex-shrink: 0; line-height: 1;
+            transition: color 0.15s;
+        }
+        .toast-close:hover { color: #fff; }
+        .toast-bar {
+            position: absolute;
+            bottom: 0; left: 0;
+            height: 3px; width: 100%;
+            border-radius: 0 0 16px 16px;
+            background: var(--t-color, #007dff);
+            animation: toastBar var(--t-dur, 4200ms) linear forwards;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(28px) scale(0.91); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0) scale(1); }
+            to   { opacity: 0; transform: translateX(20px) scale(0.94); }
+        }
+        @keyframes toastBar {
+            from { width: 100%; }
+            to   { width: 0; }
+        }
+
+        /* Insight bar animated fill */
+        .insight-bar > span {
+            transition: transform 0.85s cubic-bezier(0.34, 1.12, 0.64, 1);
+            transform-origin: left;
+        }
+        .insight-bar.bar-ready > span { transform: scaleX(0); }
+        .insight-bar.bar-start > span { transform: scaleX(1); }
+
+        /* Staggered card entrance */
+        .summary-card, .teller-card, .channel-card {
+            transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.25s ease;
+        }
+        .card-enter   { opacity: 0; transform: translateY(28px); }
+        .card-visible { opacity: 1; transform: translateY(0); }
+
+        /* Channel logo hover glow */
+        .channel-logo-mark {
+            transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .channel-card:hover .channel-logo-mark {
+            transform: scale(1.13) rotate(-5deg);
+            box-shadow:
+                0 0 0 6px color-mix(in srgb, var(--channel-base, #0d63c5) 18%, transparent),
+                0 16px 30px color-mix(in srgb, var(--channel-base, #0d63c5) 30%, transparent);
+        }
+
+        /* Donut entrance */
+        @keyframes donutAppear {
+            from { opacity: 0; transform: scale(0.7) rotate(-20deg); }
+            to   { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        /* Primary summary card glimmer */
+        @keyframes primaryGlimmer {
+            0%, 100% { box-shadow: 0 16px 28px rgba(17, 35, 62, 0.08); }
+            50%       { box-shadow: 0 16px 28px rgba(17, 35, 62, 0.08), 0 0 48px 10px rgba(34, 197, 94, 0.1); }
+        }
+        .summary-card.primary { animation: primaryGlimmer 3.2s ease-in-out infinite; }
+        .summary-card.primary .summary-value { text-shadow: 0 0 24px rgba(34, 197, 94, 0.32); }
+
+        /* Active tab glow */
+        @keyframes tabGlow {
+            0%, 100% { box-shadow: 0 16px 30px rgba(0, 125, 255, 0.24); }
+            50%       { box-shadow: 0 16px 30px rgba(0, 125, 255, 0.38), 0 0 22px rgba(0, 125, 255, 0.14); }
+        }
+        .billing-tab.active { animation: tabGlow 2.8s ease-in-out infinite; }
+
+        /* Tab panel crossfade */
+        .tab-panel.active { animation: panelFade 0.38s ease both; }
+        @keyframes panelFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Payment item hover slide */
+        .payment-item {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .payment-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(17, 35, 62, 0.1);
+        }
+
+        /* Teller card hover lift */
+        .teller-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .teller-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 24px 44px rgba(18, 48, 79, 0.15);
+        }
+
+        /* Input focus lift */
+        .billing-page .input:focus,
+        .billing-page .select:focus,
+        .billing-page .textarea:focus {
+            transform: translateY(-1px);
+        }
+
+        /* ── Live chart ── */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.18);
+            color: #ef4444;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .live-badge::before {
+            content: "";
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: liveDot 1.1s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes liveDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.2; transform: scale(0.5); }
+        }
+        .live-dot-indicator {
+            position: absolute;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--dot-color, #ff9800);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 4;
+            transition: left 0.25s ease, top 0.25s ease;
+        }
+        .live-dot-indicator::before,
+        .live-dot-indicator::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            background: var(--dot-color, #ff9800);
+            animation: livePulseRing 1.6s ease-out infinite;
+        }
+        .live-dot-indicator::before { inset: -5px;  opacity: 0.28; }
+        .live-dot-indicator::after  { inset: -11px; opacity: 0.1; animation-delay: 0.35s; }
+        @keyframes livePulseRing {
+            0%   { transform: scale(0.3); opacity: 0.8; }
+            100% { transform: scale(1);   opacity: 0; }
+        }
+        .live-mini-stats {
+            display: none;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 10px;
+            padding: 9px 16px;
+            background: rgba(255, 255, 255, 0.62);
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            font-size: 12px;
+            backdrop-filter: blur(6px);
+        }
+        .live-mini-stat { display: flex; align-items: center; gap: 6px; color: var(--billing-muted); }
+        .live-mini-stat strong { color: var(--billing-text); font-weight: 800; }
+        .chart-chip {
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+        .chart-chip:hover:not(.active) {
+            background: rgba(255, 152, 0, 0.12);
+            color: #b36800;
+        }
+    </style>
+</head>
+<body>
+    <main class="page billing-page">
+        <div class="billing-tabs" role="tablist" aria-label="Billing dashboard sections">
+            <button class="billing-tab active" type="button" data-tab="overview">Overview</button>
+            <button class="billing-tab" type="button" data-tab="channels">Channel View</button>
+            <button class="billing-tab" type="button" data-tab="logs">Complete Logs</button>
+        </div>
+
+        <div class="tab-panel active" data-tab-panel="overview">
+        <section class="summary-grid" id="summary-grid"></section>
+
+        <section class="analytics-grid">
+            <article class="billing-panel analytics-main">
+                <div class="section-head">
+                    <div>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+                            <h2 style="margin:0;">Collections Trend</h2>
+                            <span class="live-badge">Live</span>
+                        </div>
+                        <p>Real-time rolling payment activity — digital channels vs. branch counter collections.</p>
+                    </div>
+                    <div class="chart-toolbar">
+                        <button class="chart-chip" type="button">Day</button>
+                        <button class="chart-chip" type="button">Week</button>
+                        <button class="chart-chip active" type="button">Month</button>
+                        <button class="chart-chip" type="button">Year</button>
+                    </div>
+                </div>
+                <div class="analytics-chart">
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#ff9800;"></span>Digital payment</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#22c7e8;"></span>Branch / local payment</span>
+                    </div>
+                    <div id="trend-chart"></div>
+                    <div id="live-mini-stats" class="live-mini-stats">
+                        <span class="live-mini-stat">Session payments: <strong id="live-count">0</strong></span>
+                        <span class="live-mini-stat">Session total: <strong id="live-total">₱0.00</strong></span>
+                        <span class="live-mini-stat">Last update: <strong id="live-last">—</strong></span>
+                    </div>
+                </div>
+            </article>
+            <div class="analytics-side">
+                <article class="billing-panel analytics-side-card">
+                    <div class="section-head">
+                        <div>
+                            <h3>Channel Mix</h3>
+                            <p>Share of collected amount by active payment source.</p>
+                        </div>
+                    </div>
+                    <div id="channel-mix-chart"></div>
+                </article>
+                <article class="billing-panel analytics-side-card">
+                    <div class="section-head">
+                        <div>
+                            <h3>Verification Status</h3>
+                            <p>Quick view of posted, pending, and failed collections.</p>
+                        </div>
+                    </div>
+                    <div id="status-mix-chart"></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="billing-panel teller-panel" data-design="local-tellers-card-v2">
+            <div class="section-head">
+                <div>
+                    <h2>Local Payment Tellers</h2>
+                    <p>Track local cashier windows, teller totals, pending validations, and last posting activity.</p>
+                </div>
+                <div class="toolbar-tags" id="teller-tags"></div>
+            </div>
+            <div class="teller-grid" id="teller-grid"></div>
+        </section>
+
+        <section class="billing-panel filter-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Filter Payment Logs</h2>
+                    <p>Refine by date range, area, channel, account, reference, and posting status.</p>
+                </div>
+            </div>
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="filter-date-from">Date From</label>
+                    <input class="input" id="filter-date-from" type="date" value="2026-05-01" />
+                </div>
+                <div class="field">
+                    <label for="filter-date-to">Date To</label>
+                    <input class="input" id="filter-date-to" type="date" value="2026-05-04" />
+                </div>
+                <div class="field">
+                    <label for="filter-channel">Payment Channel</label>
+                    <select class="select" id="filter-channel">
+                        <option value="">All channels</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="filter-area">Area</label>
+                    <select class="select" id="filter-area">
+                        <option value="">All areas</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="filter-book">Book</label>
+                    <select class="select" id="filter-book">
+                        <option value="">All books</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="filter-account">Account Number</label>
+                    <input class="input" id="filter-account" type="text" placeholder="04390160 / 07011234" />
+                </div>
+                <div class="field">
+                    <label for="filter-name">Consumer Name</label>
+                    <input class="input" id="filter-name" type="text" placeholder="Search consumer name" />
+                </div>
+                <div class="field">
+                    <label for="filter-reference">Reference Number</label>
+                    <input class="input" id="filter-reference" type="text" placeholder="GC-9044512 / EP-11891" />
+                </div>
+                <div class="field">
+                    <label for="filter-status">Status</label>
+                    <select class="select" id="filter-status">
+                        <option value="">All statuses</option>
+                        <option value="Posted">Posted</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="For Reconciliation">For Reconciliation</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn primary" type="button" id="search-button">Search</button>
+                <button class="btn light" type="button" id="reset-button">Reset</button>
+                <button class="btn secondary" type="button" id="export-excel">Export Excel</button>
+                <button class="btn light" type="button" id="export-pdf">Export PDF</button>
+                <button class="btn light" type="button" id="print-report">Print Report</button>
+                <button class="btn light" type="button" id="verify-payment">Verify Payment</button>
+                <button class="btn light" type="button" id="view-details">View Details</button>
+                <button class="btn light" type="button" id="reconcile-button">Reconcile</button>
+            </div>
+        </section>
+        </div>
+
+        <div class="tab-panel" data-tab-panel="channels">
+        <section class="billing-panel table-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Payment Channels Overview</h2>
+                    <p>Latest transactions per channel with glass overlay list cards, channel watermark logos, and GCash-inspired highlighting.</p>
+                </div>
+                <div class="toolbar-tags" id="overview-tags"></div>
+            </div>
+            <div class="channel-grid" id="channel-grid"></div>
+        </section>
+        </div>
+
+        <div class="tab-panel" data-tab-panel="logs">
+        <section class="billing-panel table-panel">
+            <div class="table-toolbar">
+                <div>
+                    <h3>Complete Payment Logs</h3>
+                    <p id="table-summary" class="lead" style="font-size:14px; max-width:none;">Showing all payment logs.</p>
+                </div>
+                <div class="toolbar-tags">
+                    <span class="toolbar-tag" id="table-tag-total">0 transactions</span>
+                    <span class="toolbar-tag" id="table-tag-amount">PHP 0.00</span>
+                    <span class="toolbar-tag" id="table-tag-pending">0 pending</span>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="table" id="payment-table">
+                    <thead>
+                        <tr>
+                            <th>Payment Channel</th>
+                            <th>Account Number</th>
+                            <th>Name</th>
+                            <th>Area</th>
+                            <th>Book</th>
+                            <th>Bill Month</th>
+                            <th>Amount</th>
+                            <th>Reference Number</th>
+                            <th>OR Number</th>
+                            <th>Payment Date</th>
+                            <th>Posted By</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payment-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+        </div>
+    </main>
+    <div class="billing-orbs" aria-hidden="true">
+        <div class="billing-orb"></div>
+        <div class="billing-orb"></div>
+        <div class="billing-orb"></div>
+        <div class="billing-orb"></div>
+    </div>
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <script src="../module.js"></script>
+    <script>
+        (function () {
+            const samplePayments = [
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390160", consumerName: "Rafael Alegria", area: "Paranas", book: "004", department: "Billing Section", amount: 1284.55, referenceNumber: "GC-9044512", orNumber: "OR-260504-001", billMonth: "April 2026", paymentDate: "2026-05-04T08:14:00", postedBy: "M. Cascayan", status: "Posted", remarks: "Real-time settlement", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390121", consumerName: "Marilyn Bustamante", area: "Paranas", book: "004", department: "Billing Section", amount: 950.00, referenceNumber: "GC-9044520", orNumber: "OR-260504-002", billMonth: "April 2026", paymentDate: "2026-05-04T08:56:00", postedBy: "A. Pador", status: "Verified", remarks: "Matched via API callback", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390181", consumerName: "Saturnino Capacite", area: "Catbalogan", book: "017", department: "Billing Section", amount: 1436.20, referenceNumber: "GC-9044578", orNumber: "OR-260504-003", billMonth: "April 2026", paymentDate: "2026-05-04T09:18:00", postedBy: "E. Porcil", status: "Pending", remarks: "Awaiting settlement confirmation", channelStatus: "Watchlist" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390200", consumerName: "Gina Esplago", area: "Basey", book: "011", department: "Billing Section", amount: 1120.75, referenceNumber: "GC-9044611", orNumber: "OR-260504-004", billMonth: "April 2026", paymentDate: "2026-05-04T10:02:00", postedBy: "I. Gabriola", status: "For Reconciliation", remarks: "Amount posted, OR pending", channelStatus: "Attention" },
+
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011410", consumerName: "Almeda Abacial", area: "Paranas", book: "001", department: "Cashiering", amount: 1860.30, referenceNumber: "EP-11891", orNumber: "OR-260504-101", billMonth: "April 2026", paymentDate: "2026-05-04T07:42:00", postedBy: "J. Bisnar", status: "Posted", remarks: "Store collection remitted", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011724", consumerName: "Armeda B. Abacial", area: "Basey", book: "008", department: "Cashiering", amount: 765.00, referenceNumber: "EP-11894", orNumber: "OR-260504-102", billMonth: "April 2026", paymentDate: "2026-05-04T08:33:00", postedBy: "C. Acaban", status: "Verified", remarks: "Validated through clearing file", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011414", consumerName: "Buenaventura Abacial", area: "Villareal", book: "022", department: "Cashiering", amount: 1322.18, referenceNumber: "EP-11903", orNumber: "OR-260504-103", billMonth: "April 2026", paymentDate: "2026-05-04T11:09:00", postedBy: "A. Cabuet", status: "Pending", remarks: "Waiting POS batch upload", channelStatus: "Watchlist" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011427", consumerName: "Eric Abacial", area: "Catbalogan", book: "018", department: "Cashiering", amount: 587.40, referenceNumber: "EP-11908", orNumber: "OR-260504-104", billMonth: "April 2026", paymentDate: "2026-05-04T12:18:00", postedBy: "E. Porcil", status: "Failed", remarks: "Reference rejected by partner", channelStatus: "Incident" },
+
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011721", consumerName: "Ester Abacial", area: "Paranas", book: "002", department: "Treasury", amount: 2985.45, referenceNumber: "LB-5500182", orNumber: "OR-260504-201", billMonth: "April 2026", paymentDate: "2026-05-04T09:40:00", postedBy: "T. Delmonte", status: "Posted", remarks: "Direct branch posting", channelStatus: "Stable" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011429", consumerName: "Irene May Abacial", area: "Basey", book: "009", department: "Treasury", amount: 2240.10, referenceNumber: "LB-5500194", orNumber: "OR-260504-202", billMonth: "April 2026", paymentDate: "2026-05-04T10:12:00", postedBy: "I. Gabriola", status: "Verified", remarks: "Same-day branch validation", channelStatus: "Stable" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011400", consumerName: "Lorenza Abacial", area: "Villareal", book: "020", department: "Treasury", amount: 1195.60, referenceNumber: "LB-5500199", orNumber: "OR-260504-203", billMonth: "April 2026", paymentDate: "2026-05-04T13:05:00", postedBy: "A. Cabuet", status: "For Reconciliation", remarks: "Branch trace in progress", channelStatus: "Attention" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011418", consumerName: "Vitus Solayao Abacial", area: "Catbalogan", book: "019", department: "Treasury", amount: 3011.20, referenceNumber: "LB-5500210", orNumber: "OR-260504-204", billMonth: "April 2026", paymentDate: "2026-05-04T15:21:00", postedBy: "E. Porcil", status: "Posted", remarks: "Corporate remittance", channelStatus: "Stable" },
+
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014290", consumerName: "Carlo Abadiano", area: "Paranas", book: "003", department: "Treasury", amount: 1730.00, referenceNumber: "BDO-770013", orNumber: "OR-260504-301", billMonth: "April 2026", paymentDate: "2026-05-04T08:01:00", postedBy: "M. Cascayan", status: "Posted", remarks: "Online banking credit", channelStatus: "Healthy" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04011716", consumerName: "Dominador Abadiano", area: "Catbalogan", book: "016", department: "Treasury", amount: 910.45, referenceNumber: "BDO-770017", orNumber: "OR-260504-302", billMonth: "April 2026", paymentDate: "2026-05-04T09:44:00", postedBy: "E. Porcil", status: "Pending", remarks: "Awaiting BDO file acknowledgement", channelStatus: "Watchlist" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014330", consumerName: "Maribeth M. Abadiano", area: "Villareal", book: "023", department: "Treasury", amount: 2150.95, referenceNumber: "BDO-770022", orNumber: "OR-260504-303", billMonth: "April 2026", paymentDate: "2026-05-04T11:35:00", postedBy: "A. Cabuet", status: "Verified", remarks: "Auto-posted to ledger", channelStatus: "Healthy" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04011719", consumerName: "Anacito Abadiano", area: "Basey", book: "010", department: "Treasury", amount: 845.20, referenceNumber: "BDO-770028", orNumber: "OR-260504-304", billMonth: "April 2026", paymentDate: "2026-05-04T14:11:00", postedBy: "I. Gabriola", status: "Cancelled", remarks: "Customer reversed transaction", channelStatus: "Incident" },
+
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04010310", consumerName: "Concepcion Abadiano", area: "Paranas", book: "005", department: "Reconciliation", amount: 684.35, referenceNumber: "DBP-300801", orNumber: "OR-260504-401", billMonth: "April 2026", paymentDate: "2026-05-04T07:55:00", postedBy: "R. Tiuason", status: "For Reconciliation", remarks: "Store remittance awaiting proof", channelStatus: "Attention" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014130", consumerName: "Erlinda G. Abadiano", area: "Basey", book: "012", department: "Reconciliation", amount: 1520.00, referenceNumber: "ML-884122", orNumber: "OR-260504-402", billMonth: "April 2026", paymentDate: "2026-05-04T09:02:00", postedBy: "I. Gabriola", status: "Posted", remarks: "M Lhuillier settlement cleared", channelStatus: "Healthy" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014310", consumerName: "Manilyn T. Abadiano", area: "Villareal", book: "024", department: "Reconciliation", amount: 1320.50, referenceNumber: "CEBU-440122", orNumber: "OR-260504-403", billMonth: "April 2026", paymentDate: "2026-05-04T10:47:00", postedBy: "A. Cabuet", status: "Pending", remarks: "Outlet report not yet uploaded", channelStatus: "Watchlist" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04011725", consumerName: "Merlinda Abadiano", area: "Catbalogan", book: "021", department: "Reconciliation", amount: 980.00, referenceNumber: "DBP-300845", orNumber: "OR-260504-404", billMonth: "April 2026", paymentDate: "2026-05-04T16:18:00", postedBy: "E. Porcil", status: "Posted", remarks: "DBP branch posted", channelStatus: "Healthy" },
+
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012001", consumerName: "Josefina Ador", area: "Paranas", book: "006", department: "Local Cashiering", amount: 640.00, referenceNumber: "TELLER-11021", orNumber: "OR-260504-501", billMonth: "April 2026", paymentDate: "2026-05-04T08:25:00", postedBy: "Cashier Window 1", status: "Posted", remarks: "Walk-in counter payment", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012031", consumerName: "Delfin Abario", area: "Basey", book: "013", department: "Local Cashiering", amount: 1185.75, referenceNumber: "TELLER-11034", orNumber: "OR-260504-502", billMonth: "April 2026", paymentDate: "2026-05-04T09:48:00", postedBy: "Cashier Window 2", status: "Verified", remarks: "Counter payment validated", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012088", consumerName: "Rosita Abalon", area: "Catbalogan", book: "014", department: "Local Cashiering", amount: 890.40, referenceNumber: "TELLER-11045", orNumber: "OR-260504-503", billMonth: "April 2026", paymentDate: "2026-05-04T11:16:00", postedBy: "Cashier Window 1", status: "Pending", remarks: "Awaiting supervisor verification", channelStatus: "Watchlist" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012140", consumerName: "Lourdes Abanador", area: "Villareal", book: "025", department: "Local Cashiering", amount: 1425.10, referenceNumber: "TELLER-11061", orNumber: "OR-260504-504", billMonth: "April 2026", paymentDate: "2026-05-04T15:08:00", postedBy: "Cashier Window 3", status: "Posted", remarks: "End-of-day local window posting", channelStatus: "Stable" },
+
+                /* --- Collections channel --- */
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015001", consumerName: "Herminia Abanilla", area: "Catbalogan", book: "015", department: "Collections Unit", amount: 2250.00, referenceNumber: "COLL-20001", orNumber: "OR-260504-601", billMonth: "April 2026", paymentDate: "2026-05-04T08:30:00", postedBy: "R. Tiuason", status: "Posted", remarks: "External field collection received", channelStatus: "Active" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015022", consumerName: "Vicente Abaquita", area: "Paranas", book: "007", department: "Collections Unit", amount: 1875.50, referenceNumber: "COLL-20002", orNumber: "OR-260504-602", billMonth: "April 2026", paymentDate: "2026-05-04T10:45:00", postedBy: "M. Cascayan", status: "Verified", remarks: "Field collection verified and cleared", channelStatus: "Active" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015045", consumerName: "Lucia Abaquita", area: "Basey", book: "011", department: "Collections Unit", amount: 3120.75, referenceNumber: "COLL-20003", orNumber: "OR-260504-603", billMonth: "April 2026", paymentDate: "2026-05-04T14:20:00", postedBy: "I. Gabriola", status: "Pending", remarks: "Awaiting field collection confirmation", channelStatus: "Watchlist" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015078", consumerName: "Renato Abarro", area: "Villareal", book: "024", department: "Collections Unit", amount: 1540.00, referenceNumber: "COLL-20004", orNumber: "OR-260504-604", billMonth: "April 2026", paymentDate: "2026-05-04T16:55:00", postedBy: "A. Cabuet", status: "Posted", remarks: "Route collection posted end-of-day", channelStatus: "Active" },
+
+                /* --- May 4 additional --- */
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390250", consumerName: "Alejandro Abella", area: "Paranas", book: "004", department: "Billing Section", amount: 1655.00, referenceNumber: "GC-9044650", orNumber: "OR-260504-005", billMonth: "April 2026", paymentDate: "2026-05-04T07:30:00", postedBy: "M. Cascayan", status: "Posted", remarks: "GCash auto-settled", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390261", consumerName: "Beatriz Abello", area: "Catbalogan", book: "017", department: "Billing Section", amount: 2310.50, referenceNumber: "GC-9044661", orNumber: "OR-260504-006", billMonth: "April 2026", paymentDate: "2026-05-04T09:05:00", postedBy: "E. Porcil", status: "Posted", remarks: "Mobile wallet settlement", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390275", consumerName: "Cesar Abenis", area: "Basey", book: "011", department: "Billing Section", amount: 870.00, referenceNumber: "GC-9044675", orNumber: "OR-260504-007", billMonth: "April 2026", paymentDate: "2026-05-04T10:40:00", postedBy: "I. Gabriola", status: "Verified", remarks: "Verified via QR scan", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390302", consumerName: "Eduardo Abero", area: "Paranas", book: "004", department: "Billing Section", amount: 1425.75, referenceNumber: "GC-9044702", orNumber: "OR-260504-009", billMonth: "April 2026", paymentDate: "2026-05-04T13:50:00", postedBy: "M. Cascayan", status: "Posted", remarks: "Real-time GCash credit", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390315", consumerName: "Felicitas Abesa", area: "Catbalogan", book: "018", department: "Billing Section", amount: 990.00, referenceNumber: "GC-9044715", orNumber: "OR-260504-010", billMonth: "April 2026", paymentDate: "2026-05-04T15:30:00", postedBy: "E. Porcil", status: "For Reconciliation", remarks: "OR pending issuance", channelStatus: "Attention" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390341", consumerName: "Herminia Abison", area: "Villareal", book: "020", department: "Billing Section", amount: 2045.00, referenceNumber: "GC-9044741", orNumber: "OR-260504-012", billMonth: "April 2026", paymentDate: "2026-05-04T17:10:00", postedBy: "A. Pador", status: "Posted", remarks: "Batch settlement confirmed", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011800", consumerName: "Ignacio Abeson", area: "Paranas", book: "001", department: "Cashiering", amount: 1340.00, referenceNumber: "EP-11920", orNumber: "OR-260504-105", billMonth: "April 2026", paymentDate: "2026-05-04T07:15:00", postedBy: "J. Bisnar", status: "Posted", remarks: "ECPay outlet cleared", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011815", consumerName: "Jovita Abeto", area: "Catbalogan", book: "018", department: "Cashiering", amount: 2760.50, referenceNumber: "EP-11935", orNumber: "OR-260504-106", billMonth: "April 2026", paymentDate: "2026-05-04T09:25:00", postedBy: "C. Acaban", status: "Verified", remarks: "Outlet batch validated", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011830", consumerName: "Karen Abiado", area: "Villareal", book: "022", department: "Cashiering", amount: 1120.00, referenceNumber: "EP-11950", orNumber: "OR-260504-107", billMonth: "April 2026", paymentDate: "2026-05-04T10:55:00", postedBy: "A. Cabuet", status: "Pending", remarks: "Awaiting ECPay clearance", channelStatus: "Watchlist" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011860", consumerName: "Marilou Abiag", area: "Paranas", book: "001", department: "Cashiering", amount: 3500.00, referenceNumber: "EP-11980", orNumber: "OR-260504-109", billMonth: "April 2026", paymentDate: "2026-05-04T14:05:00", postedBy: "J. Bisnar", status: "Failed", remarks: "Reference number mismatch", channelStatus: "Incident" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011875", consumerName: "Norma Abiang", area: "Catbalogan", book: "016", department: "Cashiering", amount: 1560.80, referenceNumber: "EP-11995", orNumber: "OR-260504-110", billMonth: "April 2026", paymentDate: "2026-05-04T15:45:00", postedBy: "C. Acaban", status: "Posted", remarks: "POS batch cleared", channelStatus: "Healthy" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011500", consumerName: "Quirino Abibo", area: "Paranas", book: "002", department: "Treasury", amount: 4250.00, referenceNumber: "LB-5500230", orNumber: "OR-260504-205", billMonth: "April 2026", paymentDate: "2026-05-04T08:00:00", postedBy: "T. Delmonte", status: "Posted", remarks: "Corporate account remittance", channelStatus: "Stable" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011515", consumerName: "Rosario Abid", area: "Catbalogan", book: "017", department: "Treasury", amount: 1890.60, referenceNumber: "LB-5500245", orNumber: "OR-260504-206", billMonth: "April 2026", paymentDate: "2026-05-04T11:20:00", postedBy: "I. Gabriola", status: "Verified", remarks: "Branch posting verified", channelStatus: "Stable" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011530", consumerName: "Simplicio Abido", area: "Villareal", book: "020", department: "Treasury", amount: 3375.00, referenceNumber: "LB-5500260", orNumber: "OR-260504-207", billMonth: "April 2026", paymentDate: "2026-05-04T13:45:00", postedBy: "A. Cabuet", status: "Posted", remarks: "Over-the-counter LANDBANK posting", channelStatus: "Stable" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011545", consumerName: "Trinidad Abiera", area: "Basey", book: "009", department: "Treasury", amount: 2100.00, referenceNumber: "LB-5500275", orNumber: "OR-260504-208", billMonth: "April 2026", paymentDate: "2026-05-04T14:50:00", postedBy: "T. Delmonte", status: "Pending", remarks: "Awaiting branch advice", channelStatus: "Attention" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011558", consumerName: "Urbano Abig", area: "Paranas", book: "002", department: "Treasury", amount: 5100.00, referenceNumber: "LB-5500290", orNumber: "OR-260504-209", billMonth: "April 2026", paymentDate: "2026-05-04T15:55:00", postedBy: "I. Gabriola", status: "Posted", remarks: "High-value account remittance", channelStatus: "Stable" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014400", consumerName: "Wilma Abigan", area: "Paranas", book: "003", department: "Treasury", amount: 1980.00, referenceNumber: "BDO-770040", orNumber: "OR-260504-305", billMonth: "April 2026", paymentDate: "2026-05-04T07:50:00", postedBy: "M. Cascayan", status: "Posted", remarks: "BDO online credit confirmed", channelStatus: "Healthy" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014415", consumerName: "Arturo Abina", area: "Catbalogan", book: "016", department: "Treasury", amount: 3400.00, referenceNumber: "BDO-770055", orNumber: "OR-260504-306", billMonth: "April 2026", paymentDate: "2026-05-04T10:20:00", postedBy: "E. Porcil", status: "Verified", remarks: "Auto-posted and validated", channelStatus: "Healthy" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014428", consumerName: "Belen Abinales", area: "Villareal", book: "023", department: "Treasury", amount: 760.00, referenceNumber: "BDO-770070", orNumber: "OR-260504-307", billMonth: "April 2026", paymentDate: "2026-05-04T12:00:00", postedBy: "A. Cabuet", status: "Pending", remarks: "File acknowledgement pending", channelStatus: "Watchlist" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014441", consumerName: "Catalino Abino", area: "Basey", book: "010", department: "Treasury", amount: 2580.00, referenceNumber: "BDO-770085", orNumber: "OR-260504-308", billMonth: "April 2026", paymentDate: "2026-05-04T14:35:00", postedBy: "I. Gabriola", status: "Posted", remarks: "Same-day credit processed", channelStatus: "Healthy" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014350", consumerName: "Florencia Abiosa", area: "Paranas", book: "005", department: "Reconciliation", amount: 1200.00, referenceNumber: "DBP-300870", orNumber: "OR-260504-405", billMonth: "April 2026", paymentDate: "2026-05-04T08:10:00", postedBy: "R. Tiuason", status: "Posted", remarks: "DBP outlet remitted", channelStatus: "Healthy" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014363", consumerName: "Gaudencio Abiose", area: "Catbalogan", book: "021", department: "Reconciliation", amount: 950.00, referenceNumber: "ML-884145", orNumber: "OR-260504-406", billMonth: "April 2026", paymentDate: "2026-05-04T09:55:00", postedBy: "I. Gabriola", status: "Verified", remarks: "M Lhuillier settlement cleared", channelStatus: "Healthy" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014376", consumerName: "Hilaria Abique", area: "Basey", book: "012", department: "Reconciliation", amount: 1875.00, referenceNumber: "CEBU-440145", orNumber: "OR-260504-407", billMonth: "April 2026", paymentDate: "2026-05-04T11:30:00", postedBy: "A. Cabuet", status: "Pending", remarks: "Outlet batch pending upload", channelStatus: "Watchlist" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014395", consumerName: "Josefa Abisa", area: "Paranas", book: "005", department: "Reconciliation", amount: 2340.00, referenceNumber: "ML-884168", orNumber: "OR-260504-409", billMonth: "April 2026", paymentDate: "2026-05-04T15:10:00", postedBy: "I. Gabriola", status: "Posted", remarks: "M Lhuillier remittance cleared", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012200", consumerName: "Leonora Abiso", area: "Paranas", book: "006", department: "Local Cashiering", amount: 1560.00, referenceNumber: "TELLER-11080", orNumber: "OR-260504-505", billMonth: "April 2026", paymentDate: "2026-05-04T07:45:00", postedBy: "Cashier Window 1", status: "Posted", remarks: "Early morning walk-in", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012215", consumerName: "Marcelo Abita", area: "Basey", book: "013", department: "Local Cashiering", amount: 2200.00, referenceNumber: "TELLER-11095", orNumber: "OR-260504-506", billMonth: "April 2026", paymentDate: "2026-05-04T09:10:00", postedBy: "Cashier Window 2", status: "Posted", remarks: "Counter payment processed", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012230", consumerName: "Natividad Abitona", area: "Catbalogan", book: "014", department: "Local Cashiering", amount: 780.50, referenceNumber: "TELLER-11110", orNumber: "OR-260504-507", billMonth: "April 2026", paymentDate: "2026-05-04T10:30:00", postedBy: "Cashier Window 3", status: "Verified", remarks: "Supervisor-verified counter tx", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012260", consumerName: "Perlita Ablan", area: "Paranas", book: "006", department: "Local Cashiering", amount: 1350.00, referenceNumber: "TELLER-11140", orNumber: "OR-260504-509", billMonth: "April 2026", paymentDate: "2026-05-04T13:40:00", postedBy: "Cashier Window 2", status: "Posted", remarks: "Afternoon window payment", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012275", consumerName: "Regalado Ablado", area: "Basey", book: "013", department: "Local Cashiering", amount: 960.75, referenceNumber: "TELLER-11155", orNumber: "OR-260504-510", billMonth: "April 2026", paymentDate: "2026-05-04T14:55:00", postedBy: "Cashier Window 3", status: "Posted", remarks: "Routine counter collection", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012300", consumerName: "Teresita Ablaza", area: "Villareal", book: "025", department: "Local Cashiering", amount: 2480.00, referenceNumber: "TELLER-11185", orNumber: "OR-260504-512", billMonth: "April 2026", paymentDate: "2026-05-04T17:00:00", postedBy: "Cashier Window 2", status: "Posted", remarks: "End-of-day collection posted", channelStatus: "Stable" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015100", consumerName: "Ubaldo Ablesa", area: "Paranas", book: "007", department: "Collections Unit", amount: 2780.00, referenceNumber: "COLL-20005", orNumber: "OR-260504-605", billMonth: "April 2026", paymentDate: "2026-05-04T09:00:00", postedBy: "R. Tiuason", status: "Posted", remarks: "Field route collection completed", channelStatus: "Active" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015112", consumerName: "Virginia Ablesia", area: "Catbalogan", book: "015", department: "Collections Unit", amount: 1650.00, referenceNumber: "COLL-20006", orNumber: "OR-260504-606", billMonth: "April 2026", paymentDate: "2026-05-04T11:00:00", postedBy: "M. Cascayan", status: "Verified", remarks: "Route verified by supervisor", channelStatus: "Active" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015125", consumerName: "Wenceslao Ablet", area: "Basey", book: "011", department: "Collections Unit", amount: 3450.00, referenceNumber: "COLL-20007", orNumber: "OR-260504-607", billMonth: "April 2026", paymentDate: "2026-05-04T13:30:00", postedBy: "I. Gabriola", status: "Posted", remarks: "Basey route collection cleared", channelStatus: "Active" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015150", consumerName: "Yolando Abling", area: "Paranas", book: "007", department: "Collections Unit", amount: 4100.00, referenceNumber: "COLL-20009", orNumber: "OR-260504-609", billMonth: "April 2026", paymentDate: "2026-05-04T16:10:00", postedBy: "R. Tiuason", status: "Posted", remarks: "Bulk route collection remitted", channelStatus: "Active" },
+
+                /* --- May 3 --- */
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390100", consumerName: "Alfredo Ablur", area: "Paranas", book: "004", department: "Billing Section", amount: 1450.00, referenceNumber: "GC-9043100", orNumber: "OR-260503-001", billMonth: "April 2026", paymentDate: "2026-05-03T08:20:00", postedBy: "M. Cascayan", status: "Posted", remarks: "GCash settlement May 3", channelStatus: "Healthy" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390115", consumerName: "Brigida Abner", area: "Catbalogan", book: "017", department: "Billing Section", amount: 2100.00, referenceNumber: "GC-9043115", orNumber: "OR-260503-002", billMonth: "April 2026", paymentDate: "2026-05-03T09:45:00", postedBy: "E. Porcil", status: "Posted", remarks: "Mobile settlement confirmed", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011600", consumerName: "Carlito Abney", area: "Basey", book: "008", department: "Cashiering", amount: 1880.50, referenceNumber: "EP-11800", orNumber: "OR-260503-003", billMonth: "April 2026", paymentDate: "2026-05-03T10:10:00", postedBy: "J. Bisnar", status: "Verified", remarks: "Bayad Center cleared", channelStatus: "Healthy" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011350", consumerName: "Emilio Abocado", area: "Paranas", book: "002", department: "Treasury", amount: 3200.00, referenceNumber: "LB-5500100", orNumber: "OR-260503-005", billMonth: "April 2026", paymentDate: "2026-05-03T08:00:00", postedBy: "T. Delmonte", status: "Posted", remarks: "Branch posting completed", channelStatus: "Stable" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011365", consumerName: "Felipa Abocan", area: "Catbalogan", book: "019", department: "Treasury", amount: 1750.00, referenceNumber: "LB-5500115", orNumber: "OR-260503-006", billMonth: "April 2026", paymentDate: "2026-05-03T10:45:00", postedBy: "I. Gabriola", status: "Verified", remarks: "Branch validated same day", channelStatus: "Stable" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014200", consumerName: "Geronimo Abodez", area: "Basey", book: "010", department: "Treasury", amount: 2950.00, referenceNumber: "BDO-770150", orNumber: "OR-260503-007", billMonth: "April 2026", paymentDate: "2026-05-03T09:00:00", postedBy: "M. Cascayan", status: "Posted", remarks: "BDO online banking credit", channelStatus: "Healthy" },
+                { channel: "DBP / Other Stores", logo: "DBP", logoText: "DBP / Stores", accountNumber: "04014050", consumerName: "Isidora Abola", area: "Paranas", book: "005", department: "Reconciliation", amount: 890.00, referenceNumber: "DBP-300700", orNumber: "OR-260503-009", billMonth: "April 2026", paymentDate: "2026-05-03T08:30:00", postedBy: "R. Tiuason", status: "Posted", remarks: "DBP store remittance cleared", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012400", consumerName: "Jacinto Aboloc", area: "Catbalogan", book: "014", department: "Local Cashiering", amount: 1680.00, referenceNumber: "TELLER-10900", orNumber: "OR-260503-010", billMonth: "April 2026", paymentDate: "2026-05-03T09:30:00", postedBy: "Cashier Window 1", status: "Posted", remarks: "Walk-in counter payment", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012415", consumerName: "Kalayaan Abolos", area: "Basey", book: "013", department: "Local Cashiering", amount: 2250.00, referenceNumber: "TELLER-10915", orNumber: "OR-260503-011", billMonth: "April 2026", paymentDate: "2026-05-03T11:00:00", postedBy: "Cashier Window 2", status: "Verified", remarks: "Verified by supervisor", channelStatus: "Healthy" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015200", consumerName: "Lorena Abolor", area: "Paranas", book: "007", department: "Collections Unit", amount: 3180.00, referenceNumber: "COLL-19990", orNumber: "OR-260503-012", billMonth: "April 2026", paymentDate: "2026-05-03T10:00:00", postedBy: "R. Tiuason", status: "Posted", remarks: "Route collection completed", channelStatus: "Active" },
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390130", consumerName: "Manuel Abonado", area: "Villareal", book: "020", department: "Billing Section", amount: 1920.00, referenceNumber: "GC-9043130", orNumber: "OR-260503-013", billMonth: "April 2026", paymentDate: "2026-05-03T14:15:00", postedBy: "A. Pador", status: "Posted", remarks: "Digital payment auto-settled", channelStatus: "Healthy" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011380", consumerName: "Ofelia Abonillo", area: "Basey", book: "009", department: "Treasury", amount: 4500.00, referenceNumber: "LB-5500130", orNumber: "OR-260503-015", billMonth: "April 2026", paymentDate: "2026-05-03T16:00:00", postedBy: "T. Delmonte", status: "Posted", remarks: "Large branch posting confirmed", channelStatus: "Stable" },
+
+                /* --- May 2 --- */
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04390050", consumerName: "Quirina Abonos", area: "Paranas", book: "004", department: "Billing Section", amount: 1350.00, referenceNumber: "GC-9042050", orNumber: "OR-260502-001", billMonth: "March 2026", paymentDate: "2026-05-02T08:30:00", postedBy: "M. Cascayan", status: "Posted", remarks: "GCash real-time settlement", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011500", consumerName: "Roberto Abordo", area: "Catbalogan", book: "018", department: "Cashiering", amount: 2450.00, referenceNumber: "EP-11700", orNumber: "OR-260502-002", billMonth: "March 2026", paymentDate: "2026-05-02T09:15:00", postedBy: "C. Acaban", status: "Posted", remarks: "ECPay outlet cleared", channelStatus: "Healthy" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011250", consumerName: "Salvadora Aborlan", area: "Basey", book: "009", department: "Treasury", amount: 3800.00, referenceNumber: "LB-5500050", orNumber: "OR-260502-003", billMonth: "March 2026", paymentDate: "2026-05-02T10:00:00", postedBy: "T. Delmonte", status: "Posted", remarks: "Branch posting completed", channelStatus: "Stable" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014100", consumerName: "Teodorico Abos", area: "Villareal", book: "023", department: "Treasury", amount: 1650.00, referenceNumber: "BDO-770200", orNumber: "OR-260502-004", billMonth: "March 2026", paymentDate: "2026-05-02T11:20:00", postedBy: "A. Cabuet", status: "Verified", remarks: "Auto-posted BDO ledger", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012500", consumerName: "Ursulo Aboso", area: "Paranas", book: "006", department: "Local Cashiering", amount: 1200.00, referenceNumber: "TELLER-10800", orNumber: "OR-260502-005", billMonth: "March 2026", paymentDate: "2026-05-02T08:45:00", postedBy: "Cashier Window 1", status: "Posted", remarks: "Walk-in counter payment", channelStatus: "Healthy" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015300", consumerName: "Valentina Abote", area: "Catbalogan", book: "015", department: "Collections Unit", amount: 2850.00, referenceNumber: "COLL-19880", orNumber: "OR-260502-006", billMonth: "March 2026", paymentDate: "2026-05-02T10:30:00", postedBy: "R. Tiuason", status: "Posted", remarks: "Route collection cleared", channelStatus: "Active" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011265", consumerName: "Yolanda Abotizo", area: "Paranas", book: "002", department: "Treasury", amount: 5200.00, referenceNumber: "LB-5500065", orNumber: "OR-260502-009", billMonth: "March 2026", paymentDate: "2026-05-02T14:30:00", postedBy: "T. Delmonte", status: "Posted", remarks: "High-value LANDBANK posting", channelStatus: "Stable" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04014115", consumerName: "Zoilo Abran", area: "Catbalogan", book: "016", department: "Treasury", amount: 2200.00, referenceNumber: "BDO-770215", orNumber: "OR-260502-010", billMonth: "March 2026", paymentDate: "2026-05-02T15:50:00", postedBy: "E. Porcil", status: "Posted", remarks: "BDO branch credit", channelStatus: "Healthy" },
+
+                /* --- May 1 --- */
+                { channel: "GCash", logo: "GC", logoText: "GCash", accountNumber: "04389900", consumerName: "Celestina Abrea", area: "Paranas", book: "004", department: "Billing Section", amount: 1100.00, referenceNumber: "GC-9041900", orNumber: "OR-260501-001", billMonth: "March 2026", paymentDate: "2026-05-01T08:00:00", postedBy: "M. Cascayan", status: "Posted", remarks: "GCash settlement May 1", channelStatus: "Healthy" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011200", consumerName: "Dionisio Abrecia", area: "Catbalogan", book: "019", department: "Treasury", amount: 3600.00, referenceNumber: "LB-5499900", orNumber: "OR-260501-002", billMonth: "March 2026", paymentDate: "2026-05-01T09:00:00", postedBy: "T. Delmonte", status: "Posted", remarks: "Branch posting May 1", channelStatus: "Stable" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04013900", consumerName: "Edgardo Abredo", area: "Basey", book: "010", department: "Treasury", amount: 2400.00, referenceNumber: "BDO-770250", orNumber: "OR-260501-003", billMonth: "March 2026", paymentDate: "2026-05-01T10:30:00", postedBy: "A. Cabuet", status: "Posted", remarks: "Online banking credit May 1", channelStatus: "Healthy" },
+                { channel: "ECPay", logo: "EP", logoText: "ECPay", accountNumber: "04011400", consumerName: "Flordeliza Abrego", area: "Villareal", book: "022", department: "Cashiering", amount: 1560.00, referenceNumber: "EP-11600", orNumber: "OR-260501-004", billMonth: "March 2026", paymentDate: "2026-05-01T11:15:00", postedBy: "C. Acaban", status: "Verified", remarks: "ECPay batch cleared May 1", channelStatus: "Healthy" },
+                { channel: "Local Tellers", logo: "LT", logoText: "Local Tellers", accountNumber: "04012600", consumerName: "Gorgonia Abrenica", area: "Paranas", book: "006", department: "Local Cashiering", amount: 1450.00, referenceNumber: "TELLER-10700", orNumber: "OR-260501-005", billMonth: "March 2026", paymentDate: "2026-05-01T09:00:00", postedBy: "Cashier Window 1", status: "Posted", remarks: "Holiday walk-in payment", channelStatus: "Healthy" },
+                { channel: "Collections", logo: "CL", logoText: "Collections", accountNumber: "04015400", consumerName: "Hermenegildo Abrenilla", area: "Catbalogan", book: "015", department: "Collections Unit", amount: 2650.00, referenceNumber: "COLL-19770", orNumber: "OR-260501-006", billMonth: "March 2026", paymentDate: "2026-05-01T10:00:00", postedBy: "R. Tiuason", status: "Posted", remarks: "Route collection May 1", channelStatus: "Active" },
+                { channel: "LANDBANK", logo: "LB", logoText: "LANDBANK", accountNumber: "04011215", consumerName: "Kristoffer Abrera", area: "Paranas", book: "002", department: "Treasury", amount: 4800.00, referenceNumber: "LB-5499915", orNumber: "OR-260501-009", billMonth: "March 2026", paymentDate: "2026-05-01T16:00:00", postedBy: "T. Delmonte", status: "Verified", remarks: "Large posting verified May 1", channelStatus: "Stable" },
+                { channel: "BDO", logo: "BD", logoText: "BDO", accountNumber: "04013915", consumerName: "Lilia Abreza", area: "Catbalogan", book: "016", department: "Treasury", amount: 1900.00, referenceNumber: "BDO-770265", orNumber: "OR-260501-010", billMonth: "March 2026", paymentDate: "2026-05-01T16:45:00", postedBy: "E. Porcil", status: "Posted", remarks: "BDO end of day May 1", channelStatus: "Healthy" }
+            ];
+
+            const channelTheme = {
+                "GCash": { glow: "rgba(0, 125, 255, 0.28)", badge: "#7ac1ff", watermark: "GCASH", status: "Live", base: "#0087ff", dark: "#083b82", mark: "G" },
+                "ECPay": { glow: "rgba(255, 138, 52, 0.24)", badge: "#ffd0b0", watermark: "ECPAY", status: "Online", base: "#f97316", dark: "#8a2d12", mark: "E" },
+                "LANDBANK": { glow: "rgba(46, 164, 79, 0.24)", badge: "#bdf5c6", watermark: "LAND", status: "Stable", base: "#1ea45a", dark: "#0c5130", mark: "L" },
+                "BDO": { glow: "rgba(52, 111, 255, 0.24)", badge: "#b7cbff", watermark: "BDO", status: "Syncing", base: "#1b4ea1", dark: "#4f0f1a", mark: "B" },
+                "DBP / Other Stores": { glow: "rgba(13, 99, 197, 0.24)", badge: "#c5deff", watermark: "DBP", status: "Mixed", base: "#0d63c5", dark: "#143259", mark: "D" },
+                "Local Tellers": { glow: "rgba(32, 188, 230, 0.24)", badge: "#c1f2ff", watermark: "LOCAL", status: "In-House", base: "#0f7b8c", dark: "#13293d", mark: "T" },
+                "Collections":   { glow: "rgba(124, 58, 237, 0.24)", badge: "#ddd6fe", watermark: "COLL",  status: "Active",   base: "#7c3aed", dark: "#4c1d95",  mark: "C" }
+            };
+
+            const summaryConfig = [
+                { key: "todayAmount", label: "Total Amount", foot: "+10% compared to last cycle", currency: true, icon: "₱", accent: "#22c55e", line: "#22c55e", fill: "rgba(34,197,94,0.16)", primary: true, series: [18, 26, 24, 31, 29, 36, 34] },
+                { key: "todayCount", label: "Total Payments", foot: "Active consumer transactions", icon: "P", accent: "#22c7e8", line: "#22c7e8", fill: "rgba(34,199,232,0.14)", series: [12, 14, 15, 18, 16, 19, 20] },
+                { key: "digitalCount", label: "Digital Channels", foot: "GCash, ECPay, bank, and partners", icon: "D", accent: "#22c55e", line: "#22c55e", fill: "rgba(34,197,94,0.14)", series: [10, 11, 12, 13, 12, 14, 15] },
+                { key: "localTellerCount", label: "Local Tellers", foot: "Over-the-counter branch collections", icon: "T", accent: "#ff9800", line: "#ff9800", fill: "rgba(255,152,0,0.16)", series: [3, 4, 3, 5, 4, 4, 4] }
+            ];
+
+            const els = {
+                summaryGrid: document.getElementById("summary-grid"),
+                trendChart: document.getElementById("trend-chart"),
+                channelMixChart: document.getElementById("channel-mix-chart"),
+                statusMixChart: document.getElementById("status-mix-chart"),
+                tellerGrid: document.getElementById("teller-grid"),
+                tellerTags: document.getElementById("teller-tags"),
+                channelGrid: document.getElementById("channel-grid"),
+                tableBody: document.getElementById("payment-table-body"),
+                overviewTags: document.getElementById("overview-tags"),
+                tableSummary: document.getElementById("table-summary"),
+                tableTagTotal: document.getElementById("table-tag-total"),
+                tableTagAmount: document.getElementById("table-tag-amount"),
+                tableTagPending: document.getElementById("table-tag-pending"),
+                filterDateFrom: document.getElementById("filter-date-from"),
+                filterDateTo: document.getElementById("filter-date-to"),
+                filterChannel: document.getElementById("filter-channel"),
+                filterArea: document.getElementById("filter-area"),
+                filterBook: document.getElementById("filter-book"),
+                filterAccount: document.getElementById("filter-account"),
+                filterName: document.getElementById("filter-name"),
+                filterReference: document.getElementById("filter-reference"),
+                filterStatus: document.getElementById("filter-status"),
+                searchButton: document.getElementById("search-button"),
+                resetButton: document.getElementById("reset-button"),
+                exportExcel: document.getElementById("export-excel"),
+                exportPdf: document.getElementById("export-pdf"),
+                printReport: document.getElementById("print-report"),
+                verifyPayment: document.getElementById("verify-payment"),
+                viewDetails: document.getElementById("view-details"),
+                reconcileButton: document.getElementById("reconcile-button"),
+                tabButtons: Array.from(document.querySelectorAll(".billing-tab")),
+                tabPanels: Array.from(document.querySelectorAll("[data-tab-panel]"))
+            };
+
+            const filters = {
+                dateFrom: "2026-05-01",
+                dateTo:   "2026-05-04",
+                channel: "",
+                area: "",
+                book: "",
+                account: "",
+                name: "",
+                reference: "",
+                status: ""
+            };
+
+            function formatCurrency(value) {
+                return new Intl.NumberFormat("en-PH", {
+                    style: "currency",
+                    currency: "PHP",
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+
+            function formatDateTime(value) {
+                const date = new Date(value);
+                return date.toLocaleString("en-PH", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit"
+                });
+            }
+
+            function formatTime(value) {
+                const date = new Date(value);
+                return date.toLocaleTimeString("en-PH", {
+                    hour: "numeric",
+                    minute: "2-digit"
+                });
+            }
+
+            function sanitize(value) {
+                return String(value || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            function statusClass(status) {
+                const normalized = (status || "").toLowerCase();
+                if (normalized === "posted" || normalized === "verified") return "status-posted";
+                if (normalized === "pending") return "status-pending";
+                if (normalized === "failed" || normalized === "cancelled") return "status-failed";
+                return "status-reconcile";
+            }
+
+            function populateSelect(select, values, label) {
+                select.innerHTML = `<option value="">${label}</option>` +
+                    values.map((value) => `<option value="${sanitize(value)}">${sanitize(value)}</option>`).join("");
+            }
+
+            function initFilters() {
+                const channels = [...new Set(samplePayments.map((item) => item.channel))].sort();
+                const areas = [...new Set(samplePayments.map((item) => item.area))].sort();
+                const books = [...new Set(samplePayments.map((item) => item.book))].sort();
+                populateSelect(els.filterChannel, channels, "All channels");
+                populateSelect(els.filterArea, areas, "All areas");
+                populateSelect(els.filterBook, books, "All books");
+            }
+
+            function activePayments() {
+                return samplePayments.filter((item) => {
+                    const paymentDate = item.paymentDate.slice(0, 10);
+                    const afterStart = !filters.dateFrom || paymentDate >= filters.dateFrom;
+                    const beforeEnd = !filters.dateTo || paymentDate <= filters.dateTo;
+                    const matchChannel = !filters.channel || item.channel === filters.channel;
+                    const matchArea = !filters.area || item.area === filters.area;
+                    const matchBook = !filters.book || item.book === filters.book;
+                    const matchAccount = !filters.account || item.accountNumber.toLowerCase().includes(filters.account);
+                    const matchName = !filters.name || item.consumerName.toLowerCase().includes(filters.name);
+                    const matchReference = !filters.reference || item.referenceNumber.toLowerCase().includes(filters.reference);
+                    const matchStatus = !filters.status || item.status === filters.status;
+                    return afterStart && beforeEnd && matchChannel && matchArea && matchBook && matchAccount && matchName && matchReference && matchStatus;
+                });
+            }
+
+            function computeSummary(payments) {
+                return {
+                    todayCount: payments.length,
+                    todayAmount: payments.reduce((sum, item) => sum + item.amount, 0),
+                    digitalCount: payments.filter((item) => item.channel !== "Local Tellers").length,
+                    gCashCount: payments.filter((item) => item.channel === "GCash").length,
+                    ecPayCount: payments.filter((item) => item.channel === "ECPay").length,
+                    landbankCount: payments.filter((item) => item.channel === "LANDBANK" || item.channel === "BDO").length,
+                    localTellerCount: payments.filter((item) => item.channel === "Local Tellers").length,
+                    otherStoresCount: payments.filter((item) => item.channel === "DBP / Other Stores").length,
+                    pendingCount: payments.filter((item) => item.status === "Pending" || item.status === "For Reconciliation").length,
+                    failedCount: payments.filter((item) => item.status === "Failed" || item.status === "Cancelled").length
+                };
+            }
+
+            function sparklineSvg(values, card) {
+                const max = Math.max(...values, 1);
+                const min = Math.min(...values, 0);
+                const width = 92;
+                const height = 42;
+                const points = values.map((value, index) => {
+                    const x = (width / (values.length - 1)) * index;
+                    const normalized = (value - min) / ((max - min) || 1);
+                    const y = height - normalized * (height - 6) - 3;
+                    return `${x},${y}`;
+                });
+                const area = `M 0 ${height} L ${points.join(" L ")} L ${width} ${height} Z`;
+                return `
+                    <svg class="summary-sparkline" viewBox="0 0 ${width} ${height}" aria-hidden="true">
+                        <path class="area" d="${area}" style="--card-fill:${card.fill};"></path>
+                        <path class="line" d="M ${points.join(" L ")}" style="--card-line:${card.line};"></path>
+                    </svg>
+                `;
+            }
+
+            function renderSummary(payments) {
+                const summary = computeSummary(payments);
+                els.summaryGrid.innerHTML = summaryConfig.map((card) => `
+                    <article class="summary-card ${card.primary ? "primary" : ""}" style="--card-accent:${card.accent};">
+                        <div class="summary-head">
+                            <div>
+                                <div class="summary-label">${card.label}</div>
+                                <div class="summary-value" data-target="${summary[card.key]}" data-currency="${card.currency ? "1" : "0"}">0</div>
+                            </div>
+                            <div>
+                                <div class="summary-icon">${card.icon}</div>
+                                ${sparklineSvg(card.series, card)}
+                            </div>
+                        </div>
+                        <div class="summary-foot">${card.foot}</div>
+                    </article>
+                `).join("");
+                animateCounters();
+
+                /* Reset live base whenever filter changes */
+                if (lce.baseVals !== null) {
+                    lce.baseVals  = [summary.todayAmount, summary.todayCount, summary.digitalCount, summary.localTellerCount];
+                    lce.liveVals  = [0, 0, 0, 0];
+                    if (lce.sparkBufs) {
+                        lce.sparkBufs = summaryConfig.map(function(cfg, i) {
+                            return lce.buf.slice(-8).map(function(p) {
+                                return [p.d + p.l, p.d + p.l, p.d, p.l][i];
+                            });
+                        });
+                    }
+                }
+            }
+
+            function renderTrendChart(payments) {
+                /* Handled by the live chart engine (lceInit). */
+            }
+
+            function renderChannelMixChart(payments) {
+                const totalAmount = payments.reduce((sum, item) => sum + item.amount, 0) || 1;
+                const groups = Object.keys(channelTheme).map((channel) => {
+                    const amount = payments.filter((item) => item.channel === channel).reduce((sum, item) => sum + item.amount, 0);
+                    return { channel, amount, theme: channelTheme[channel] };
+                }).filter((item) => item.amount > 0);
+
+                els.channelMixChart.innerHTML = `
+                    <div class="insight-list">
+                        ${groups.map((group) => `
+                            <div class="insight-row">
+                                <div class="insight-top">
+                                    <span>${sanitize(group.channel)}</span>
+                                    <span>${formatCurrency(group.amount)}</span>
+                                </div>
+                                <div class="insight-bar"><span style="width:${(group.amount / totalAmount) * 100}%; --bar-color:${group.theme.base};"></span></div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+            }
+
+            function renderStatusMixChart(payments) {
+                const posted = payments.filter((item) => item.status === "Posted" || item.status === "Verified").length;
+                const pending = payments.filter((item) => item.status === "Pending" || item.status === "For Reconciliation").length;
+                const failed = payments.filter((item) => item.status === "Failed" || item.status === "Cancelled").length;
+                const total = Math.max(posted + pending + failed, 1);
+                const percent = Math.round((posted / total) * 100);
+
+                els.statusMixChart.innerHTML = `
+                    <div class="donut-wrap">
+                        <div class="donut-chart">
+                            <div class="donut-value">${percent}%</div>
+                        </div>
+                        <div class="insight-list">
+                            <div class="insight-row">
+                                <div class="insight-top"><span>Posted / Verified</span><span>${posted}</span></div>
+                                <div class="insight-bar"><span style="width:${(posted / total) * 100}%; --bar-color:#22c55e;"></span></div>
+                            </div>
+                            <div class="insight-row">
+                                <div class="insight-top"><span>Pending / Reconciliation</span><span>${pending}</span></div>
+                                <div class="insight-bar"><span style="width:${(pending / total) * 100}%; --bar-color:#22c7e8;"></span></div>
+                            </div>
+                            <div class="insight-row">
+                                <div class="insight-top"><span>Failed / Cancelled</span><span>${failed}</span></div>
+                                <div class="insight-bar"><span style="width:${(failed / total) * 100}%; --bar-color:#ff9800;"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                var donutEl = els.statusMixChart.querySelector(".donut-chart");
+                if (donutEl) { donutEl.style.animation = "donutAppear 0.75s cubic-bezier(0.34,1.56,0.64,1) both"; }
+            }
+
+            function channelGroups(payments) {
+                const allChannels = Object.keys(channelTheme);
+                return allChannels.map((channel) => {
+                    const rows = payments
+                        .filter((item) => item.channel === channel)
+                        .sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+                    const totalAmount = rows.reduce((sum, item) => sum + item.amount, 0);
+                    const latest = rows[0];
+                    const pending = rows.filter((item) => item.status === "Pending" || item.status === "For Reconciliation").length;
+                    const failed = rows.filter((item) => item.status === "Failed" || item.status === "Cancelled").length;
+                    return {
+                        channel,
+                        rows,
+                        totalAmount,
+                        latest,
+                        pending,
+                        failed
+                    };
+                });
+            }
+
+            function renderOverviewTags(payments) {
+                const areas = [...new Set(payments.map((item) => item.area))];
+                const books = [...new Set(payments.map((item) => item.book))];
+                els.overviewTags.innerHTML = `
+                    <span class="toolbar-tag">${payments.length} visible transactions</span>
+                    <span class="toolbar-tag">${areas.length} active areas</span>
+                    <span class="toolbar-tag">${books.length} active books</span>
+                `;
+            }
+
+            function tellerGroups(payments) {
+                return payments
+                    .filter((item) => item.channel === "Local Tellers")
+                    .reduce((acc, item) => {
+                        const key = item.postedBy;
+                        if (!acc[key]) {
+                            acc[key] = {
+                                teller: item.postedBy,
+                                area: item.area,
+                                rows: []
+                            };
+                        }
+                        acc[key].rows.push(item);
+                        return acc;
+                    }, {});
+            }
+
+            function renderTellers(payments) {
+                const groups = Object.values(tellerGroups(payments)).sort((a, b) => b.rows.length - a.rows.length);
+                const total = groups.reduce((sum, group) => sum + group.rows.length, 0);
+                const areas = [...new Set(groups.map((group) => group.area))];
+
+                els.tellerTags.innerHTML = `
+                    <span class="toolbar-tag">${groups.length} active tellers</span>
+                    <span class="toolbar-tag">${total} local transactions</span>
+                    <span class="toolbar-tag">${areas.length} covered areas</span>
+                `;
+
+                if (!groups.length) {
+                    els.tellerGrid.innerHTML = `<div class="empty-state">No local teller payments matched the current filters.</div>`;
+                    return;
+                }
+
+                els.tellerGrid.innerHTML = groups.map((group, index) => {
+                    const totalAmount = group.rows.reduce((sum, item) => sum + item.amount, 0);
+                    const latest = group.rows.slice().sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate))[0];
+                    const pending = group.rows.filter((item) => item.status === "Pending" || item.status === "For Reconciliation").length;
+                    const verified = group.rows.filter((item) => item.status === "Posted" || item.status === "Verified").length;
+
+                    return `
+                        <article class="teller-card" data-watermark="TLR-${index + 1}">
+                            <div class="teller-top">
+                                <div>
+                                    <div class="teller-title">${sanitize(group.teller)}</div>
+                                    <div class="teller-sub">${sanitize(group.area)} local counter monitoring</div>
+                                </div>
+                                <span class="teller-badge">Local Payment</span>
+                            </div>
+                            <div class="teller-stats">
+                                <div class="teller-stat">
+                                    <div class="teller-stat-label">Collected</div>
+                                    <div class="teller-stat-value">${formatCurrency(totalAmount)}</div>
+                                    <div class="teller-stat-sub">${group.rows.length} transaction(s)</div>
+                                </div>
+                                <div class="teller-stat">
+                                    <div class="teller-stat-label">Latest Post</div>
+                                    <div class="teller-stat-value">${latest ? sanitize(formatTime(latest.paymentDate)) : "--"}</div>
+                                    <div class="teller-stat-sub">${latest ? sanitize(latest.consumerName) : "No posting yet"}</div>
+                                </div>
+                                <div class="teller-stat">
+                                    <div class="teller-stat-label">Verified</div>
+                                    <div class="teller-stat-value">${verified}</div>
+                                    <div class="teller-stat-sub">posted / verified</div>
+                                </div>
+                                <div class="teller-stat">
+                                    <div class="teller-stat-label">Pending Queue</div>
+                                    <div class="teller-stat-value">${pending}</div>
+                                    <div class="teller-stat-sub">needs review</div>
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                }).join("");
+            }
+
+            function renderChannels(payments) {
+                const groups = channelGroups(payments);
+                els.channelGrid.innerHTML = groups.map((group) => {
+                    const theme = channelTheme[group.channel];
+                    const dominantStatus = group.failed > 0 ? "Incident" : group.pending > 0 ? "Monitor" : theme.status;
+                    const badgeClass = group.failed > 0 ? "status-failed" : group.pending > 0 ? "status-pending" : "status-posted";
+                    const items = group.rows.length
+                        ? group.rows.map((item) => `
+                            <article class="payment-item">
+                                <div class="payment-item-top">
+                                    <div class="payment-account">
+                                        <strong>${sanitize(item.accountNumber)} · ${sanitize(item.consumerName)}</strong>
+                                        <span>${sanitize(item.orNumber)} / ${sanitize(item.referenceNumber)}</span>
+                                    </div>
+                                    <div class="payment-amount">${formatCurrency(item.amount)}</div>
+                                </div>
+                                <div class="payment-meta">
+                                    Bill Month: ${sanitize(item.billMonth)}<br />
+                                    Paid: ${sanitize(formatDateTime(item.paymentDate))}<br />
+                                    Status: <span class="status-badge ${statusClass(item.status)}">${sanitize(item.status)}</span>
+                                </div>
+                            </article>
+                        `).join("")
+                        : `<div class="empty-state">No payments matched this channel for the current filters.</div>`;
+
+                    return `
+                        <article class="channel-card" style="--channel-glow:${theme.glow}; --channel-base:${theme.base}; --channel-dark:${theme.dark};">
+                            <div class="channel-top">
+                                <div class="channel-brand">
+                                    <div class="channel-logo-head">
+                                        <div class="channel-logo-mark">${sanitize(theme.mark)}</div>
+                                        <div>
+                                            <span class="channel-logo-chip">${sanitize(group.channel)}</span>
+                                            <div class="channel-title">${sanitize(group.channel)}</div>
+                                        </div>
+                                    </div>
+                                    <div class="channel-sub">${group.rows.length ? `${group.rows.length} transaction(s) visible` : "No visible transactions"}</div>
+                                </div>
+                                <span class="status-badge ${badgeClass}">${sanitize(dominantStatus)}</span>
+                            </div>
+                            <div class="channel-kpis">
+                                <div class="channel-kpi">
+                                    <div class="channel-kpi-label">Collected</div>
+                                    <div class="channel-kpi-value">${formatCurrency(group.totalAmount)}</div>
+                                </div>
+                                <div class="channel-kpi">
+                                    <div class="channel-kpi-label">Latest Time</div>
+                                    <div class="channel-kpi-value">${group.latest ? sanitize(formatTime(group.latest.paymentDate)) : "--"}</div>
+                                </div>
+                                <div class="channel-kpi">
+                                    <div class="channel-kpi-label">Pending Queue</div>
+                                    <div class="channel-kpi-value">${group.pending}</div>
+                                </div>
+                                <div class="channel-kpi">
+                                    <div class="channel-kpi-label">Transactions</div>
+                                    <div class="channel-kpi-value">${group.rows.length}</div>
+                                </div>
+                            </div>
+                            <div class="channel-list">${items}</div>
+                            <div class="payment-watermark">${sanitize(theme.watermark)}</div>
+                        </article>
+                    `;
+                }).join("");
+            }
+
+            function renderTable(payments) {
+                if (!payments.length) {
+                    els.tableBody.innerHTML = `<tr><td colspan="13" class="empty-state">No payment logs matched the current filters.</td></tr>`;
+                    els.tableSummary.textContent = "No transactions matched the current filters.";
+                    els.tableTagTotal.textContent = "0 transactions";
+                    els.tableTagAmount.textContent = formatCurrency(0);
+                    els.tableTagPending.textContent = "0 pending";
+                    return;
+                }
+
+                const totalAmount = payments.reduce((sum, item) => sum + item.amount, 0);
+                const pendingCount = payments.filter((item) => item.status === "Pending" || item.status === "For Reconciliation").length;
+
+                els.tableBody.innerHTML = payments
+                    .sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate))
+                    .map((item) => `
+                        <tr>
+                            <td><span class="channel-badge">${sanitize(item.channel)}</span></td>
+                            <td>${sanitize(item.accountNumber)}</td>
+                            <td>
+                                <strong>${sanitize(item.consumerName)}</strong><br />
+                                <span class="muted-cell">${sanitize(item.department)}</span>
+                            </td>
+                            <td>${sanitize(item.area)}</td>
+                            <td>${sanitize(item.book)}</td>
+                            <td>${sanitize(item.billMonth)}</td>
+                            <td class="amount-text">${formatCurrency(item.amount)}</td>
+                            <td>${sanitize(item.referenceNumber)}</td>
+                            <td>${sanitize(item.orNumber)}</td>
+                            <td>${sanitize(formatDateTime(item.paymentDate))}</td>
+                            <td>${sanitize(item.postedBy)}</td>
+                            <td><span class="status-badge ${statusClass(item.status)}">${sanitize(item.status)}</span></td>
+                            <td>${sanitize(item.remarks)}</td>
+                        </tr>
+                    `).join("");
+
+                els.tableSummary.textContent = `Showing ${payments.length} payment log(s) from ${sanitize(filters.dateFrom || "all dates")} to ${sanitize(filters.dateTo || "all dates")}.`;
+                els.tableTagTotal.textContent = `${payments.length} transactions`;
+                els.tableTagAmount.textContent = formatCurrency(totalAmount);
+                els.tableTagPending.textContent = `${pendingCount} pending`;
+            }
+
+            function renderEverything() {
+                const payments = activePayments();
+                renderSummary(payments);
+                renderTrendChart(payments);
+                renderChannelMixChart(payments);
+                renderStatusMixChart(payments);
+                renderTellers(payments);
+                renderTable(payments);
+                postRender();
+            }
+
+            function activateTab(tabName) {
+                els.tabButtons.forEach((button) => {
+                    button.classList.toggle("active", button.dataset.tab === tabName);
+                });
+                els.tabPanels.forEach((panel) => {
+                    panel.classList.toggle("active", panel.dataset.tabPanel === tabName);
+                });
+            }
+
+            function initTabs() {
+                els.tabButtons.forEach((button) => {
+                    button.addEventListener("click", () => activateTab(button.dataset.tab));
+                });
+            }
+
+            function animateCounters() {
+                const counters = document.querySelectorAll(".summary-value[data-target]");
+                counters.forEach((counter) => {
+                    const target = Number(counter.dataset.target || 0);
+                    const isCurrency = counter.dataset.currency === "1";
+                    const duration = 700;
+                    const start = performance.now();
+
+                    function step(now) {
+                        const progress = Math.min((now - start) / duration, 1);
+                        const eased = 1 - Math.pow(1 - progress, 3);
+                        const value = target * eased;
+                        counter.textContent = isCurrency ? formatCurrency(value) : Math.round(value).toLocaleString("en-PH");
+                        if (progress < 1) {
+                            requestAnimationFrame(step);
+                        } else {
+                            counter.textContent = isCurrency ? formatCurrency(target) : Math.round(target).toLocaleString("en-PH");
+                        }
+                    }
+
+                    requestAnimationFrame(step);
+                });
+            }
+
+            function syncFilterState() {
+                filters.dateFrom = els.filterDateFrom.value;
+                filters.dateTo = els.filterDateTo.value;
+                filters.channel = els.filterChannel.value;
+                filters.area = els.filterArea.value;
+                filters.book = els.filterBook.value;
+                filters.account = els.filterAccount.value.trim().toLowerCase();
+                filters.name = els.filterName.value.trim().toLowerCase();
+                filters.reference = els.filterReference.value.trim().toLowerCase();
+                filters.status = els.filterStatus.value;
+            }
+
+            function resetFilters() {
+                els.filterDateFrom.value = "2026-05-04";
+                els.filterDateTo.value = "2026-05-04";
+                els.filterChannel.value = "";
+                els.filterArea.value = "";
+                els.filterBook.value = "";
+                els.filterAccount.value = "";
+                els.filterName.value = "";
+                els.filterReference.value = "";
+                els.filterStatus.value = "";
+                syncFilterState();
+                renderEverything();
+            }
+
+            function notify(message, type) {
+                var kind = type || "info";
+                var icons = { info: "ℹ", success: "✓", warn: "⚠" };
+                var colors = { info: "#007dff", success: "#22c55e", warn: "#ff9800" };
+                var dur = 4200;
+                var container = document.getElementById("toast-container");
+                if (!container) { window.alert(message); return; }
+                var toast = document.createElement("div");
+                toast.className = "toast toast-" + kind;
+                toast.style.setProperty("--t-color", colors[kind] || colors.info);
+                toast.style.setProperty("--t-dur", dur + "ms");
+                var label = kind.charAt(0).toUpperCase() + kind.slice(1);
+                toast.innerHTML =
+                    "<em class=\"toast-icon\">" + (icons[kind] || icons.info) + "</em>" +
+                    "<div class=\"toast-body\">" +
+                        "<div class=\"toast-title\">" + label + "</div>" +
+                        "<div class=\"toast-msg\">" + message + "</div>" +
+                    "</div>" +
+                    "<button class=\"toast-close\" aria-label=\"Dismiss\">&#215;</button>" +
+                    "<div class=\"toast-bar\"></div>";
+                container.appendChild(toast);
+                function dismiss() {
+                    toast.classList.add("removing");
+                    toast.addEventListener("animationend", function() {
+                        if (toast.parentNode) { toast.parentNode.removeChild(toast); }
+                    }, { once: true });
+                }
+                toast.querySelector(".toast-close").addEventListener("click", dismiss);
+                setTimeout(dismiss, dur);
+            }
+
+            els.searchButton.addEventListener("click", () => {
+                syncFilterState();
+                renderEverything();
+            });
+
+            els.resetButton.addEventListener("click", resetFilters);
+            els.exportExcel.addEventListener("click", () => notify("Sample UI only: wire this button to your billing Excel export endpoint."));
+            els.exportPdf.addEventListener("click", () => notify("Sample UI only: wire this button to your PDF report generator."));
+            els.printReport.addEventListener("click", () => window.print());
+            els.verifyPayment.addEventListener("click", () => notify("Open verification workflow for the selected payment log."));
+            els.viewDetails.addEventListener("click", () => notify("Open payment details drawer or modal."));
+            els.reconcileButton.addEventListener("click", () => notify("Launch reconciliation tools for pending channel entries."));
+
+            /* ─── Post-render effect hooks ─── */
+            function postRender() {
+                initCardEntrance();
+                initTilt();
+                setTimeout(animateBars, 260);
+            }
+
+            function initCardEntrance() {
+                var cards = document.querySelectorAll(".summary-card, .teller-card, .channel-card");
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (!entry.isIntersecting) { return; }
+                        var el = entry.target;
+                        var delay = Number(el.dataset.eDelay || 0);
+                        setTimeout(function() {
+                            el.classList.remove("card-enter");
+                            el.classList.add("card-visible");
+                        }, delay);
+                        observer.unobserve(el);
+                    });
+                }, { threshold: 0.08 });
+
+                cards.forEach(function(card, i) {
+                    card.classList.remove("card-visible");
+                    card.classList.add("card-enter");
+                    card.dataset.eDelay = i * 75;
+                    observer.observe(card);
+                });
+            }
+
+            function initTilt() {
+                var TILT = 10;
+                document.querySelectorAll(".summary-card, .channel-card").forEach(function(card) {
+                    if (card._tiltBound) { return; }
+                    card._tiltBound = true;
+                    card.classList.add("tilt-card");
+                    if (!card.querySelector(".tilt-shine")) {
+                        var shine = document.createElement("div");
+                        shine.className = "tilt-shine";
+                        card.appendChild(shine);
+                    }
+                    card.addEventListener("mousemove", function(e) {
+                        var r = this.getBoundingClientRect();
+                        var x = (e.clientX - r.left) / r.width;
+                        var y = (e.clientY - r.top) / r.height;
+                        var rx = (0.5 - y) * TILT;
+                        var ry = (x - 0.5) * TILT;
+                        this.style.transform = "perspective(600px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-4px)";
+                        this.style.setProperty("--mx", (x * 100) + "%");
+                        this.style.setProperty("--my", (y * 100) + "%");
+                    });
+                    card.addEventListener("mouseleave", function() {
+                        this.style.transform = "";
+                    });
+                });
+            }
+
+            function animateBars() {
+                document.querySelectorAll(".insight-bar").forEach(function(bar) {
+                    if (bar.classList.contains("bar-start")) { return; }
+                    bar.classList.add("bar-ready");
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            bar.classList.add("bar-start");
+                        });
+                    });
+                });
+            }
+
+            function initRipples() {
+                document.querySelector(".billing-page").addEventListener("click", function(e) {
+                    var btn = e.target.closest(".billing-page .btn");
+                    if (!btn) { return; }
+                    var r = btn.getBoundingClientRect();
+                    var size = Math.max(r.width, r.height);
+                    var ripple = document.createElement("span");
+                    ripple.className = "btn-ripple";
+                    ripple.style.cssText =
+                        "width:" + size + "px;" +
+                        "height:" + size + "px;" +
+                        "left:" + (e.clientX - r.left - size / 2) + "px;" +
+                        "top:" + (e.clientY - r.top - size / 2) + "px;";
+                    btn.appendChild(ripple);
+                    ripple.addEventListener("animationend", function() {
+                        if (ripple.parentNode) { ripple.parentNode.removeChild(ripple); }
+                    });
+                });
+            }
+
+            /* ══════════════════════════════════════════════
+               LIVE REALTIME CANVAS CHART ENGINE
+            ══════════════════════════════════════════════ */
+            var lce = {
+                canvas: null, ctx: null,
+                buf: [], prev: [],
+                N: 20, ms: 2500,
+                timer: null, raf: null,
+                t0: 0, dur: 700,
+                maxY: 10000,
+                liveTotal: 0, liveCount: 0,
+                L: 48, R: 18, T: 16, B: 28,
+                sparkBufs: null,          /* rolling 8-pt sparkline buffers per card */
+                baseVals:  null,          /* [amount, payments, digital, local] from filter */
+                liveVals:  [0, 0, 0, 0]  /* cumulative live increments */
+            };
+
+            function lceSeed() {
+                lce.buf = [];
+                var now = Date.now();
+                for (var i = lce.N - 1; i >= 0; i--) {
+                    var ts = new Date(now - i * lce.ms * 1.15);
+                    lce.buf.push({
+                        d: 700 + Math.random() * 4800,
+                        l: 120 + Math.random() * 1400,
+                        lbl: ts.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })
+                    });
+                }
+                lce.prev = lce.buf.map(function(x) { return Object.assign({}, x); });
+                lce.maxY = Math.max.apply(null, lce.buf.map(function(x) { return x.d; })) * 1.45;
+            }
+
+            function lceInit() {
+                var wrap = document.getElementById("trend-chart");
+                if (!wrap) return;
+                wrap.innerHTML =
+                    '<div style="position:relative;overflow:hidden;border-radius:12px;">' +
+                    '<canvas id="lce-c" style="width:100%;height:260px;display:block;"></canvas>' +
+                    '<div id="lce-da" class="live-dot-indicator" style="--dot-color:#ff9800;"></div>' +
+                    '<div id="lce-db" class="live-dot-indicator" style="--dot-color:#22c7e8;"></div>' +
+                    '</div>';
+
+                var c = document.getElementById("lce-c");
+                c.width = c.offsetWidth || 760;
+                c.height = 260;
+                lce.canvas = c;
+                lce.ctx = c.getContext("2d");
+
+                lceSeed();
+                lceDraw(1);
+                lceStart();
+
+                /* Seed sparkline buffers from the same live data so scales match */
+                lce.sparkBufs = [0, 1, 2, 3].map(function(i) {
+                    return lce.buf.slice(-8).map(function(p) {
+                        return [p.d + p.l, p.d + p.l, p.d, p.l][i];
+                    });
+                });
+
+                /* Capture current filter totals as base values */
+                var _bs = computeSummary(activePayments());
+                lce.baseVals = [_bs.todayAmount, _bs.todayCount, _bs.digitalCount, _bs.localTellerCount];
+                lce.liveVals = [0, 0, 0, 0];
+
+                var ms = document.getElementById("live-mini-stats");
+                if (ms) ms.style.display = "flex";
+
+                /* Chip buttons → speed control */
+                var speeds = { "Day": 1200, "Week": 2500, "Month": 4000, "Year": 7000 };
+                document.querySelectorAll(".chart-chip").forEach(function(chip) {
+                    chip.addEventListener("click", function() {
+                        document.querySelectorAll(".chart-chip").forEach(function(b) { b.classList.remove("active"); });
+                        chip.classList.add("active");
+                        lce.ms = speeds[chip.textContent.trim()] || 2500;
+                        lceStart();
+                    });
+                });
+
+                window.addEventListener("resize", function() {
+                    if (!lce.canvas) return;
+                    lce.canvas.width = lce.canvas.offsetWidth;
+                    lceDraw(1);
+                });
+            }
+
+            function lceStart() {
+                if (lce.timer) clearInterval(lce.timer);
+                lce.timer = setInterval(lceTick, lce.ms);
+            }
+
+            function lceTick() {
+                var last = lce.buf[lce.buf.length - 1];
+
+                /* Realistic random-walk with occasional spikes */
+                var d = Math.max(250, last.d * (0.48 + Math.random() * 1.0) + (Math.random() - 0.28) * 1600);
+                var l = Math.max(60,  last.l * (0.55 + Math.random() * 0.8) + (Math.random() - 0.35) * 500);
+                if (Math.random() < 0.1) d *= 1.4 + Math.random() * 0.9;  /* spike */
+
+                var ts = new Date();
+                var lbl = ts.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" });
+
+                lce.prev = lce.buf.map(function(x) { return Object.assign({}, x); });
+                lce.buf.push({ d: d, l: l, lbl: lbl });
+                if (lce.buf.length > lce.N) lce.buf.shift();
+
+                /* Smooth max update */
+                var newMax = Math.max.apply(null, lce.buf.map(function(x) { return x.d; }));
+                lce.maxY = lce.maxY * 0.76 + newMax * 0.24 + 700;
+
+                lce.liveTotal += d + l;
+                lce.liveCount++;
+
+                /* Push new values into sparkline buffers and trim */
+                if (lce.sparkBufs) {
+                    var spVals = [d + l, d + l, d, l];
+                    for (var si = 0; si < 4; si++) {
+                        lce.sparkBufs[si].push(spVals[si]);
+                        if (lce.sparkBufs[si].length > 8) lce.sparkBufs[si].shift();
+                    }
+                }
+
+                /* Accumulate live deltas for card counters */
+                lce.liveVals[0] += d + l;   /* total amount   */
+                lce.liveVals[1] += 1;         /* total payments */
+                lce.liveVals[2] += 1;         /* digital count  */
+                lce.liveVals[3] += 0.25;      /* local tellers (1 per ~4 ticks) */
+
+                lceUpdateStats(d + l, lbl);
+                lcUpdateCards();              /* live-update the 4 summary cards */
+
+                /* Occasional toast for notable payment */
+                if (Math.random() < 0.22) {
+                    var chs = ["GCash", "ECPay", "LANDBANK", "BDO", "Local Teller"];
+                    var ch = chs[Math.floor(Math.random() * chs.length)];
+                    notify("New collection via " + ch + " — " + formatCurrency(d), "success");
+                }
+
+                /* Start smooth animation */
+                lce.t0 = performance.now();
+                if (lce.raf) cancelAnimationFrame(lce.raf);
+                lceAnimLoop();
+            }
+
+            function lceAnimLoop() {
+                var elapsed = performance.now() - lce.t0;
+                var t = Math.min(elapsed / lce.dur, 1);
+                var e = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;  /* ease in-out cubic */
+                lceDraw(e);
+                if (t < 1) { lce.raf = requestAnimationFrame(lceAnimLoop); }
+                else { lce.raf = null; }
+            }
+
+            function lceDraw(prog) {
+                var c = lce.canvas, ctx = lce.ctx;
+                if (!c || !ctx) return;
+                var W = c.width, H = c.height;
+                var L = lce.L, R = lce.R, T = lce.T, B = lce.B;
+                var cW = W - L - R, cH = H - T - B;
+                var n = lce.buf.length;
+                if (n < 2) return;
+
+                var maxY = lce.maxY;
+
+                /* Interpolate between prev and current */
+                var data = lce.buf.map(function(cur, i) {
+                    var pr = lce.prev[i] || lce.prev[lce.prev.length - 1] || cur;
+                    return {
+                        d: pr.d + (cur.d - pr.d) * prog,
+                        l: pr.l + (cur.l - pr.l) * prog,
+                        lbl: cur.lbl
+                    };
+                });
+
+                function X(i) { return L + (cW / (n - 1)) * i; }
+                function Y(v) { return T + cH - Math.min(1, v / maxY) * cH; }
+
+                ctx.clearRect(0, 0, W, H);
+
+                /* Dashed grid lines */
+                [0, 0.25, 0.5, 0.75, 1].forEach(function(tick) {
+                    var y = T + cH - cH * tick;
+                    ctx.save();
+                    ctx.strokeStyle = "rgba(209,220,235,0.85)";
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([4, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(L, y);
+                    ctx.lineTo(W - R, y);
+                    ctx.stroke();
+                    ctx.restore();
+                    ctx.fillStyle = "#9aaabb";
+                    ctx.font = "600 11px -apple-system,BlinkMacSystemFont,system-ui,sans-serif";
+                    ctx.textAlign = "right";
+                    ctx.fillText(Math.round((maxY * tick) / 1000) + "k", L - 5, y + 4);
+                });
+
+                var ds = data.map(function(x) { return x.d; });
+                var ls = data.map(function(x) { return x.l; });
+
+                /* Area fill */
+                function drawArea(series, r, g, b) {
+                    var grad = ctx.createLinearGradient(0, T, 0, T + cH);
+                    grad.addColorStop(0, "rgba("+r+","+g+","+b+",0.22)");
+                    grad.addColorStop(1, "rgba("+r+","+g+","+b+",0.01)");
+                    ctx.beginPath();
+                    series.forEach(function(v, i) { i===0 ? ctx.moveTo(X(i),Y(v)) : ctx.lineTo(X(i),Y(v)); });
+                    ctx.lineTo(X(n-1), T+cH);
+                    ctx.lineTo(X(0), T+cH);
+                    ctx.closePath();
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                }
+
+                /* Line with glow */
+                function drawLine(series, r, g, b) {
+                    ctx.save();
+                    ctx.lineJoin = "round"; ctx.lineCap = "round";
+                    /* glow */
+                    ctx.beginPath();
+                    ctx.lineWidth = 7;
+                    ctx.strokeStyle = "rgba("+r+","+g+","+b+",0.12)";
+                    series.forEach(function(v, i) { i===0 ? ctx.moveTo(X(i),Y(v)) : ctx.lineTo(X(i),Y(v)); });
+                    ctx.stroke();
+                    /* main */
+                    ctx.beginPath();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = "rgb("+r+","+g+","+b+")";
+                    series.forEach(function(v, i) { i===0 ? ctx.moveTo(X(i),Y(v)) : ctx.lineTo(X(i),Y(v)); });
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                drawArea(ls, 34, 199, 232);
+                drawArea(ds, 255, 152, 0);
+                drawLine(ls, 34, 199, 232);
+                drawLine(ds, 255, 152, 0);
+
+                /* Dots every Nth point */
+                var dotStep = Math.max(1, Math.floor(n / 7));
+                function drawDots(series, r, g, b) {
+                    series.forEach(function(v, i) {
+                        if (i % dotStep !== 0 && i !== n - 1) return;
+                        ctx.beginPath(); ctx.arc(X(i), Y(v), 4, 0, Math.PI*2);
+                        ctx.fillStyle = "rgb("+r+","+g+","+b+")"; ctx.fill();
+                        ctx.beginPath(); ctx.arc(X(i), Y(v), 4, 0, Math.PI*2);
+                        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke();
+                    });
+                }
+                drawDots(ls, 34, 199, 232);
+                drawDots(ds, 255, 152, 0);
+
+                /* X-axis labels */
+                var lblStep = Math.max(1, Math.floor(n / 5));
+                ctx.fillStyle = "#9aaabb";
+                ctx.font = "600 11px -apple-system,BlinkMacSystemFont,system-ui,sans-serif";
+                ctx.textAlign = "center";
+                data.forEach(function(d, i) {
+                    if (i % lblStep !== 0 && i !== n - 1) return;
+                    ctx.fillText(d.lbl, X(i), H - 2);
+                });
+
+                /* Update CSS pulse-dot positions */
+                var rect = c.getBoundingClientRect();
+                if (rect.width > 0) {
+                    var sx = W / rect.width, sy = H / rect.height;
+                    var lxPx = X(n-1) / sx;
+                    var da = document.getElementById("lce-da");
+                    var db = document.getElementById("lce-db");
+                    if (da) { da.style.left = lxPx + "px"; da.style.top = (Y(ds[n-1]) / sy) + "px"; }
+                    if (db) { db.style.left = lxPx + "px"; db.style.top = (Y(ls[n-1]) / sy) + "px"; }
+                }
+            }
+
+            function lcUpdateCards() {
+                if (!lce.sparkBufs || !lce.baseVals) return;
+                var cards = document.querySelectorAll("#summary-grid .summary-card");
+                if (!cards.length) return;
+
+                var isCur   = [true, false, false, false];
+                var newVals = [
+                    lce.baseVals[0] + lce.liveVals[0],
+                    lce.baseVals[1] + lce.liveVals[1],
+                    lce.baseVals[2] + Math.floor(lce.liveVals[2]),
+                    lce.baseVals[3] + Math.floor(lce.liveVals[3])
+                ];
+
+                cards.forEach(function(card, i) {
+                    if (i >= summaryConfig.length) return;
+
+                    /* ── animate counter ── */
+                    var valEl = card.querySelector(".summary-value");
+                    if (valEl) {
+                        var cur = parseFloat((valEl.textContent || "0").replace(/[^\d.]/g, "")) || 0;
+                        var tgt = newVals[i];
+                        var dur = 620, t0 = performance.now();
+                        (function step(now) {
+                            var p = Math.min((now - t0) / dur, 1);
+                            var e = 1 - Math.pow(1 - p, 3);
+                            var v = cur + (tgt - cur) * e;
+                            valEl.textContent = isCur[i]
+                                ? formatCurrency(v)
+                                : Math.round(v).toLocaleString("en-PH");
+                            if (p < 1) requestAnimationFrame(step);
+                        })(performance.now());
+                    }
+
+                    /* ── redraw sparkline ── */
+                    var oldSvg = card.querySelector(".summary-sparkline");
+                    if (oldSvg && lce.sparkBufs[i] && lce.sparkBufs[i].length > 1) {
+                        var tmp = document.createElement("div");
+                        tmp.innerHTML = sparklineSvg(lce.sparkBufs[i], summaryConfig[i]);
+                        var newSvg = tmp.querySelector(".summary-sparkline");
+                        if (newSvg) oldSvg.parentNode.replaceChild(newSvg, oldSvg);
+                    }
+                });
+            }
+
+            function lceUpdateStats(newAmt, lbl) {
+                var t = document.getElementById("live-total");
+                var cnt = document.getElementById("live-count");
+                var lst = document.getElementById("live-last");
+                if (t)   t.textContent   = formatCurrency(lce.liveTotal);
+                if (cnt) cnt.textContent = lce.liveCount;
+                if (lst) lst.textContent = formatCurrency(newAmt) + " @ " + lbl;
+            }
+            /* ══════════════════════════════════════════════ */
+
+            initFilters();
+            initTabs();
+            initRipples();
+            syncFilterState();
+            renderEverything();
+            lceInit();
+        })();
+    </script>
+    <script src="../../../assets/js/offline-sync.js?v=20260820-sw-registration-fix-v10"></script>
+</body>
+</html>
+

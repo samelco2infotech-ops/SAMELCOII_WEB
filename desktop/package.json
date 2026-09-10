@@ -1,0 +1,16 @@
+{
+  "name": "samelcii-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SAMELCII desktop launcher with per-client SQLite storage",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "electron": "^31.2.1",
+    "sqlite3": "^5.1.7"
+  }
+}

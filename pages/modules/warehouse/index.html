@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<!--
+    FILE: warehouse/index.html
+    PURPOSE: Hybrid master-detail workspace for releasing paid member meters.
+    EDIT GUIDE: Toolbar controls live in warehouse-top; editable meter fields live in meter-form-dock.
+    HUWAG BAGUHIN: Keep the existing element IDs because warehouse.js uses them for load, print, cancel, and save.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warehouse | SAMELCII</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <link rel="stylesheet" href="warehouse.css?v=20260903-executed-by-warning-v1" />
+</head>
+<body class="warehouse-page">
+    <main class="warehouse-shell">
+        <!-- [SECTION] Hybrid toolbar: legacy field order with modern accessible actions. -->
+        <header class="warehouse-top" aria-label="Warehouse controls">
+            <div class="warehouse-heading">
+                <span class="warehouse-kicker" id="warehouse-view-kicker">Meter release desk</span>
+                <h1 id="warehouse-view-title">Membership Order</h1>
+            </div>
+            <div class="warehouse-top-inner">
+                <label class="search-field">
+                    <span class="sr-only">Search meter payments</span>
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                    <input id="warehouse-search" type="search" placeholder="Search account, member, serial, or brand" autocomplete="off" />
+                </label>
+
+                <label class="filter-field">
+                    <span>Month</span>
+                    <select id="warehouse-filter-month" title="Use the mouse wheel or arrow keys to change month">
+                        <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+                        <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+                        <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+                        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                    </select>
+                </label>
+
+                <label class="filter-field filter-year">
+                    <span>Year</span>
+                    <select id="warehouse-filter-year" title="Use the mouse wheel or arrow keys to change year">
+                        <option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option>
+                        <option value="2021">2021</option><option value="2022">2022</option><option value="2023">2023</option>
+                        <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+                        <option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option>
+                        <option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
+                    </select>
+                </label>
+
+                <label class="filter-field filter-area">
+                    <span>Area</span>
+                    <select id="warehouse-filter-area" title="Show only this branch's queue">
+                        <option value="">All areas</option>
+                        <option value="MAIN">Main</option>
+                        <option value="BASEY">Basey</option>
+                        <option value="VILLAREAL">Villareal</option>
+                        <option value="CATBALOGAN">Catbalogan</option>
+                    </select>
+                </label>
+
+                <div class="warehouse-actions" aria-label="Warehouse actions">
+                    <button type="button" id="warehouse-refresh-btn" class="icon-btn" title="Reload meter payments" aria-label="Reload meter payments">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" id="warehouse-print-btn" class="icon-btn" title="Print and release selected order" aria-label="Print and release selected order" disabled>
+                        <i class="fa fa-print" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" id="warehouse-energized-btn" class="secondary-btn" title="Confirm the released order returned and was energized" disabled>
+                        <i class="fa fa-bolt" aria-hidden="true"></i> Mark Energized
+                    </button>
+                    <button type="button" id="warehouse-cancel-btn" class="secondary-btn" title="Mark the selected order rejected" disabled>
+                        Cancel order
+                    </button>
+                    <button type="button" id="warehouse-save-btn" class="primary-btn" disabled>
+                        <i class="fa fa-save" aria-hidden="true"></i><span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- [SECTION] Old master-detail proportions, rebuilt as a responsive workspace. -->
+        <section class="warehouse-content" id="warehouse-order-view">
+            <aside class="warehouse-master" aria-label="Meter payment list">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-label">Queue</span>
+                        <strong>Meter payments</strong>
+                    </div>
+                    <button type="button" id="warehouse-pending-count" class="queue-count-badge" aria-pressed="false" aria-label="Show pending new connection requests">
+                        <i class="fa fa-clock-o" aria-hidden="true"></i>
+                        <strong>0</strong>
+                        <span>Pending</span>
+                    </button>
+                </div>
+                <div class="master-table-wrap">
+                    <table class="master-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Account / member</th>
+                                <th>Status</th>
+                                <th class="master-col-print"><span class="sr-only">Print</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="warehouse-master-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="warehouse-master-nav">
+                    <button type="button" id="warehouse-page-prev" aria-label="Previous page"><i class="fa fa-angle-left"></i></button>
+                    <span id="warehouse-page-label">Page 1 of 1</span>
+                    <button type="button" id="warehouse-page-next" aria-label="Next page"><i class="fa fa-angle-right"></i></button>
+                </div>
+            </aside>
+
+            <section class="warehouse-detail" aria-label="Selected meter payment">
+                <div class="detail-canvas">
+                    <div class="detail-summary">
+                        <span class="eyebrow" id="warehouse-detail-eyebrow">Selected payment</span>
+                        <h2 id="warehouse-detail-title">No payment selected</h2>
+                        <p id="warehouse-detail-desc">Choose a record from the queue, complete the four meter details, then save it for Warehouse release.</p>
+                        <input type="hidden" id="wh-account" value="" />
+                        <label class="account-reference">
+                            <span>Account number</span>
+                            <input id="wh-account-display" type="text" readonly placeholder="Select a payment row" />
+                        </label>
+                    </div>
+                    <div class="fee-table-wrap" aria-live="polite">
+                        <table class="fee-table">
+                            <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+                            <tbody id="warehouse-fee-tbody">
+                                <tr class="fee-empty"><td colspan="2">Select a payment to view its paid items.</td></tr>
+                            </tbody>
+                            <tfoot><tr><th>Total</th><td id="warehouse-fee-total">0.00</td></tr></tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- [FORM] These four fields match the legacy Warehouse screen and the current save payload. -->
+                <section class="meter-form-dock" aria-labelledby="meter-details-title">
+                    <div id="warehouse-readiness" class="release-guide" data-state="waiting" role="status" aria-live="polite">
+                        <span class="release-guide-icon" aria-hidden="true"><i class="fa fa-info-circle"></i></span>
+                        <span class="release-guide-copy">
+                            <strong id="warehouse-readiness-title">Select a payment</strong>
+                            <span id="warehouse-readiness-text">Choose a queue record to check its release requirements.</span>
+                        </span>
+                    </div>
+                    <div class="meter-form-heading">
+                        <span>Release information</span>
+                        <strong id="meter-details-title">Meter details</strong>
+                    </div>
+                    <div class="field-grid">
+                        <label><span>Meter Brand</span><input id="wh-meter-brand" type="text" placeholder="Enter meter brand" value="" autocomplete="off" /></label>
+                        <label><span>Serial Number</span><input id="wh-serial" type="text" placeholder="Enter serial number" value="" autocomplete="off" /></label>
+                        <label><span>Seal Number</span><input id="wh-seal" type="text" placeholder="Enter seal number" value="" autocomplete="off" /></label>
+                        <label><span>ERC Seal No.</span><input id="wh-erc" type="text" placeholder="Enter ERC seal number" value="" autocomplete="off" /></label>
+                        <label><span>Initial Reading</span><input id="wh-reading" type="text" inputmode="decimal" placeholder="Enter reading" value="" autocomplete="off" /></label>
+                    </div>
+                    <div class="withdrawn-executed-row">
+                        <div class="withdrawn-line">
+                            <span>Withdrawn/Executed by:</span>
+                            <div class="withdrawn-picker">
+                                <input type="hidden" id="wh-withdrawn-usercode" value="" />
+                                <input type="text" id="wh-withdrawn-search" class="withdrawn-search" placeholder="Search TSD/ESD employee" autocomplete="off" />
+                                <div id="wh-withdrawn-results" class="withdrawn-results" hidden></div>
+                            </div>
+                        </div>
+                        <label class="executed-at-field"><span>Executed Date/Time</span><input id="wh-executed-at" type="datetime-local" /></label>
+                    </div>
+                    <p id="wh-withdrawn-warning" class="withdrawn-warning" hidden>
+                        <i class="fa fa-exclamation-triangle"></i>
+                        No technician selected — this order's printed "Executed By" will be blank.
+                    </p>
+                </section>
+            </section>
+        </section>
+
+        <section class="warehouse-secondary-view" id="warehouse-report-view" hidden aria-labelledby="warehouse-report-title">
+            <header class="secondary-view-head">
+                <div><span class="panel-label">Monthly overview</span><h2 id="warehouse-report-title">Warehouse Report</h2></div>
+                <span id="warehouse-report-period" class="period-chip">—</span>
+            </header>
+            <div class="report-summary" aria-label="Warehouse status summary">
+                <article><span>Total orders</span><strong id="warehouse-report-total">0</strong></article>
+                <article><span>Warehouse queue</span><strong id="warehouse-report-queue">0</strong></article>
+                <article><span>Meter saved</span><strong id="warehouse-report-saved">0</strong></article>
+                <article><span>Completed</span><strong id="warehouse-report-completed">0</strong></article>
+            </div>
+            <div class="secondary-table-wrap">
+                <table class="secondary-table">
+                    <thead><tr><th>Apply ID</th><th>Account</th><th>Member</th><th>Status</th><th>Processed by</th><th>Date</th></tr></thead>
+                    <tbody id="warehouse-report-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="warehouse-secondary-view" id="warehouse-inventory-view" hidden aria-labelledby="warehouse-inventory-title">
+            <header class="secondary-view-head">
+                <div><span class="panel-label">Stock register</span><h2 id="warehouse-inventory-title">Warehouse Inventory</h2></div>
+                <span class="period-chip"><strong id="warehouse-inventory-count">0</strong> items</span>
+            </header>
+            <div class="secondary-table-wrap">
+                <table class="secondary-table">
+                    <thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit</th><th>Last updated</th></tr></thead>
+                    <tbody id="warehouse-inventory-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+        <p id="warehouse-status-message" class="sr-only" aria-live="polite"></p>
+    </main>
+
+    <script src="../module.js"></script>
+    <script src="warehouse.js?v=20260903-executed-by-warning-v1"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     FILE: index.html
+     PURPOSE: Holiday calendar list at Add/Edit Holiday form.
+     EDIT GUIDE: I-bump ang asset versions kapag may Holiday UI update.
+     HUWAG BAGUHIN: Panatilihing tugma ang element IDs sa script.js.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <script>
+        if (window.location.protocol === "file:") {
+            window.location.replace("http://192.168.1.99/SAMELCII_WEB_SYSTEM/SAMELCII_WEB_SYSTEM/pages/modules/holiday/index.html");
+        }
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Holiday Calendar | SAMELCII</title>
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <link rel="stylesheet" href="styles.css?v=20260907-holiday-form-first-v1" />
+</head>
+<body>
+    <main class="page holiday-page">
+        <div class="holiday-recommend-bar">
+            <span class="holiday-recommend-label" title="Click a name to fill the form. You still pick the date.">Recommended</span>
+            <div class="holiday-recommend-chips" id="holiday-recommend-chips"></div>
+        </div>
+
+        <div class="holiday-layout">
+            <section class="panel holiday-table-panel">
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Holiday</th>
+                                <th>Type</th>
+                                <th>ATC</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holiday-table-body"></tbody>
+                    </table>
+                </div>
+                <p class="message" id="holiday-list-message"></p>
+                <div class="holiday-pager" id="holiday-pager" hidden>
+                    <button class="btn light" id="holiday-pager-prev" type="button">Prev</button>
+                    <span id="holiday-pager-status"></span>
+                    <button class="btn light" id="holiday-pager-next" type="button">Next</button>
+                </div>
+            </section>
+
+            <div class="holiday-right-col">
+                <section class="panel holiday-form-panel" id="holiday-form-panel">
+                    <h2 class="holiday-form-title" id="holiday-form-title">Add holiday</h2>
+                    <input type="hidden" id="holiday-id" />
+                    <div class="form-grid holiday-form-grid">
+                        <div class="field full">
+                            <label for="holiday-name">Holiday name <span class="holiday-required">*</span></label>
+                            <input class="input" id="holiday-name" type="text" placeholder="e.g. Independence Day" />
+                        </div>
+                        <div class="field">
+                            <label for="holiday-date">Date <span class="holiday-required">*</span></label>
+                            <input class="input" id="holiday-date" type="date" />
+                        </div>
+                        <div class="field">
+                            <label for="holiday-type">Type</label>
+                            <select class="select" id="holiday-type">
+                                <option value="Regular">Regular</option>
+                                <option value="Special Non-Working">Special Non-Working</option>
+                            </select>
+                        </div>
+                        <div class="field check-field" hidden>
+                            <label><input type="checkbox" id="holiday-atc" checked /> Counts toward attendance (ATC)</label>
+                        </div>
+                        <button class="holiday-more-toggle" id="holiday-more-toggle" type="button">+ More options</button>
+                        <div class="field" id="holiday-coverage-field" hidden>
+                            <label for="holiday-coverage">Coverage</label>
+                            <select class="select" id="holiday-coverage">
+                                <option value="WHOLE">Whole day</option>
+                                <option value="AM">Half day (AM)</option>
+                                <option value="PM">Half day (PM)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn" id="holiday-save-btn" type="button">Save</button>
+                        <button class="btn light" id="holiday-cancel-btn" type="button">Cancel</button>
+                    </div>
+                    <p class="message" id="holiday-form-message"></p>
+                </section>
+            </div>
+        </div>
+    </main>
+    <script src="../module.js?v=20260514-dtr-shell-v4"></script>
+    <script src="script.js?v=20260907-current-year-first-v1"></script>
+</body>
+</html>

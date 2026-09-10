@@ -1,0 +1,40 @@
+# Dependencies (regeneratable via npm install)
+node_modules/
+
+# Secrets — never commit real credentials. .env.example files are the templates that DO get committed.
+.env
+.env.local
+!.env.example
+
+# Legacy PHP (api/*.php) hardcodes the real prod DB password (api/config.php) — being migrated
+# off entirely (see AGENTS.md); not the source of truth going forward, don't ship the leak.
+api/
+
+# One-off dev utility with a real DB host in its default — kept out until re-audited.
+tools/
+
+# Real customer/employee data — DB dumps, cached JSON exports, uploaded files. Never belongs in
+# git regardless of repo visibility (PII).
+database/backups/
+json-api/data/
+json-api/cache/
+uploads/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs
+logs/
+backend/logs/
+*.log
+*.log.*
+
+# Desktop app build artifacts (node_modules covered above; these are compiled output, not source)
+desktop/build/
+desktop/downloads/
+
+# Editor/OS noise
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo

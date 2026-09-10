@@ -1,0 +1,11 @@
+# SAMELCII Node backend source guard: Apache must never serve backend code or secrets.
+# EDIT GUIDE: manage public API routes through the Node service or an approved reverse proxy.
+# HUWAG BAGUHIN: deny this whole folder; Node reads these files directly and is not affected.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

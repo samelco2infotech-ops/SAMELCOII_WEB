@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobile Approvals | SAMELCII</title>
+    <!-- Mobile approvals module ito; Android-style Material shell para sa Fuel, EPASS, Travel, at Leave. -->
+    <meta name="theme-color" content="#0b57d0" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <link rel="stylesheet" href="./styles.css?v=20260526-font-standard-v1" />
+</head>
+<body>
+    <!-- HUWAG BAGUHIN: Ang root ids dito ang kinakausap ng script.js para sa live queue at actions. -->
+    <main class="approvals-page container-fluid px-2 px-sm-3 py-2 py-sm-3">
+        <!-- SECTION: App Bar -->
+        <header class="approvals-appbar">
+            <div class="approvals-appbar__top">
+                <div class="approvals-appbar__brand">
+                    <span class="app-icon"><i class="bi bi-phone-fill" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="eyebrow">Approval center</p>
+                        <h1>Fuel, EPASS, Travel, Leave</h1>
+                    </div>
+                </div>
+                <span class="queue-badge">
+                    <i class="bi bi-inbox btn-icon" aria-hidden="true"></i>
+                    <strong id="queue-total">0</strong>
+                </span>
+            </div>
+            <div class="approvals-appbar__meta">
+                <span class="meta-inline">
+                    <i class="bi bi-person-circle btn-icon" aria-hidden="true"></i>
+                    <strong id="logged-user">-</strong>
+                </span>
+                <span class="meta-inline meta-inline--ghost">
+                    <i class="bi bi-calendar3 btn-icon" aria-hidden="true"></i>
+                    <strong id="current-date-label">Today</strong>
+                </span>
+            </div>
+        </header>
+
+        <!-- SECTION: Toolbar -->
+        <section class="approvals-panel approvals-panel--toolbar card border-0 shadow-sm rounded-4" aria-label="Approval filters">
+            <div class="toolbar-row">
+                <label class="search-field">
+                    <span class="search-label">Search queue</span>
+                    <input id="queue-search" type="search" placeholder="No., name, purpose, destination" />
+                </label>
+                <div class="toolbar-actions">
+                    <label class="date-field">
+                        <span class="search-label">Date</span>
+                        <input id="queue-date" type="date" />
+                    </label>
+                    <button class="refresh-btn" id="refresh-queue-btn" type="button"><i class="bi bi-arrow-clockwise btn-icon" aria-hidden="true"></i><span class="btn-label">Refresh</span></button>
+                </div>
+            </div>
+            <div class="queue-summary" aria-live="polite">
+                <span class="summary-chip" id="current-tab-chip">Fuel</span>
+                <span class="summary-copy" id="queue-summary-copy">Loading pending requests...</span>
+            </div>
+        </section>
+
+        <!-- SECTION: Queue -->
+        <section class="approvals-panel approvals-panel--list card border-0 shadow-sm rounded-4" aria-label="Pending approvals">
+            <div class="status-line" id="queue-status">Loading queue...</div>
+            <div class="queue-list" id="queue-list"></div>
+        </section>
+
+        <!-- SECTION: Navigator -->
+        <nav class="approvals-nav card border-0 shadow-lg rounded-4" aria-label="Mobile navigator">
+            <button class="nav-btn active" type="button" data-tab="fuel" aria-pressed="true"><i class="bi bi-fuel-pump btn-icon" aria-hidden="true"></i><span class="btn-label">Fuel</span><span id="fuel-count">0</span></button>
+            <button class="nav-btn" type="button" data-tab="epass" aria-pressed="false"><i class="bi bi-person-badge btn-icon" aria-hidden="true"></i><span class="btn-label">EPASS</span><span id="epass-count">0</span></button>
+            <button class="nav-btn" type="button" data-tab="travel" aria-pressed="false"><i class="bi bi-airplane btn-icon" aria-hidden="true"></i><span class="btn-label">Travel</span><span id="travel-count">0</span></button>
+            <button class="nav-btn" type="button" data-tab="leave" aria-pressed="false"><i class="bi bi-calendar-check btn-icon" aria-hidden="true"></i><span class="btn-label">Leave</span><span id="leave-count">0</span></button>
+            <button class="nav-btn" type="button" data-tab="all" aria-pressed="false"><i class="bi bi-list-ul btn-icon" aria-hidden="true"></i><span class="btn-label">All</span></button>
+            <button class="nav-btn nav-btn--danger" type="button" id="logout-btn"><i class="bi bi-box-arrow-right btn-icon" aria-hidden="true"></i><span class="btn-label">Logout</span></button>
+        </nav>
+
+        <!-- SECTION: Toast -->
+        <div class="toast" id="approval-toast" role="status" aria-live="polite"></div>
+
+        <!-- SECTION: Detail Popup -->
+        <div class="approval-modal" id="approval-detail-modal" hidden>
+            <div class="approval-modal__backdrop" data-modal-close="1"></div>
+            <section class="approval-modal__sheet card border-0 shadow-lg rounded-4" aria-label="Request details">
+                <div class="approval-modal__header">
+                    <div>
+                        <p class="approval-modal__eyebrow" id="detail-type">Request</p>
+                        <h2 class="approval-modal__title" id="detail-number">-</h2>
+                        <p class="approval-modal__subtitle" id="detail-requester">-</p>
+                    </div>
+                    <button class="approval-modal__close" type="button" id="approval-detail-close" aria-label="Close details">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="approval-modal__meta">
+                    <span class="status-chip" id="detail-status">Pending</span>
+                    <span class="queue-tail-chip" id="detail-date">-</span>
+                </div>
+                <div class="approval-modal__body" id="detail-rows"></div>
+                <div class="approval-modal__footer">
+                    <button class="action-btn approve" type="button" id="detail-approve-btn"><i class="bi bi-check-lg btn-icon" aria-hidden="true"></i><span class="btn-label">Approve</span></button>
+                    <button class="action-btn reject" type="button" id="detail-reject-btn"><i class="bi bi-x-lg btn-icon" aria-hidden="true"></i><span class="btn-label">Reject</span></button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="../module.js"></script>
+    <script src="./script.js?v=20260521-mobile-approval-leave-v2"></script>
+    <script src="../../../assets/js/offline-sync.js?v=20260820-sw-registration-fix-v10"></script>
+</body>
+</html>
+

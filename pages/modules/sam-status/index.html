@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SAM Server Status | SAMELCII</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../module.css?v=20260729-sam-status-v1" />
+    <link rel="stylesheet" href="sam-status.css?v=20260729-sam-status-v1" />
+</head>
+<body class="sst-page">
+    <main class="sst-shell">
+        <header class="sst-head">
+            <h2 class="sst-title"><i class="fa fa-heartbeat" aria-hidden="true"></i> SAM Server Status</h2>
+            <div class="sst-head-actions">
+                <span class="sst-checked-at" id="sst-checked-at">—</span>
+                <button type="button" class="sst-refresh-btn" id="sst-refresh-btn"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button>
+            </div>
+        </header>
+
+        <div class="sst-cards" id="sst-cards">
+            <div class="sst-placeholder" id="sst-placeholder">Loading…</div>
+        </div>
+
+        <p class="sst-note">Privilege 6-10 only. Auto-refreshes every 15 seconds.</p>
+    </main>
+    <script src="sam-status.js?v=20260729-sam-status-v1"></script>
+</body>
+</html>

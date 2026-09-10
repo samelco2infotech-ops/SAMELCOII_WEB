@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IT Equipment | SAMELCII</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../module.css?v=20260526-font-standard-v1" />
+    <link rel="stylesheet" href="it-equipment.css?v=20260526-font-standard-v1" />
+</head>
+<body class="ite-page">
+    <!-- GABAY: IT Equipment shell ito; ang dashboard sidebar na ang pumipili ng section, kaya wala nang top tab strip. -->
+    <main class="ite-shell">
+        <!-- GABAY: bawat panel ay nasa iisang shell; activate ng it-equipment.js ang tamang panel base sa ?tab=. -->
+        <div class="ite-panel-wrap">
+            <section class="ite-panel is-active acc-panel-bleed" id="ite-panel-accountability" aria-hidden="false">
+                <div class="acc-screen">
+                    <header class="acc-head">
+                        <h2 class="acc-title">Accountability</h2>
+                        <div class="acc-head-user">
+                            <span class="acc-avatar" aria-hidden="true"><i class="fa fa-user"></i></span>
+                            <span class="acc-head-name" id="ite-acc-user-name">—</span>
+                        </div>
+                    </header>
+                    <div class="acc-toolbar">
+                        <input id="acc-search-a" type="search" class="acc-input acc-input-grow" placeholder="Search user, form no., account…" autocomplete="off" />
+                        <input id="acc-search-b" type="search" class="acc-input acc-input-grow" placeholder="Second filter…" autocomplete="off" />
+                        <button type="button" id="acc-new-btn" class="acc-btn-primary">New accountability</button>
+                    </div>
+                    <div class="acc-table-scroll">
+                        <table class="acc-table">
+                            <thead>
+                                <tr>
+                                    <th class="acc-th-id">Id</th>
+                                    <th>User code</th>
+                                    <th>Username</th>
+                                    <th>Date issued</th>
+                                    <th>Form no.</th>
+                                    <th>Account code</th>
+                                    <th>Released by</th>
+                                    <th class="acc-th-print"><span class="sr-only">Print</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="acc-master-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <section class="ite-panel" id="ite-panel-job-order" aria-hidden="true" hidden>
+                <h2>Job order</h2>
+                <p class="ite-panel-lead">Create and monitor IT job orders and work requests.</p>
+                <div class="ite-placeholder">No data loaded yet. Connect forms and grid here when the backend is ready.</div>
+            </section>
+            <section class="ite-panel" id="ite-panel-status-report" aria-hidden="true" hidden>
+                <h2>Status report</h2>
+                <p class="ite-panel-lead">View status summaries and reporting for equipment and jobs.</p>
+                <div class="ite-placeholder">No data loaded yet. Connect forms and grid here when the backend is ready.</div>
+            </section>
+            <section class="ite-panel" id="ite-panel-turn-over" aria-hidden="true" hidden>
+                <h2>Turn over</h2>
+                <p class="ite-panel-lead">Document handovers and turn-over of IT equipment between custodians.</p>
+                <div class="ite-placeholder">No data loaded yet. Connect forms and grid here when the backend is ready.</div>
+            </section>
+            <section class="ite-panel ite-inv-shell" id="ite-panel-inventory" aria-hidden="true" hidden>
+                <div id="ite-inv-panel-root">
+                    <header class="ite-inv-head">
+                        <h2 class="ite-inv-title">Inventory</h2>
+                        <div class="ite-inv-head-user">
+                            <span id="ite-inv-user-name">—</span>
+                        </div>
+                    </header>
+                    <div class="ite-inv-toolbar">
+                        <input id="inv-search" class="ite-inv-search" type="search" placeholder="Search item code, description, category…" autocomplete="off" />
+                        <select id="inv-category" class="acc-input-like" aria-label="Category filter"></select>
+                        <div class="ite-inv-density-row">
+                            <span aria-hidden="true">Tile size</span>
+                            <input id="inv-density" type="range" min="1" max="5" step="1" value="3" aria-valuemin="1" aria-valuemax="5" aria-label="Resize product tiles from small to large" />
+                            <span id="inv-density-val" class="ite-inv-density-val">Normal</span>
+                        </div>
+                        <div class="ite-inv-tool-actions">
+                            <button type="button" id="inv-refresh" class="btn-ite-inv icon" title="Refresh"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+                            <button type="button" id="inv-print-btn" class="btn-ite-inv icon" title="Print list"><i class="fa fa-print" aria-hidden="true"></i></button>
+                            <button type="button" id="inv-add-btn" class="btn-ite-inv primary">Add item</button>
+                            <button type="button" id="inv-release-btn" class="btn-ite-inv" disabled>Release</button>
+                        </div>
+                    </div>
+                    <div id="inv-meta" class="ite-inv-meta" aria-live="polite"></div>
+                    <div id="inv-empty" class="ite-inv-empty" hidden>No items match the current filters, or inventory has not loaded yet.</div>
+                    <div class="ite-inv-grid-wrap">
+                        <div id="inv-grid" class="ite-inv-grid" role="list"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="inv-variant-modal" class="inv-var-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="inv-var-title">
+        <button type="button" class="inv-var-backdrop" id="inv-var-backdrop" aria-label="Close dialog"></button>
+        <div class="inv-var-dialog" role="document">
+            <div class="inv-var-head">
+                <h3 id="inv-var-title">Material variants</h3>
+                <button type="button" class="inv-var-x" id="inv-var-close" aria-label="Close">&times;</button>
+            </div>
+            <p class="inv-var-meta" id="inv-var-meta"></p>
+            <div class="inv-var-scroll">
+                <table class="inv-var-table">
+                    <thead>
+                        <tr>
+                            <th>Material code</th>
+                            <th class="num">Qty</th>
+                            <th class="num">Row id</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inv-var-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="acc-modal" class="acc-modal" aria-hidden="true" role="dialog" aria-labelledby="acc-modal-title">
+        <div class="acc-modal-backdrop" aria-hidden="true"></div>
+        <div class="acc-modal-dialog">
+            <div class="acc-modal-head">
+                <h3 id="acc-modal-title">New accountability</h3>
+                <button type="button" id="acc-modal-close" class="acc-modal-x" aria-label="Close">&times;</button>
+            </div>
+            <div class="acc-modal-body">
+                <div class="acc-modal-top">
+                    <fieldset class="acc-fieldset">
+                        <legend class="sr-only">Location</legend>
+                        <label class="acc-radio"><input type="radio" name="acc-site" value="paranas" checked /> Paranas</label>
+                        <label class="acc-radio"><input type="radio" name="acc-site" value="catbalogan" /> Catbalogan</label>
+                        <label class="acc-radio"><input type="radio" name="acc-site" value="basey" /> Basey</label>
+                        <label class="acc-radio"><input type="radio" name="acc-site" value="villareal" /> Villareal</label>
+                    </fieldset>
+                    <div class="acc-modal-checks">
+                        <label class="acc-check"><input type="checkbox" id="acc-signed-released" /> Released signed</label>
+                        <label class="acc-check"><input type="checkbox" id="acc-signed-received" /> Received signed</label>
+                    </div>
+                </div>
+                <div class="acc-form-grid">
+                    <label class="acc-field acc-field-span2">
+                        <span class="acc-label">Employee ID / User code</span>
+                        <input type="text" id="acc-recipient-usercode" class="acc-input" placeholder="e.g. 245 or employee ID" autocomplete="off" />
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Employee name</span>
+                        <span class="acc-field-inline acc-emp-inline">
+                            <input type="text" id="acc-employee-name" class="acc-input" placeholder="Search lookup or type name" autocomplete="off" />
+                            <button type="button" id="acc-emp-toggle" class="acc-chip-btn" title="Find employee">…</button>
+                            <div id="acc-emp-picker" class="acc-emp-picker" hidden>
+                                <input type="search" id="acc-emp-q" class="acc-input acc-emp-q" placeholder="Name or employee ID…" autocomplete="off" />
+                                <ul id="acc-emp-results" class="acc-emp-results" role="listbox"></ul>
+                            </div>
+                        </span>
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Position</span>
+                        <input type="text" id="acc-position" class="acc-input" placeholder="Position" />
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Department</span>
+                        <input type="text" id="acc-department" class="acc-input" placeholder="Department" />
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Account code</span>
+                        <input type="text" id="acc-account-code" class="acc-input" placeholder="Account code" />
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Date issued</span>
+                        <input type="date" id="acc-date-issued" class="acc-input" />
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Form ID</span>
+                        <input type="text" id="acc-form-id" class="acc-input acc-input-readonly" readonly />
+                    </label>
+                </div>
+                <div class="acc-materials-row">
+                    <button type="button" id="acc-add-line" class="acc-chip-btn acc-chip-plus" aria-label="Add line">+</button>
+                    <label class="acc-field acc-field-fill">
+                        <span class="acc-label">Materials</span>
+                        <input type="text" id="acc-material-desc" class="acc-input" placeholder="Description / item" />
+                    </label>
+                    <label class="acc-field">
+                        <span class="acc-label">Serial</span>
+                        <input type="text" id="acc-line-serial" class="acc-input" placeholder="Serial no." />
+                    </label>
+                    <label class="acc-field acc-field-qty">
+                        <span class="acc-label">Qty</span>
+                        <input type="number" id="acc-line-qty" class="acc-input" min="1" value="1" />
+                    </label>
+                </div>
+                <div class="acc-lines-wrap">
+                    <table class="acc-lines-table">
+                        <thead>
+                            <tr>
+                                <th>Item code</th>
+                                <th>Description</th>
+                                <th>Serial</th>
+                                <th class="num">Qty</th>
+                                <th class="acc-th-remove"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="acc-lines-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="acc-modal-foot">
+                <div class="acc-total">Total qty: <strong id="acc-total-qty">0</strong></div>
+                <div class="acc-modal-actions">
+                    <button type="button" id="acc-modal-cancel" class="acc-btn-muted">Cancel</button>
+                    <button type="button" id="acc-modal-print" class="acc-btn-muted">Print</button>
+                    <button type="button" id="acc-modal-save" class="acc-btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../module.js"></script>
+    <script src="it-equipment.js?v=20260510inv-pos-v1"></script>
+    <script src="accountability.js?v=20260510acc-v3"></script>
+    <script src="inventory.js?v=20260526-font-standard-v1"></script>
+    <script src="../../../assets/js/offline-sync.js?v=20260820-sw-registration-fix-v10"></script>
+</body>
+</html>
+

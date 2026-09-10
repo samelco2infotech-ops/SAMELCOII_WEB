@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Employees Profile | SAMELCII</title>
+    <script>
+        (function () {
+            const nodeRoot = `${window.location.protocol === "https:" ? "https:" : "http:"}//${window.location.hostname || "127.0.0.1"}:3000`;
+            window.SAMELCII_NODE_API_BASE = `${nodeRoot}/api`;
+            window.SAMELCII_API_BASE = window.SAMELCII_NODE_API_BASE;
+            window.SAMELCII_MEDIA_BASE = nodeRoot;
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <!-- EDIT GUIDE: Bump these version strings when the Employees Profile OT layout changes. -->
+    <link rel="stylesheet" href="./styles.css?v=20260903-ot-people-row-nowrap" />
+    <style>
+        .profile-modal.epass-mode .profile-modal-head > div {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .profile-modal.epass-mode .profile-modal-head [data-request-number-badge="epass"] {
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        .profile-modal.epass-mode .epass-request-form .epass-request-head {
+            display: none !important;
+        }
+
+        .travel-request-form .travel-selected-list--compact {
+            order: -1;
+        }
+
+        .epass-request-actions {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .epass-request-form .epass-destination-row,
+        .travel-request-form .travel-destination-row {
+            grid-template-columns: minmax(0, 1fr) auto !important;
+        }
+
+        .epass-new-request-btn {
+            min-height: 46px;
+            padding: 0 14px;
+            border: 1px solid #93b4e8;
+            border-radius: 6px;
+            background: #fff;
+            color: #2458b8;
+            font: inherit;
+            font-weight: 800;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .epass-new-request-btn:hover,
+        .epass-new-request-btn:focus-visible {
+            border-color: #2563eb;
+            background: #eff6ff;
+            outline: 0;
+        }
+
+        .epass-new-request-btn[hidden] {
+            display: none !important;
+        }
+
+        .profile-modal.leave-mode {
+            align-items: stretch !important;
+            padding: 0 !important;
+        }
+
+        .profile-modal.leave-mode .profile-modal-card {
+            display: flex !important;
+            flex-direction: column;
+            width: 100vw !important;
+            max-width: none !important;
+            height: 100vh !important;
+            max-height: none !important;
+            padding: 22px 26px !important;
+            overflow: hidden !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .profile-modal.leave-mode .profile-modal-head {
+            flex: 0 0 auto;
+        }
+
+        .profile-modal.leave-mode .profile-modal-body,
+        .profile-modal.leave-mode .leave-panel--rebuilt,
+        .profile-modal.leave-mode .leave-request-workspace {
+            flex: 1 1 auto;
+            min-height: 0 !important;
+            height: 100% !important;
+            max-height: none !important;
+        }
+
+        .profile-modal.leave-mode .leave-schedule-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            align-items: end;
+            gap: 10px;
+        }
+
+        .profile-modal.leave-mode .leave-schedule-row .leave-type-control {
+            max-width: none;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure[open] .leave-calendar {
+            min-height: 650px !important;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-toolbar {
+            min-height: 58px;
+            padding: 12px 16px !important;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-toolbar strong {
+            font-size: 20px;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-weekdays {
+            min-height: 42px;
+            padding: 13px 16px 7px !important;
+            font-size: 13px;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-grid {
+            grid-template-rows: repeat(6, minmax(88px, 1fr)) !important;
+            grid-auto-rows: minmax(88px, 1fr) !important;
+            min-height: 528px !important;
+            gap: 7px !important;
+            padding: 7px 16px 16px !important;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day {
+            min-height: 88px !important;
+            border-radius: 0 !important;
+            font-size: 14px !important;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar {
+            grid-template-rows: auto auto auto 1fr !important;
+            overflow: hidden;
+            border: 1px solid #cbd8eb;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(15, 35, 65, .08);
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-toolbar {
+            border-bottom: 1px solid #d9e3f1;
+            background: #fff;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-weekdays {
+            min-height: 46px;
+            padding: 0 !important;
+            border-bottom: 1px solid #d9e3f1;
+            background: #f5f8fc;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-weekdays span {
+            display: grid;
+            place-items: center;
+            border-right: 1px solid #e2e8f2;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-weekdays span:last-child {
+            border-right: 0;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-weekdays span:first-child {
+            background: #fff1f2;
+            color: #c81e1e;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-weekdays span:last-child {
+            background: #f0f7ff;
+            color: #1769aa;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px 12px;
+            padding: 9px 14px;
+            border-bottom: 1px solid #d9e3f1;
+            background: #fbfdff;
+            color: #52647e;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-legend i {
+            display: grid;
+            width: 22px;
+            height: 22px;
+            place-items: center;
+            border-radius: 7px;
+            color: #fff;
+            font-style: normal;
+            font-size: 10px;
+        }
+
+        .profile-modal.leave-mode .legend-half-day i { background: #e9950c; }
+        .profile-modal.leave-mode .legend-vacation i { background: #0891b2; }
+        .profile-modal.leave-mode .legend-sick i { background: #7c3aed; }
+        .profile-modal.leave-mode .legend-maternity i { background: #db2777; }
+        .profile-modal.leave-mode .legend-emergency i { background: #dc2626; }
+        .profile-modal.leave-mode .legend-holiday i { background: #b91c1c; }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-grid {
+            gap: 0 !important;
+            padding: 0 !important;
+            background: #dfe7f2;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day {
+            position: relative;
+            place-items: start;
+            align-content: start;
+            gap: 8px;
+            padding: 12px !important;
+            border-right: 1px solid #dfe7f2 !important;
+            border-bottom: 1px solid #dfe7f2 !important;
+            background: #fff;
+            color: #334155;
+            text-align: left;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day:nth-child(7n) {
+            border-right: 0 !important;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day:nth-last-child(-n+7) {
+            border-bottom: 0 !important;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day:nth-child(7n + 1),
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day:nth-child(7n) {
+            background: #f8fafc;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day:hover {
+            z-index: 1;
+            background: #edf6ff;
+            box-shadow: inset 0 0 0 2px #55a9e4;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.muted {
+            background: #f8fafc;
+            color: #b7c1d1;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.sunday:not(.muted) {
+            background: #fff1f2;
+            color: #c81e1e;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.saturday:not(.muted) {
+            background: #f6faff;
+            color: #1769aa;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.marked-holiday {
+            background: #fff1f2;
+            color: #c81e1e;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.marked-leave {
+            background: #f5edff;
+            color: #7624ad;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.today {
+            box-shadow: inset 0 0 0 2px #22a06b;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.today span {
+            display: grid;
+            min-width: 28px;
+            min-height: 28px;
+            place-items: center;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #087443;
+            font-weight: 900;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.in-range {
+            background: #eaf5ff;
+            color: #126aa8;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.selected {
+            z-index: 2;
+            background: linear-gradient(135deg, #1d4ed8, #248fd3);
+            color: #fff;
+            box-shadow: inset 0 0 0 2px #174fbd, 0 6px 14px rgba(29, 78, 216, .2);
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.selected span {
+            color: inherit;
+            font-weight: 900;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day small {
+            max-width: 100%;
+            padding: 4px 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .72);
+            font-size: 9px;
+            line-height: 1.15;
+            box-shadow: inset 0 0 0 1px currentColor;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-holiday-label {
+            display: flex !important;
+            align-items: flex-start;
+            gap: 5px;
+            width: 100%;
+            min-width: 0;
+            padding: 5px 6px;
+            border: 1px solid #ef9a9a;
+            border-radius: 7px;
+            background: #fff !important;
+            color: #b91c1c !important;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(185, 28, 28, .08);
+        }
+
+        .profile-modal.leave-mode .leave-calendar-holiday-label i {
+            display: grid;
+            width: 16px;
+            height: 16px;
+            place-items: center;
+            flex: 0 0 16px;
+            border-radius: 5px;
+            background: #c81e1e;
+            color: #fff;
+            font-style: normal;
+            font-size: 8px;
+            font-weight: 900;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-holiday-label b {
+            display: -webkit-box;
+            overflow: hidden;
+            color: inherit;
+            font-size: 8px;
+            font-weight: 900;
+            line-height: 1.25;
+            white-space: normal;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day:focus-visible {
+            z-index: 4;
+            outline: 3px solid #fbbf24;
+            outline-offset: -4px;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-half-day.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-half-day.marked-leave {
+            background: #fff7d6;
+            color: #9a5800;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-vacation.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-vacation.marked-leave {
+            background: #e6faff;
+            color: #08768f;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-sick.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-sick.marked-leave {
+            background: #f1e9ff;
+            color: #6d28d9;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-maternity.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-maternity.marked-leave {
+            background: #ffe8f3;
+            color: #be185d;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-paternity.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-paternity.marked-leave,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-official.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-official.marked-leave {
+            background: #e8efff;
+            color: #354bc5;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-emergency.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-emergency.marked-leave {
+            background: #ffebe7;
+            color: #c2410c;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-whole-day.in-range,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-other.in-range {
+            background: #eaf5ff;
+            color: #126aa8;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-half-day.selected { background: #e9950c; }
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-vacation.selected { background: #0891b2; }
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-sick.selected { background: #7c3aed; }
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-maternity.selected { background: #db2777; }
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-paternity.selected,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-official.selected { background: #4f63d8; }
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-emergency.selected { background: #dc2626; }
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-whole-day.selected,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.leave-type-other.selected { background: #247fd1; }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.has-leave-request {
+            cursor: pointer;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-status-approved {
+            background-image: linear-gradient(180deg, rgba(22, 164, 103, .035), rgba(22, 164, 103, .08));
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-status-rejected {
+            background-image: linear-gradient(180deg, rgba(220, 48, 48, .025), rgba(220, 48, 48, .07));
+        }
+
+        /* ponytail: a multi-day request's badge bleeds across the 12px cell padding + shared 1px
+           border into the neighboring day so it reads as one continuous bar, not five separate
+           requests. Ceiling: it's still five DOM elements lined up, not one true spanning bar, so a
+           very faint seam can show at each day boundary — upgrade path is an absolutely-positioned
+           overlay bar computed from the start/end cells' bounding rects if that seam ever matters. */
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-range-start .leave-request-date-badge {
+            margin-right: -13px;
+            border-radius: 7px 0 0 7px;
+            padding-right: 13px;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-range-mid .leave-request-date-badge {
+            margin-right: -13px;
+            margin-left: -13px;
+            border-radius: 0;
+            padding-right: 13px;
+            padding-left: 13px;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-range-end .leave-request-date-badge {
+            margin-left: -13px;
+            border-radius: 0 7px 7px 0;
+            padding-left: 13px;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-range-mid .leave-request-date-badge,
+        .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day.request-range-end .leave-request-date-badge {
+            grid-template-columns: minmax(0, 1fr);
+            justify-items: center;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge__spacer {
+            width: 100%;
+            height: 3px;
+            border-radius: 999px;
+            background: currentColor;
+            opacity: .35;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badges {
+            display: grid;
+            align-self: end;
+            gap: 3px;
+            width: 100%;
+            margin-top: auto;
+            color: #203654;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge {
+            display: grid;
+            grid-template-columns: 7px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+            padding: 5px 6px;
+            border: 0;
+            border-radius: 7px;
+            background: #fff7dc;
+            color: #72500b;
+            font-style: normal;
+            font-size: 8px;
+            line-height: 1;
+            box-shadow: inset 0 0 0 1px rgba(181, 126, 10, .18);
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge i {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #e9a008;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge b {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge span {
+            flex: 0 0 auto;
+            color: inherit !important;
+            font-size: 8px;
+            font-weight: 900 !important;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge.is-approved {
+            background: #eafaf1;
+            color: #087443;
+            box-shadow: inset 0 0 0 1px rgba(8, 116, 67, .16);
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge.is-approved i {
+            background: #16a467;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge.is-rejected {
+            background: #fff0f1;
+            color: #a51d1d;
+            box-shadow: inset 0 0 0 1px rgba(165, 29, 29, .15);
+        }
+
+        .profile-modal.leave-mode .leave-request-date-badge.is-rejected i {
+            background: #dc3030;
+        }
+
+        .profile-modal.leave-mode .leave-request-date-more {
+            color: #52647e;
+            font-style: normal;
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-overlay {
+            position: absolute;
+            z-index: 70;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 22px;
+            border-radius: 18px;
+            background: rgba(15, 31, 55, .32);
+            backdrop-filter: blur(3px);
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-dialog {
+            width: min(560px, 100%);
+            max-height: min(620px, calc(100% - 20px));
+            overflow: hidden;
+            border: 1px solid #d7e2f1;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 24px 64px rgba(15, 31, 55, .26);
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-dialog > header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            border-bottom: 1px solid #e1e8f2;
+            background: #f8fbff;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-dialog > header span {
+            color: #63789a;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-dialog > header h3 {
+            margin: 3px 0 0;
+            color: #14294c;
+            font-size: 22px;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-dialog > header button {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            flex: 0 0 38px;
+            border: 1px solid #cedbef;
+            border-radius: 10px;
+            background: #fff;
+            color: #274c7d;
+            cursor: pointer;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-list {
+            display: grid;
+            gap: 12px;
+            max-height: 510px;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card {
+            padding: 16px;
+            border: 1px solid #e5bd53;
+            border-radius: 14px;
+            background: #fffaf0;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card.is-approved {
+            border-color: #75d5a0;
+            background: #f1fcf6;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card.is-rejected {
+            border-color: #eba0a0;
+            background: #fff5f5;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(100, 120, 150, .16);
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card-head div {
+            display: grid;
+            gap: 3px;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card-head span,
+        .profile-modal.leave-mode .leave-request-detail-card dt {
+            color: #6b7e9c;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card-head > b {
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #fde9b2;
+            color: #875600;
+            font-size: 10px;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card.is-approved .leave-request-detail-card-head > b {
+            background: #c9f5dc;
+            color: #087443;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card.is-rejected .leave-request-detail-card-head > b {
+            background: #ffdada;
+            color: #a51d1d;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card dl {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin: 14px 0 0;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card dl > div {
+            display: grid;
+            gap: 4px;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card dd {
+            margin: 0;
+            color: #183254;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card .leave-request-detail-purpose {
+            grid-column: 1 / -1;
+        }
+
+        .profile-modal.leave-mode .leave-request-detail-card .leave-request-detail-purpose dd {
+            font-weight: 600;
+            line-height: 1.45;
+            white-space: pre-wrap;
+        }
+
+        .profile-modal.leave-mode .leave-calendar-disclosure > summary {
+            display: none !important;
+        }
+
+        .profile-modal.leave-mode .leave-request-workspace {
+            position: relative !important;
+            display: block !important;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose {
+            display: grid !important;
+            grid-template-columns: minmax(390px, .82fr) minmax(560px, 1.18fr);
+            grid-template-rows: auto auto auto auto auto !important;
+            align-content: start !important;
+            gap: 14px 18px;
+            width: 100%;
+            height: 100%;
+            overflow: hidden !important;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-credit-overview {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-schedule-row {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-purpose-field {
+            grid-column: 1;
+            grid-row: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            min-height: 0;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-purpose-field .leave-textbox {
+            height: 210px !important;
+            min-height: 210px !important;
+            resize: vertical;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-calendar-disclosure {
+            grid-column: 2;
+            grid-row: 1 / 6;
+            min-width: 0;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-preview-band--compact {
+            grid-column: 1;
+            grid-row: 4;
+            grid-template-columns: 1fr auto;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-preview-band--compact .leave-summary-chips {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-preview-band--compact .leave-submit-actions {
+            grid-column: 2;
+            grid-row: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .profile-modal.leave-mode .leave-edit-cancel {
+            min-height: 48px;
+            padding: 0 16px;
+            border: 1px solid #c9d6e8;
+            border-radius: 9px;
+            background: #fff;
+            color: #506583;
+            font: inherit;
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .profile-modal.leave-mode .leave-request-compose > .leave-message {
+            grid-column: 1;
+            grid-row: 5;
+        }
+
+        /* Leave Requests history panel styling now lives entirely in styles.css (.leave-request-history, .leave-history-*, .leave-route-*) -- this inline block was an older, un-!important-ridden duplicate that always won the cascade over styles.css and was the real source of every truncation/layout bug chased in that file. */
+        .profile-modal.leave-mode #leave-submit:disabled {
+            cursor: wait;
+            opacity: .65;
+        }
+
+        .profile-modal.leave-mode .leave-message.is-success { color: #087443; }
+        .profile-modal.leave-mode .leave-message.is-error { color: #b42318; }
+
+        @media (max-width: 820px) {
+            .profile-modal.leave-mode .leave-request-compose {
+                display: flex !important;
+                flex-direction: column;
+                overflow-y: auto !important;
+            }
+
+            .profile-modal.leave-mode .leave-request-compose > .leave-calendar-disclosure {
+                flex: 0 0 auto;
+                width: 100%;
+                height: auto;
+            }
+
+            .profile-modal.leave-mode .leave-schedule-row {
+                grid-template-columns: 1fr !important;
+            }
+
+            .profile-modal.leave-mode .leave-calendar-disclosure[open] .leave-calendar {
+                min-height: 500px !important;
+            }
+
+            .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-grid {
+                grid-template-rows: repeat(6, minmax(58px, 1fr)) !important;
+                grid-auto-rows: minmax(58px, 1fr) !important;
+                min-height: 390px !important;
+                padding-inline: 8px !important;
+            }
+
+            .profile-modal.leave-mode .leave-calendar-disclosure .leave-calendar-day {
+                min-height: 58px !important;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .profile-modal.leave-mode .profile-modal-card {
+                padding: 16px 12px !important;
+            }
+        }
+
+        .profile-modal.travel-mode .travel-request-archive,
+        body.profile-embed-travel .travel-request-archive {
+            display: flex !important;
+            flex-direction: column;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        .profile-modal.travel-mode .travel-request-archive #travel-list-body,
+        body.profile-embed-travel .travel-request-archive #travel-list-body {
+            min-height: 0 !important;
+            overflow-y: scroll !important;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            scrollbar-width: auto;
+            scrollbar-color: #8b95a5 #eef3f9;
+        }
+
+        .profile-modal.travel-mode .travel-request-archive #travel-list-body::-webkit-scrollbar,
+        body.profile-embed-travel .travel-request-archive #travel-list-body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .profile-modal.travel-mode .travel-request-archive #travel-list-body::-webkit-scrollbar-track,
+        body.profile-embed-travel .travel-request-archive #travel-list-body::-webkit-scrollbar-track {
+            background: #eef3f9;
+            border-radius: 999px;
+        }
+
+        .profile-modal.travel-mode .travel-request-archive #travel-list-body::-webkit-scrollbar-thumb,
+        body.profile-embed-travel .travel-request-archive #travel-list-body::-webkit-scrollbar-thumb {
+            border: 2px solid #eef3f9;
+            border-radius: 999px;
+            background: #8b95a5;
+        }
+
+        .epass-request-form .epass-reference-purpose::before {
+            content: none !important;
+            display: none !important;
+        }
+
+        .request-approver-control {
+            display: grid;
+            grid-template-columns: minmax(240px, 300px) minmax(320px, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+            align-items: stretch;
+        }
+
+        .request-approver-field {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            min-width: 0;
+            min-height: 68px;
+            padding: 8px 12px;
+            border: 1px solid #c9d9f4;
+            border-radius: 12px;
+            background: #f8fbff;
+        }
+
+        .request-approver-field > span {
+            display: block;
+            margin-bottom: 4px;
+            color: #617596;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .request-approver-field select,
+        .request-approver-field input[type="search"] {
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 38px;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            outline: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #10264b;
+            font: inherit;
+            font-weight: 800;
+        }
+
+        .request-approver-field select:focus,
+        .request-approver-field input[type="search"]:focus {
+            box-shadow: none !important;
+        }
+
+        .request-approver-field small {
+            display: block;
+            color: #6c7e9c;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .request-approver-field[hidden] {
+            display: none !important;
+        }
+
+        .request-approver-picker {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            align-items: stretch;
+            gap: 10px;
+            min-width: 0;
+            min-height: 68px;
+        }
+
+        .request-approver-picker > .request-approver-field {
+            height: 100%;
+        }
+
+        .request-approver-picker[hidden],
+        .request-approver-results[hidden] {
+            display: none !important;
+        }
+
+        .request-approver-results {
+            position: absolute;
+            z-index: 80;
+            top: calc(100% + 7px);
+            left: 0;
+            right: 0;
+            max-height: 286px;
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid #c9d9f4;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 18px 42px rgba(16, 38, 75, .2);
+        }
+
+        .request-approver-result {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr) 30px;
+            align-items: center;
+            gap: 11px;
+            padding: 9px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: transparent;
+            color: #10264b;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .request-approver-result:hover,
+        .request-approver-result:focus-visible,
+        .request-approver-result.is-selected {
+            border-color: #9ec1ff;
+            background: #eef5ff;
+            outline: none;
+        }
+
+        .request-approver-avatar {
+            width: 48px;
+            height: 48px;
+            display: inline-grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dce9ff, #edf4ff);
+            color: #245bd0;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .request-approver-avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .request-approver-avatar-fallback {
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .request-approver-copy {
+            min-width: 0;
+        }
+
+        .request-approver-copy strong,
+        .request-approver-copy span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .request-approver-copy strong {
+            font-size: 13px;
+        }
+
+        .request-approver-copy span {
+            margin-top: 2px;
+            color: #617596;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .request-approver-check {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #dcf8e8;
+            color: #14804a;
+            opacity: 0;
+        }
+
+        .request-approver-result.is-selected .request-approver-check {
+            opacity: 1;
+        }
+
+        .request-approver-empty {
+            padding: 18px 12px;
+            color: #617596;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .request-approver-selected {
+            min-width: 0;
+            margin-top: 0;
+        }
+
+        .request-approver-picker > .request-approver-field[hidden] + .request-approver-selected {
+            grid-column: 1 / -1;
+        }
+
+        .request-approver-selected-card {
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 11px;
+            min-height: 66px;
+            padding: 8px 10px;
+            border: 1px solid #bcd2f6;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f8fbff, #eef5ff);
+        }
+
+        .request-approver-selected-card.is-changeable {
+            cursor: pointer;
+        }
+
+        .request-approver-selected-card.is-default {
+            border-color: #8edbb0;
+            background: linear-gradient(135deg, #f5fff9, #e8f9ef);
+        }
+
+        .request-approver-selected-actions {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .request-approver-selected-badge {
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #2458b8;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .request-approver-selected-card.is-default .request-approver-selected-badge {
+            background: #d9f7e6;
+            color: #087443;
+        }
+
+        .request-approver-default-btn {
+            min-height: 34px;
+            padding: 0 10px;
+            border: 1px solid #9dbdf2;
+            border-radius: 9px;
+            background: #fff;
+            color: #2458b8;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .request-approver-default-btn:hover,
+        .request-approver-default-btn:focus-visible {
+            border-color: #2563eb;
+            background: #eff6ff;
+            outline: 0;
+        }
+
+        .request-approver-selected-empty {
+            min-height: 66px;
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border: 1px dashed #bfd0ec;
+            border-radius: 14px;
+            background: #f8fbff;
+            color: #617596;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        /* Larger EPASS and Travel workspaces without removing safe screen margins. */
+        .profile-modal.epass-mode,
+        .profile-modal.travel-mode {
+            padding: 6px !important;
+        }
+
+        .profile-modal.epass-mode .profile-modal-card,
+        .profile-modal.travel-mode .profile-modal-card {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            width: calc(100vw - 12px) !important;
+            max-width: 1600px !important;
+            height: calc(100vh - 12px) !important;
+            max-height: 1000px !important;
+            padding: 16px 18px !important;
+            overflow: hidden !important;
+        }
+
+        .profile-modal.epass-mode .profile-modal-body,
+        .profile-modal.travel-mode .profile-modal-body {
+            flex: 1 1 auto;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        .profile-modal.epass-mode .epass-panel.epass-panel--rebuilt,
+        .profile-modal.travel-mode .travel-panel.travel-panel--rebuilt {
+            flex: 1 1 auto;
+            height: 100% !important;
+            min-height: 0 !important;
+        }
+
+        @media (max-width: 760px) {
+            .profile-modal.epass-mode,
+            .profile-modal.travel-mode {
+                padding: 0 !important;
+            }
+
+            .profile-modal.epass-mode .profile-modal-card,
+            .profile-modal.travel-mode .profile-modal-card {
+                width: 100vw !important;
+                height: 100vh !important;
+                max-height: none !important;
+                padding: 12px !important;
+                border-radius: 0 !important;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .request-approver-control {
+                grid-template-columns: 1fr;
+            }
+
+            .request-approver-picker {
+                grid-template-columns: 1fr;
+            }
+
+            .request-approver-picker > .request-approver-field,
+            .request-approver-selected {
+                grid-column: 1;
+            }
+
+            .request-approver-results {
+                position: static;
+                margin-top: 7px;
+                max-height: 240px;
+            }
+        }
+
+        /* Travel Request Details: bump up the small type the user flagged as unreadable. */
+        .travel-request-form .epass-pill-input,
+        .travel-request-form .epass-date-pill,
+        .travel-request-form .epass-date-pill span,
+        .travel-request-form .epass-destination-input,
+        .travel-request-form .epass-purpose-box,
+        .travel-request-form .epass-message,
+        .travel-request-form .epass-save-btn {
+            font-size: 15px;
+        }
+
+        .travel-request-form .request-approver-field > span {
+            font-size: 13px;
+        }
+
+        .travel-request-form .request-approver-field small {
+            font-size: 12px;
+        }
+
+        .travel-request-form .request-approver-copy strong {
+            font-size: 16px;
+        }
+
+        .travel-request-form .request-approver-copy span {
+            font-size: 13px;
+        }
+
+        .travel-request-form .request-approver-selected-badge {
+            font-size: 11px;
+        }
+
+        .travel-request-form .request-approver-default-btn,
+        .travel-request-form .request-approver-selected-empty,
+        .travel-request-form .request-approver-empty {
+            font-size: 13px;
+        }
+
+        /* Airport-style calendar date picker, shared by EPASS and Travel request forms. */
+        .travel-calendar-field {
+            margin: 4px 0 6px;
+        }
+
+        .travel-calendar-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #b91c1c;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .travel-calendar-hint {
+            margin: 2px 0 8px;
+            color: #6c7e9c;
+            font-size: 11.5px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .travel-calendar {
+            border: 1px solid #e7ecf5;
+            border-radius: 16px;
+            padding: 16px 16px 18px;
+            background: #fbfcfe;
+            margin-top: 6px;
+        }
+
+        .travel-calendar-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2px 14px;
+        }
+
+        .travel-calendar-head strong {
+            font-size: 18px;
+            font-weight: 900;
+            color: #10264b;
+            letter-spacing: 0.01em;
+        }
+
+        .travel-calendar-nav {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid #dfe6f2;
+            background: #fff;
+            color: #45566f;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .travel-calendar-nav:hover {
+            background: #eef5ff;
+            border-color: #9ec1ff;
+            color: #1d4ed8;
+        }
+
+        .travel-calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
+            padding: 0 2px 8px;
+        }
+
+        .travel-calendar-weekdays span {
+            text-align: center;
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: #93a2ba;
+            text-transform: uppercase;
+        }
+
+        .travel-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px 4px;
+            padding: 0 2px;
+        }
+
+        .travel-calendar-day {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            min-height: 42px;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #10264b;
+            font: 700 17px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+        }
+
+        .travel-calendar-day:not(:disabled):hover {
+            background: #eef5ff;
+            color: #1d4ed8;
+        }
+
+        .travel-calendar-day:active:not(:disabled) {
+            transform: scale(0.94);
+        }
+
+        .travel-calendar-day.is-today {
+            color: #1d4ed8;
+            border-color: #9ec1ff;
+        }
+
+        .travel-calendar-day.is-selected {
+            background: #1d4ed8;
+            color: #fff;
+            box-shadow: 0 6px 14px rgba(29, 78, 216, 0.35);
+            border-color: #1d4ed8;
+        }
+
+        .travel-calendar-day.is-blank {
+            visibility: hidden;
+            cursor: default;
+        }
+
+        dialog.calendar-popup {
+            width: min(460px, 94vw);
+            padding: 20px;
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        }
+
+        /* [FIX] The inline chip rail under the trigger button repeated exactly what the calendar
+           popup already shows via its highlighted day circles, so it's redundant screen space —
+           hide it and let the freed-up room go to a bigger calendar instead. */
+        #travel-dates-list {
+            display: none;
+        }
+
+        dialog.calendar-popup::backdrop {
+            background: rgba(15, 23, 42, 0.45);
+        }
+
+        .calendar-popup-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .calendar-popup-head strong {
+            font-size: 18px;
+            font-weight: 900;
+            color: #10264b;
+        }
+
+        .calendar-popup-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 0;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .calendar-popup-close:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+    <main class="profile-module">
+        <section class="profile-topbar">
+            <div>
+                <p class="eyebrow">Master Page Module</p>
+                <h1>Employees Profile</h1>
+            </div>
+            <div class="topbar-meta">
+                <span id="profile-clock">-</span>
+                <span class="status-chip">Employee Records</span>
+                <button class="profile-layout-button" id="profile-layout-customize" type="button" aria-pressed="false">
+                    <i class="fa fa-arrows" aria-hidden="true"></i>
+                    <span>Customize layout</span>
+                </button>
+                <button class="profile-layout-button" id="profile-layout-settings-toggle" type="button" aria-expanded="false" aria-controls="profile-layout-settings">
+                    <i class="fa fa-sliders" aria-hidden="true"></i>
+                    <span>Layout settings</span>
+                </button>
+                <button class="profile-layout-button profile-layout-reset" id="profile-layout-reset" type="button" hidden>
+                    <i class="fa fa-undo" aria-hidden="true"></i>
+                    <span>Reset layout</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="profile-quick-actions" aria-label="Employee forms">
+            <button class="quick-action-btn" type="button" data-form="dtr">
+                <i class="fa fa-clock-o"></i>
+                <span>ALC</span>
+            </button>
+            <!-- GABAY: Isang button lang — magbubukas ng picker na EPASS o TRAVEL ang pinipili. -->
+            <button class="quick-action-btn quick-action-epass-travel" type="button" data-form="epass-travel">
+                <span class="quick-action-dual-icon" aria-hidden="true">
+                    <i class="fa fa-id-card-o"></i>
+                    <i class="fa fa-plane"></i>
+                </span>
+                <span>EPASS/TRAVEL</span>
+            </button>
+            <button class="quick-action-btn" type="button" data-form="leave">
+                <i class="fa fa-calendar-check-o"></i>
+                <span>LEAVE</span>
+            </button>
+            <!-- GABAY: OT button opens the overtime request form. -->
+            <button class="quick-action-btn quick-action-ot" type="button" data-form="overtime">
+                <i class="fa fa-hourglass-half"></i>
+                <span>OT</span>
+            </button>
+        </section>
+
+        <section class="profile-layout-settings" id="profile-layout-settings" aria-labelledby="profile-layout-settings-title" hidden>
+            <div class="profile-layout-settings-head">
+                <div>
+                    <p class="eyebrow">Local workspace</p>
+                    <h2 id="profile-layout-settings-title">Advanced layout settings</h2>
+                </div>
+                <button class="profile-layout-settings-close" id="profile-layout-settings-close" type="button" aria-label="Close layout settings">&times;</button>
+            </div>
+            <div class="profile-layout-settings-grid">
+                <label class="profile-layout-density">
+                    <span>Display density</span>
+                    <select id="profile-layout-density">
+                        <option value="compact">Compact</option>
+                        <option value="comfortable">Comfortable</option>
+                        <option value="spacious">Spacious</option>
+                    </select>
+                </label>
+                <div class="profile-layout-panel-list" aria-label="Panel visibility and collapse settings">
+                    <div class="profile-layout-panel-row" data-layout-panel-row="profile">
+                        <strong>Profile</strong>
+                        <label><input type="checkbox" data-layout-visible="profile" /> Show</label>
+                        <label><input type="checkbox" data-layout-collapsed="profile" /> Collapse</label>
+                        <button type="button" data-layout-panel-reset="profile">Reset</button>
+                    </div>
+                    <div class="profile-layout-panel-row" data-layout-panel-row="attendance">
+                        <strong>Attendance</strong>
+                        <label><input type="checkbox" data-layout-visible="attendance" /> Show</label>
+                        <label><input type="checkbox" data-layout-collapsed="attendance" /> Collapse</label>
+                        <button type="button" data-layout-panel-reset="attendance">Reset</button>
+                    </div>
+                    <div class="profile-layout-panel-row" data-layout-panel-row="accountability">
+                        <strong>IT Accountability</strong>
+                        <label><input type="checkbox" data-layout-visible="accountability" /> Show</label>
+                        <label><input type="checkbox" data-layout-collapsed="accountability" /> Collapse</label>
+                        <button type="button" data-layout-panel-reset="accountability">Reset</button>
+                    </div>
+                    <div class="profile-layout-panel-row" data-layout-panel-row="leave">
+                        <strong>Leave Points</strong>
+                        <label><input type="checkbox" data-layout-visible="leave" /> Show</label>
+                        <label><input type="checkbox" data-layout-collapsed="leave" /> Collapse</label>
+                        <button type="button" data-layout-panel-reset="leave">Reset</button>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-layout-settings-actions">
+                <button type="button" id="profile-layout-export"><i class="fa fa-download" aria-hidden="true"></i> Export settings</button>
+                <button type="button" id="profile-layout-import"><i class="fa fa-upload" aria-hidden="true"></i> Import settings</button>
+                <input id="profile-layout-import-file" type="file" accept="application/json,.json" hidden />
+                <span id="profile-layout-settings-status" role="status" aria-live="polite"></span>
+            </div>
+            <p class="profile-layout-local-note"><i class="fa fa-bolt" aria-hidden="true"></i> Saved automatically on this computer only. No database or API request is used.</p>
+        </section>
+
+        <section class="profile-grid" id="profile-custom-layout">
+            <article class="card identity-card profile-layout-widget" data-layout-widget="profile">
+                <button class="profile-layout-drag-handle" type="button" draggable="false" data-layout-drag="main" aria-label="Drag Profile panel">
+                    <i class="fa fa-arrows" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </button>
+                <div class="identity-head">
+                    <div class="avatar-wrap">
+                        <img id="profile-avatar" src="../../../assets/images/avatar-female.jpg?v=20260615-avatar-small-v2" alt="Employee avatar" />
+                        <button class="avatar-change-btn" id="profile-avatar-change" type="button">
+                            <i class="fa fa-camera"></i>
+                            <span>Change photo</span>
+                        </button>
+                        <input id="profile-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+                    </div>
+                    <div class="identity-main">
+                        <div class="title-row">
+                            <h2 id="employee-name">Employee Name</h2>
+                            <span class="badge active">Active</span>
+                        </div>
+                        <div class="identity-meta">
+                            <div><span>Role</span><strong id="employee-role">System User</strong></div>
+                            <div><span>Position</span><strong id="employee-position">Department Staff</strong></div>
+                            <div><span>Email</span><strong id="employee-email">-</strong></div>
+                            <div><span>Phone</span><strong id="employee-phone">-</strong></div>
+                            <div><span>Company</span><strong>SAMELCO II</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="identity-footer">
+                    <button class="soft-btn" type="button" id="profile-edit-open">Edit Profile</button>
+                    <button class="soft-btn alt" type="button">Employee Card</button>
+                </div>
+                <div class="identity-section">
+                <div class="card-head">
+                    <h3>Basic Information</h3>
+                    <span class="mini-note">Non-editable</span>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <span>Hire Date</span>
+                        <strong id="employee-hire-date">-</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span>Worked For</span>
+                        <strong id="employee-tenure">-</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span>Employee ID</span>
+                        <strong id="employee-id">-</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span>SSN</span>
+                        <strong>XXX-XX-3561</strong>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-head">
+                        <h4>Personal Information</h4>
+                        <span>Non-editable</span>
+                    </div>
+                    <div class="info-display-grid">
+                        <div class="info-display-item">
+                            <span class="info-label">Birth Date</span>
+                            <strong class="info-value" id="employee-birthdate">-</strong>
+                        </div>
+                        <div class="info-display-item">
+                            <span class="info-label">Address</span>
+                            <strong class="info-value" id="employee-address">-</strong>
+                        </div>
+                        <div class="info-display-item">
+                            <span class="info-label">Street 2</span>
+                            <strong class="info-value" id="employee-street2">-</strong>
+                        </div>
+                        <div class="info-display-item">
+                            <span class="info-label">City</span>
+                            <strong class="info-value" id="employee-city">-</strong>
+                        </div>
+                        <div class="info-display-item">
+                            <span class="info-label">Province</span>
+                            <strong class="info-value" id="employee-province">-</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-head">
+                        <h4>Occupation Information</h4>
+                        <span>Department View</span>
+                    </div>
+                    <div class="info-display-grid compact">
+                        <div class="info-display-item emphasis">
+                            <span class="info-label">Employment</span>
+                            <strong class="info-value">Full-Time</strong>
+                        </div>
+                        <div class="info-display-item emphasis">
+                            <span class="info-label">Department</span>
+                            <strong class="info-value" id="employee-department">-</strong>
+                        </div>
+                        <div class="info-display-item emphasis">
+                            <span class="info-label">Assignment</span>
+                            <strong class="info-value" id="employee-assignment">Main Office</strong>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </article>
+
+            <article class="card dtr-card profile-layout-widget" data-layout-widget="attendance">
+                <button class="profile-layout-drag-handle" type="button" draggable="false" data-layout-drag="main" aria-label="Drag Attendance panel">
+                    <i class="fa fa-arrows" aria-hidden="true"></i>
+                    <span>Attendance</span>
+                </button>
+                <div class="dtr-head">
+                    <div>
+                        <p class="eyebrow">Daily Time Record</p>
+                        <h3>Attendance Record</h3>
+                    </div>
+                    <div class="dtr-head-tools">
+                        <div class="form-chip-row">
+                            <span class="form-chip approved" id="dtr-month-badge">APRIL 2026</span>
+                            <span class="form-chip" id="dtr-area-badge">MAIN OFFICE</span>
+                        </div>
+                        <div class="dtr-month-controls" aria-label="View monthly DTR">
+                            <select id="dtr-month-select" aria-label="DTR month"></select>
+                            <select id="dtr-year-select" aria-label="DTR year"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dtr-table-wrap">
+                    <table class="dtr-table-sheet">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Day</th>
+                                <th colspan="2">A M</th>
+                                <th colspan="2">P M</th>
+                                <th colspan="2">Over Time</th>
+                                <th rowspan="2">Under Time</th>
+                            </tr>
+                            <tr>
+                                <th>IN</th>
+                                <th>OUT</th>
+                                <th>IN</th>
+                                <th>OUT</th>
+                                <th>IN</th>
+                                <th>OUT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtr-table-body"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7" class="dtr-total-label">Total</td>
+                                <td id="dtr-total-undertime">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </article>
+
+            <section class="side-shell profile-layout-widget" data-layout-widget="side">
+                <button class="profile-layout-drag-handle profile-layout-side-handle" type="button" draggable="false" data-layout-drag="main" aria-label="Drag Side panels">
+                    <i class="fa fa-arrows" aria-hidden="true"></i>
+                    <span>Side panels</span>
+                </button>
+                <article class="card accountability-borrowed-card profile-side-widget" data-side-widget="accountability">
+                    <button class="profile-layout-drag-handle profile-layout-card-handle" type="button" draggable="false" data-layout-drag="side" aria-label="Drag IT Accountability panel">
+                        <i class="fa fa-arrows-v" aria-hidden="true"></i>
+                    </button>
+                    <div class="card-head">
+                        <h3>My IT accountability</h3>
+                        <span class="mini-note">Borrowed equipment</span>
+                    </div>
+                    <div class="accountability-borrowed-root" id="accountability-borrowed-root">
+                        <div class="accountability-borrowed-loading">Loading borrowed items…</div>
+                    </div>
+                </article>
+                <article class="card dtr-leave-sidebar-card profile-side-widget" data-side-widget="leave">
+                    <button class="profile-layout-drag-handle profile-layout-card-handle" type="button" draggable="false" data-layout-drag="side" aria-label="Drag Leave Points panel">
+                        <i class="fa fa-arrows-v" aria-hidden="true"></i>
+                    </button>
+                    <div class="card-head">
+                        <h3>Leave points</h3>
+                        <span class="mini-note">DTR credits</span>
+                    </div>
+                    <div class="dtr-leave-sidebar-root" id="dtr-leave-sidebar-root">
+                        <div class="accountability-borrowed-loading">Loading leave points...</div>
+                    </div>
+                </article>
+                <button class="profile-layout-side-resizer" type="button" data-layout-resize="sideSplit" aria-label="Resize IT Accountability and Leave Points panels"></button>
+            </section>
+            <button class="profile-layout-resizer profile-layout-resizer-left" type="button" data-layout-resize="left" aria-label="Resize first and center columns"></button>
+            <button class="profile-layout-resizer profile-layout-resizer-right" type="button" data-layout-resize="right" aria-label="Resize center and last columns"></button>
+
+        </section>
+    </main>
+
+    <!-- HUWAG BAGUHIN: id ng picker — script.js ang nagbubukas/sinasara. -->
+    <div class="epass-travel-picker-modal" id="epass-travel-picker-modal" aria-hidden="true">
+        <div class="epass-travel-picker-card" role="dialog" aria-modal="true" aria-labelledby="epass-travel-picker-title">
+            <button class="epass-travel-picker-close" id="epass-travel-picker-close" type="button" aria-label="Close">&times;</button>
+            <h2 id="epass-travel-picker-title" class="epass-travel-picker-title">EPASS/TRAVEL</h2>
+            <p class="epass-travel-picker-sub">Pumili ng form na bubuksan.</p>
+            <div class="epass-travel-picker-actions">
+                <button type="button" class="epass-travel-choice epass-travel-choice--epass" data-pick="epass">
+                    <i class="fa fa-id-card-o" aria-hidden="true"></i>
+                    <span>EPASS</span>
+                </button>
+                <button type="button" class="epass-travel-choice epass-travel-choice--travel" data-pick="travel">
+                    <i class="fa fa-plane" aria-hidden="true"></i>
+                    <span>TRAVEL</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-modal" id="profile-form-modal" aria-hidden="true">
+        <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-form-title">
+            <div class="profile-modal-head">
+                <div>
+                    <p class="eyebrow modal-eyebrow" id="profile-form-tag">Form</p>
+                    <h2 id="profile-form-title">Form Details</h2>
+                </div>
+                <button class="profile-modal-close" id="profile-form-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="profile-modal-body" id="profile-form-body"></div>
+        </div>
+    </div>
+    <div class="avatar-crop-modal" id="avatar-crop-modal" aria-hidden="true">
+        <div class="avatar-crop-card" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
+            <div class="profile-modal-head">
+                <div>
+                    <p class="eyebrow modal-eyebrow">Profile Photo</p>
+                    <h2 id="avatar-crop-title">Position your photo</h2>
+                </div>
+                <button class="profile-modal-close" id="avatar-crop-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="avatar-crop-stage" id="avatar-crop-stage">
+                <img id="avatar-crop-image" alt="Profile photo preview" />
+            </div>
+            <label class="avatar-zoom-control">
+                <span>Zoom</span>
+                <input id="avatar-crop-zoom" type="range" min="1" max="2.4" value="1" step="0.01" />
+            </label>
+            <div class="avatar-crop-actions">
+                <button class="soft-btn alt" id="avatar-crop-cancel" type="button">Cancel</button>
+                <button class="soft-btn" id="avatar-crop-save" type="button">Save Photo</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="avatar-crop-modal" id="edit-profile-modal" aria-hidden="true">
+        <div class="avatar-crop-card" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
+            <div class="profile-modal-head">
+                <div>
+                    <p class="eyebrow modal-eyebrow">My Profile</p>
+                    <h2 id="edit-profile-title">Edit contact info</h2>
+                </div>
+                <button class="profile-modal-close" id="edit-profile-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <p class="edit-profile-note">Name, position, and department are set by HR and can't be changed here.</p>
+            <form id="edit-profile-form">
+                <label class="edit-profile-field">
+                    <span>Mobile number</span>
+                    <input id="edit-profile-mobile" type="tel" maxlength="20" autocomplete="off" />
+                </label>
+                <label class="edit-profile-field">
+                    <span>Email</span>
+                    <input id="edit-profile-email" type="email" maxlength="120" autocomplete="off" />
+                </label>
+                <p class="edit-profile-message" id="edit-profile-message" hidden></p>
+                <div class="avatar-crop-actions">
+                    <button class="soft-btn alt" type="button" id="edit-profile-cancel">Cancel</button>
+                    <button class="soft-btn" type="submit" id="edit-profile-save">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // EDIT GUIDE: I-set agad ang tamang local/live base paths bago mag-load ang shared scripts.
+        (function () {
+            const nodeRoot = `${window.location.protocol === "https:" ? "https:" : "http:"}//${window.location.hostname || "127.0.0.1"}:3000`;
+            window.SAMELCII_NODE_API_BASE = `${nodeRoot}/api`;
+            window.SAMELCII_API_BASE = window.SAMELCII_NODE_API_BASE;
+            window.SAMELCII_MEDIA_BASE = nodeRoot;
+        })();
+    </script>
+    <script src="../../../assets/js/api-client.js?v=20260730-auth-verify-v5"></script>
+    <script>
+        (function () {
+            const nodeRoot = `${window.location.protocol === "https:" ? "https:" : "http:"}//${window.location.hostname || "127.0.0.1"}:3000`;
+            window.SAMELCII_NODE_API_BASE = `${nodeRoot}/api`;
+            window.SAMELCII_API_BASE = window.SAMELCII_NODE_API_BASE;
+            window.SAMELCII_MEDIA_BASE = nodeRoot;
+        })();
+    </script>
+    <script src="../../../assets/js/page-protection.js?v=20260728-redirect-fix-v3"></script>
+    <script src="./script.js?v=20260903-ot-area-subfilter"></script>
+    <script>
+        (function () {
+            const modal = document.getElementById("profile-form-modal");
+            const title = document.getElementById("profile-form-title");
+            if (!modal || !title) return;
+
+            const syncEpassTitleBadge = () => {
+                const formBadge = modal.querySelector('.epass-request-form [data-request-number-badge="epass"]');
+                const titleBadge = title.parentElement.querySelector('[data-request-number-badge="epass"]');
+                if (modal.classList.contains("epass-mode")) {
+                    if (formBadge) title.insertAdjacentElement("afterend", formBadge);
+                } else if (titleBadge) {
+                    titleBadge.remove();
+                }
+            };
+
+            new MutationObserver(syncEpassTitleBadge).observe(modal, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ["class"]
+            });
+            syncEpassTitleBadge();
+        })();
+    </script>
+    <script src="../../../assets/js/offline-sync.js?v=20260820-sw-registration-fix-v10"></script>
+</body>
+</html>

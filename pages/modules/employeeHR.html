@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <title>HRAD Employee Directory | SAMELCII</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --navy: #142441;
+            --muted: #66758f;
+            --line: #dce5f3;
+            --blue: #2857e7;
+            --blue-dark: #183fbc;
+            --blue-soft: #edf3ff;
+            --green: #0c8e76;
+            --green-soft: #e8f8f3;
+            --amber: #b96b08;
+            --amber-soft: #fff5df;
+            --red: #d72d3c;
+            --red-soft: #fff0f2;
+            --surface: #ffffff;
+            --canvas: #f4f7fc;
+            --shadow: 0 18px 50px rgba(25, 49, 92, .09);
+        }
+
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+
+        body {
+            margin: 0;
+            color: var(--navy);
+            background: var(--canvas);
+            font: 15px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        button, input, select, textarea { font: inherit; }
+        button { cursor: pointer; }
+        button:disabled { cursor: not-allowed; opacity: .55; }
+
+        .page {
+            width: min(1600px, 100%);
+            min-height: 100vh;
+            margin: auto;
+            padding: 22px;
+        }
+
+        .page-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 18px;
+            padding: 22px 24px;
+            border: 1px solid #d8e3f8;
+            border-radius: 22px;
+            background: linear-gradient(120deg, #fff 0%, #eef4ff 66%, #e1eaff 100%);
+            box-shadow: var(--shadow);
+        }
+
+        .eyebrow {
+            margin: 0 0 5px;
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .11em;
+            text-transform: uppercase;
+        }
+
+        h1, h2, h3, p { margin-top: 0; }
+        h1 { margin-bottom: 5px; font-size: clamp(25px, 3vw, 38px); line-height: 1.1; }
+        .page-head p:last-child { margin-bottom: 0; color: var(--muted); }
+
+        .service-state {
+            flex: 0 0 auto;
+            padding: 10px 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        .service-state::before {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            margin-right: 8px;
+            border-radius: 50%;
+            background: var(--amber);
+            content: "";
+        }
+
+        .service-state[data-state="online"]::before { background: var(--green); }
+        .service-state[data-state="offline"]::before { background: var(--red); }
+
+        .notice {
+            margin-bottom: 14px;
+            padding: 12px 15px;
+            border: 1px solid #f0c77e;
+            border-radius: 12px;
+            background: var(--amber-soft);
+            color: #754400;
+            font-weight: 700;
+        }
+
+        .notice[data-tone="success"] { border-color: #a8decf; background: var(--green-soft); color: #08614f; }
+        .notice[data-tone="error"] { border-color: #efb2bb; background: var(--red-soft); color: #a71d2b; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric {
+            min-width: 0;
+            padding: 15px 17px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+        .metric strong { display: block; margin-top: 4px; font-size: 25px; line-height: 1.1; }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+            min-height: 680px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .directory {
+            display: flex;
+            min-height: 0;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: #f8faff;
+        }
+
+        .directory-head { padding: 19px; border-bottom: 1px solid var(--line); }
+        .directory-head h2 { margin-bottom: 12px; font-size: 19px; }
+
+        .filters { display: grid; gap: 9px; }
+        .search-wrap { position: relative; }
+        .search-wrap span { position: absolute; top: 11px; left: 12px; color: var(--muted); }
+        .search-wrap input { padding-left: 36px; }
+
+        input, select, textarea {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            border: 1px solid #bdcbe0;
+            border-radius: 10px;
+            color: var(--navy);
+            background: #fff;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(40, 87, 231, .12);
+        }
+
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+        .result-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .employee-list {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding: 12px;
+            overflow: auto;
+            list-style: none;
+        }
+
+        .employee-card {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 43px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 11px;
+            border: 1px solid transparent;
+            border-radius: 13px;
+            color: inherit;
+            background: transparent;
+            text-align: left;
+        }
+
+        .employee-card:hover { border-color: #cad9fb; background: #fff; }
+        .employee-card[aria-current="true"] { border-color: #8eacff; background: var(--blue-soft); box-shadow: 0 7px 18px rgba(37, 79, 203, .11); }
+
+        .avatar {
+            position: relative;
+            display: grid;
+            overflow: hidden;
+            width: 43px;
+            height: 43px;
+            place-items: center;
+            border-radius: 13px;
+            color: #fff;
+            background: linear-gradient(135deg, #3678ee, #2839cc);
+            font-weight: 900;
+        }
+
+        .avatar img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .employee-copy { min-width: 0; }
+        .employee-copy strong, .employee-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .employee-copy small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            min-height: 25px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #765000;
+            background: var(--amber-soft);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .badge[data-state="ready"], .badge[data-state="active"] { color: #08705c; background: var(--green-soft); }
+        .badge[data-state="blocked"] { color: #a51f2d; background: var(--red-soft); }
+
+        .empty-state { padding: 40px 20px; color: var(--muted); text-align: center; }
+
+        .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+        .pager button { min-height: 34px; padding: 6px 12px; font-size: 12.5px; }
+        .pager span { color: var(--muted); font-size: 12px; font-weight: 750; }
+
+        .profile { min-width: 0; }
+        .profile-empty { display: grid; min-height: 650px; place-items: center; color: var(--muted); text-align: center; }
+        .profile-empty strong { display: block; color: var(--navy); font-size: 20px; }
+
+        .profile-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 22px 24px 17px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .profile-identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .profile-identity .avatar { width: 58px; height: 58px; border-radius: 17px; font-size: 19px; }
+        .profile-identity h2 { margin-bottom: 2px; font-size: 23px; }
+        .profile-identity p { margin-bottom: 0; color: var(--muted); }
+        .profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+        .button {
+            min-height: 40px;
+            padding: 8px 13px;
+            border: 1px solid #c7d3e7;
+            border-radius: 10px;
+            color: var(--navy);
+            background: #fff;
+            font-weight: 850;
+        }
+
+        .button:hover:not(:disabled) { border-color: var(--blue); }
+        .button-primary { border-color: var(--blue); color: #fff; background: var(--blue); }
+        .button-primary:hover:not(:disabled) { background: var(--blue-dark); }
+
+        .profile-tabs {
+            display: flex;
+            gap: 5px;
+            padding: 11px 18px 0;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .profile-tabs button {
+            flex: 0 0 auto;
+            padding: 10px 13px;
+            border: 0;
+            border-bottom: 3px solid transparent;
+            color: var(--muted);
+            background: transparent;
+            font-weight: 850;
+        }
+
+        .profile-tabs button[aria-selected="true"] { border-bottom-color: var(--blue); color: var(--blue); }
+
+        .profile-body { padding: 20px 24px 28px; }
+
+        .nav-step {
+            display: grid;
+            flex: 0 0 auto;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            place-items: center;
+            border-radius: 999px;
+        }
+
+        .profile-index { color: var(--muted); font-size: 12px; font-weight: 750; }
+
+        .dtr-stats { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 10px; color: var(--muted); font-size: 12.5px; font-weight: 700; }
+        .dtr-stats strong { color: var(--navy); }
+
+        .month-nav { display: flex; align-items: center; gap: 8px; }
+        .month-nav strong { min-width: 108px; text-align: center; font-size: 14px; }
+        .month-nav .nav-step { width: 32px; height: 32px; }
+
+        .dtr-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 10px; color: var(--muted); font-size: 11.5px; }
+        .dtr-swatch { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 3px; vertical-align: -1px; background: #eef1f6; }
+        .dtr-swatch[data-tone="weekend"] { background: #e3e8f2; }
+        .dtr-swatch[data-tone="holiday"] { background: var(--amber-soft); border: 1px solid var(--amber); }
+        .dtr-swatch[data-tone="epass"] { background: var(--blue-soft); border: 1px solid var(--blue); }
+        .dtr-swatch[data-tone="absent"] { background: var(--red-soft); border: 1px solid var(--red); }
+
+        .dtr-cal-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; }
+        .dtr-cal-weekdays span { text-align: center; padding-bottom: 4px; color: var(--muted); font-size: 10.5px; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
+        .dtr-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+
+        .dtr-cal-cell { position: relative; min-height: 118px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; transition: box-shadow .14s ease; }
+        .dtr-cal-cell:hover { box-shadow: 0 0 0 2px var(--blue-soft); }
+        .dtr-cal-cell[data-weekend="true"] { background: #f8faff; }
+        .dtr-cal-cell[data-special="holiday"] { background: var(--amber-soft); border-color: #f0c77e; }
+        .dtr-cal-cell[data-special="epass"] { background: var(--blue-soft); border-color: #a9c0fb; }
+        .dtr-cal-cell[data-absent="true"] { background: var(--red-soft); border-color: #efb2bb; }
+        .dtr-cal-cell[data-selected="true"] { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-soft); }
+        .dtr-cal-daynum { font-size: 12.5px; font-weight: 850; }
+        .dtr-cal-line { display: flex; justify-content: space-between; gap: 6px; margin-top: 4px; font-size: 10.5px; }
+        .dtr-cal-line-label { flex: 0 0 auto; color: var(--muted); font-weight: 850; letter-spacing: .03em; }
+        .dtr-cal-line-time { color: var(--navy); font-weight: 700; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dtr-cal-tag { margin-top: 5px; font-size: 9px; font-weight: 850; color: var(--blue-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dtr-cal-cell[data-absent="true"] .dtr-cal-tag { color: #a51f2d; }
+        .dtr-cal-flag { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; }
+        .dtr-cal-ut { position: absolute; bottom: 6px; right: 6px; padding: 1px 6px; border-radius: 999px; font-size: 8.5px; font-weight: 850; color: #946100; background: #fff; border: 1px solid var(--amber); }
+
+        .dtr-day-panel { margin-top: 14px; padding: 16px 18px; border: 1px solid #8eacff; border-radius: 14px; background: var(--blue-soft); }
+        .dtr-day-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .dtr-day-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .dtr-day-field { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+        .dtr-day-field label { display: block; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+        .dtr-day-field-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+        .dtr-day-field input[type="time"] { flex: 1; min-width: 0; min-height: 30px; padding: 4px 6px; font-size: 12.5px; }
+        .dtr-day-footer { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+        .dtr-day-footer input[type="text"] { flex: 1; min-height: 36px; }
+        .dtr-note { margin-top: 12px; padding: 12px; border-radius: 10px; color: var(--muted); background: #f6f8fc; font-size: 12.5px; }
+
+        .leave-balance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .leave-balance-card { padding: 15px 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+        .leave-balance-card span { display: block; color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+        .leave-balance-card strong { display: block; margin-top: 4px; font-size: 25px; line-height: 1.1; }
+        .leave-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+        .leave-row strong { display: block; }
+        .leave-row small { display: block; margin-top: 2px; color: var(--muted); }
+        .section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+        .panel {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .panel-wide { grid-column: 1 / -1; }
+        .panel h3 { margin-bottom: 13px; font-size: 17px; }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+        .panel-head h3 { margin-bottom: 0; }
+
+        .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; margin: 0; }
+        .details div { min-width: 0; }
+        .details dt { color: #47536b; font-size: 12.5px; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
+        .details dd { margin: 5px 0 0; overflow-wrap: anywhere; font-size: 16px; line-height: 1.4; font-weight: 800; color: var(--navy); }
+        .inline-editable { padding: 5px 7px; margin: -5px -7px; border-radius: 9px; transition: background .16s ease; }
+        .inline-editable:hover, .inline-editable:focus-within { background: var(--blue-soft); }
+        .inline-editable dd { display: flex; align-items: center; gap: 7px; min-height: 30px; }
+        .inline-value { min-width: 0; overflow-wrap: anywhere; }
+        .inline-action { display: grid; flex: 0 0 auto; width: 28px; height: 28px; padding: 0; place-items: center; border: 1px solid #b9caf2; border-radius: 8px; color: var(--blue-dark); background: #fff; font-size: 15px; font-weight: 900; opacity: 0; transition: opacity .16s ease, background .16s ease; }
+        .inline-editable:hover .inline-action, .inline-editable:focus-within .inline-action, .inline-editable[data-editing="true"] .inline-action { opacity: 1; }
+        .inline-action:hover { color: #fff; background: var(--blue); }
+        .inline-editable[data-editing="true"] { background: var(--blue-soft); }
+        .inline-editable[data-editing="true"] dd { align-items: stretch; }
+        .inline-input { min-width: 0; min-height: 34px; padding: 6px 8px; }
+
+        .readiness-list { display: grid; gap: 9px; padding: 0; list-style: none; }
+        .readiness-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 11px; border-radius: 10px; background: #f6f8fc; }
+        .requirement-editable { transition: background .16s ease, box-shadow .16s ease; }
+        .requirement-editable:hover, .requirement-editable:focus-within { background: var(--blue-soft); box-shadow: inset 0 0 0 1px #c7d7ff; }
+        .requirement-controls { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
+        .requirement-action { display: grid; flex: 0 0 auto; width: 27px; height: 27px; padding: 0; place-items: center; border: 1px solid #b9caf2; border-radius: 8px; color: var(--blue-dark); background: #fff; font-size: 14px; font-weight: 900; opacity: 0; transition: opacity .16s ease, background .16s ease; }
+        .requirement-editable:hover .requirement-action, .requirement-editable:focus-within .requirement-action, .requirement-editable[data-editing="true"] .requirement-action { opacity: 1; }
+        .requirement-action:hover { color: #fff; background: var(--blue); }
+        .requirement-editable[data-editing="true"] .requirement-controls { flex: 1 1 260px; }
+        .requirement-editable .inline-input { min-width: 120px; }
+        .next-action { margin: 0; padding: 13px; border-left: 4px solid var(--amber); border-radius: 8px; background: var(--amber-soft); font-weight: 800; }
+
+        .loan-list { display: grid; gap: 9px; }
+        .loan-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, auto); gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+        .loan-row small { display: block; color: var(--muted); }
+        .money { font-variant-numeric: tabular-nums; font-weight: 850; }
+
+        .drawer { position: fixed; z-index: 20; inset: 0; display: grid; grid-template-columns: 1fr minmax(360px, 520px); }
+        .drawer-backdrop { border: 0; background: rgba(16, 31, 58, .46); }
+        .drawer-card { display: flex; min-width: 0; height: 100%; flex-direction: column; background: #f8faff; box-shadow: -20px 0 45px rgba(18, 38, 77, .17); }
+        .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px; border-bottom: 1px solid var(--line); background: #fff; }
+        .drawer-head h2 { margin-bottom: 0; font-size: 21px; }
+        .icon-button { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid var(--line); border-radius: 10px; color: var(--navy); background: #fff; font-size: 22px; font-weight: 700; }
+        .drawer-body { padding: 20px; overflow: auto; }
+
+        .form-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 15px; background: #fff; }
+        .field { display: grid; gap: 5px; }
+        .field label { font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+        .field small { color: var(--muted); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+        .readonly-note { padding: 12px; border-radius: 10px; color: #6e4a00; background: var(--amber-soft); }
+
+        @media (max-width: 980px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .workspace { grid-template-columns: 310px minmax(0, 1fr); }
+            .profile-head { align-items: flex-start; flex-direction: column; }
+            .profile-actions { justify-content: flex-start; }
+            .section-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 760px) {
+            .page { padding: 10px; }
+            .page-head { align-items: flex-start; flex-direction: column; padding: 18px; }
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+            .workspace { display: block; }
+            .directory { max-height: 420px; border-right: 0; border-bottom: 1px solid var(--line); }
+            .profile-head, .profile-body { padding-left: 16px; padding-right: 16px; }
+            .details { grid-template-columns: 1fr; }
+            .drawer { grid-template-columns: 1fr; }
+            .drawer-backdrop { display: none; }
+            .form-grid { grid-template-columns: 1fr; }
+            .loan-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="page-head" hidden aria-hidden="true">
+            <div>
+                <p class="eyebrow">Human Resources and Administration</p>
+                <h1>Employee directory</h1>
+                <p>Find employees by department, review payroll readiness, and maintain compensation and loans from one profile.</p>
+            </div>
+            <div class="service-state" id="service-state" data-state="checking" role="status">Connecting to employee payroll data</div>
+        </header>
+
+        <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+
+        <section class="summary-grid" aria-label="Employee directory summary" hidden aria-hidden="true">
+            <article class="metric"><span>Loaded employees</span><strong id="metric-loaded">0</strong></article>
+            <article class="metric"><span>Payroll ready</span><strong id="metric-ready">0</strong></article>
+            <article class="metric"><span>Missing salary</span><strong id="metric-missing">0</strong></article>
+            <article class="metric"><span>Active loans</span><strong id="metric-loans">0</strong></article>
+        </section>
+
+        <section class="workspace">
+            <aside class="directory" aria-label="Employee directory">
+                <div class="directory-head">
+                    <h2>Employees</h2>
+                    <div class="filters">
+                        <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="employee-search" type="search" placeholder="Search name or employee ID" aria-label="Search employees" /></div>
+                        <div class="filter-row">
+                            <select id="department-filter" aria-label="Filter by department">
+                                <option value="">All departments</option>
+                                <option value="OFFICE OF THE GENERAL MANAGER">Office of the General Manager</option>
+                                <option value="CORPORATE PLANNING DEPARTMENT">Corporate Planning</option>
+                                <option value="FINANCE SERVICES DEPARTMENT">Finance Services</option>
+                                <option value="INSTITUTIONAL SERVICES DEPARTMENT">Institutional Services</option>
+                                <option value="TECHNICAL SERVICES DEPARTMENT">Technical Services</option>
+                                <option value="ENGINEERING SERVICES DEPARTMENT">Engineering Services</option>
+                                <option value="INTERNAL AUDIT DEPARTMENT">Internal Audit</option>
+                                <option value="HRAD">HRAD</option>
+                                <option value="IT">Information Technology</option>
+                                <option value="BILLING">Billing</option>
+                                <option value="CATBALOGAN">Catbalogan</option>
+                                <option value="BASEY">Basey</option>
+                                <option value="VILLAREAL">Villareal</option>
+                            </select>
+                            <select id="readiness-filter" aria-label="Filter by payroll readiness">
+                                <option value="">All readiness</option>
+                                <option value="READY">Payroll ready</option>
+                                <option value="NEEDS SALARY">Missing salary</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="result-meta"><span id="result-count">Loading employees…</span><span>Maximum 50 results</span></div>
+                </div>
+                <ul class="employee-list" id="employee-list"></ul>
+                <div class="pager" id="employee-pager" hidden>
+                    <button class="button" id="pager-prev" type="button">Prev</button>
+                    <span id="pager-status"></span>
+                    <button class="button" id="pager-next" type="button">Next</button>
+                </div>
+            </aside>
+
+            <section class="profile" aria-live="polite">
+                <div class="profile-empty" id="profile-empty"><div><strong>Select an employee</strong><span>Choose a record from the directory to review HR and payroll information.</span></div></div>
+                <div id="profile-content" hidden>
+                    <header class="profile-head">
+                        <div class="profile-identity">
+                            <button class="button nav-step" id="profile-prev" type="button" aria-label="Previous employee" title="Previous employee (←)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                            </button>
+                            <div class="avatar" id="profile-avatar">—</div>
+                            <div>
+                                <h2 id="profile-name">Employee</h2>
+                                <p id="profile-meta">Employee ID · Department</p>
+                                <span class="profile-index" id="profile-index"></span>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <span class="badge" id="profile-readiness">Needs review</span>
+                            <button class="button" id="edit-details" type="button">Edit HR details</button>
+                            <button class="button button-primary" id="add-salary" type="button">Add salary</button>
+                            <button class="button nav-step" id="profile-next" type="button" aria-label="Next employee" title="Next employee (→)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                            </button>
+                        </div>
+                    </header>
+
+                    <nav class="profile-tabs" role="tablist" aria-label="Jump to profile section">
+                        <button type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+                        <button type="button" role="tab" data-tab="employment" aria-selected="false">Employment</button>
+                        <button type="button" role="tab" data-tab="compensation" aria-selected="false">Compensation</button>
+                        <button type="button" role="tab" data-tab="schedule" aria-selected="false">Schedule & Attendance</button>
+                        <button type="button" role="tab" data-tab="leave" aria-selected="false">Leave</button>
+                        <button type="button" role="tab" data-tab="holidays" aria-selected="false">Holidays</button>
+                        <button type="button" role="tab" data-tab="payroll" aria-selected="false">Payroll Information</button>
+                        <button type="button" role="tab" data-tab="loans" aria-selected="false">Loans</button>
+                    </nav>
+
+                    <div class="profile-body">
+                        <section data-panel="overview">
+                            <div class="section-grid">
+                                <article class="panel"><h3>Important employee details</h3><dl class="details" id="overview-details"></dl></article>
+                                <article class="panel"><h3>Payroll readiness</h3><ul class="readiness-list" id="readiness-list"></ul><p class="next-action" id="next-action"></p></article>
+                                <article class="panel panel-wide"><div class="panel-head"><h3>Payroll snapshot</h3><button class="button" id="overview-salary" type="button">Maintain salary</button></div><dl class="details" id="payroll-snapshot"></dl></article>
+                            </div>
+                        </section>
+
+                        <section data-panel="employment" hidden>
+                            <div class="section-grid"><article class="panel panel-wide"><div class="panel-head"><h3>Employment record</h3><button class="button" id="employment-edit" type="button">Edit HR details</button></div><dl class="details" id="employment-details"></dl></article></div>
+                        </section>
+
+                        <section data-panel="compensation" hidden>
+                            <div class="section-grid">
+                                <article class="panel"><div class="panel-head"><h3>Current compensation</h3><button class="button button-primary" id="compensation-add" type="button">Add new rate</button></div><dl class="details" id="compensation-details"></dl></article>
+                                <article class="panel"><h3>Salary controls</h3><ul class="readiness-list"><li><span>Effective-dated history</span><span class="badge" data-state="ready">Enabled</span></li><li><span>Released payroll protection</span><span class="badge" data-state="ready">Protected</span></li><li><span>Audit responsibility</span><span class="badge" data-state="ready">Recorded</span></li></ul></article>
+                            </div>
+                        </section>
+
+                        <section data-panel="schedule" hidden>
+                            <article class="panel">
+                                <div class="panel-head">
+                                    <h3>Schedule and attendance &middot; DTR</h3>
+                                    <div class="month-nav">
+                                        <button class="button nav-step" id="dtr-month-prev" type="button" aria-label="Previous month">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                                        </button>
+                                        <strong id="dtr-month-label"></strong>
+                                        <button class="button nav-step" id="dtr-month-next" type="button" aria-label="Next month">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="readonly-note" id="dtr-status" hidden></p>
+                                <div id="dtr-content" hidden>
+                                    <div class="dtr-stats" id="dtr-stats"></div>
+                                    <div class="dtr-legend">
+                                        <span><i class="dtr-swatch" data-tone="weekend"></i>Weekend</span>
+                                        <span><i class="dtr-swatch" data-tone="holiday"></i>Holiday</span>
+                                        <span><i class="dtr-swatch" data-tone="epass"></i>EPASS / leave</span>
+                                        <span><i class="dtr-swatch" data-tone="absent"></i>Absent</span>
+                                    </div>
+                                    <div class="dtr-cal-weekdays">
+                                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                                    </div>
+                                    <div class="dtr-cal-grid" id="dtr-cal-grid"></div>
+                                    <div class="dtr-day-panel" id="dtr-day-panel" hidden></div>
+                                    <p class="dtr-note">Punches come from the biometric log via the DTR module. Click any day to review or correct it &mdash; corrections are logged with a reason and go through the same audit trail as the DTR module.</p>
+                                </div>
+                            </article>
+                        </section>
+
+                        <section data-panel="leave" hidden>
+                            <article class="panel">
+                                <h3>Leave management</h3>
+                                <p class="readonly-note" id="leave-status" hidden></p>
+                                <div id="leave-content" hidden>
+                                    <div class="leave-balance-grid" id="leave-balance-grid"></div>
+                                    <div class="panel-head" style="margin-top:18px;"><h3 style="margin-bottom:0;">Recent requests</h3></div>
+                                    <div class="loan-list" id="leave-list"></div>
+                                </div>
+                            </article>
+                        </section>
+
+                        <section data-panel="holidays" hidden>
+                            <article class="panel">
+                                <div class="panel-head">
+                                    <h3>Philippine holidays</h3>
+                                    <div class="month-nav">
+                                        <button class="button nav-step" id="holiday-year-prev" type="button" aria-label="Previous year">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                                        </button>
+                                        <strong id="holiday-year-label"></strong>
+                                        <button class="button nav-step" id="holiday-year-next" type="button" aria-label="Next year">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="readonly-note" id="holiday-status" hidden></p>
+                                <div class="loan-list" id="holiday-list"></div>
+                            </article>
+                        </section>
+
+                        <section data-panel="payroll" hidden>
+                            <div class="section-grid"><article class="panel"><h3>Payroll identity</h3><dl class="details" id="payroll-details"></dl></article><article class="panel"><h3>Required information</h3><ul class="readiness-list" id="payroll-requirements"></ul></article></div>
+                        </section>
+
+                        <section data-panel="loans" hidden>
+                            <article class="panel"><div class="panel-head"><h3>Employee loans</h3><button class="button button-primary" id="add-loan" type="button">Add loan</button></div><div class="loan-list" id="loan-list"></div></article>
+                        </section>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+        <button class="drawer-backdrop" id="drawer-backdrop" type="button" aria-label="Close employee task"></button>
+        <section class="drawer-card">
+            <header class="drawer-head"><div><p class="eyebrow">Employee task</p><h2 id="drawer-title">Employee task</h2></div><button class="icon-button" id="drawer-close" type="button" aria-label="Close employee task">×</button></header>
+            <div class="drawer-body">
+                <form class="form-card" id="salary-form" hidden>
+                    <div class="field"><label for="salary-employee">Employee</label><input id="salary-employee" readonly /></div>
+                    <input id="salary-usercode" type="hidden" />
+                    <div class="form-grid">
+                        <div class="field"><label for="salary-group">Payroll group</label><input id="salary-group" value="REGULAR" required maxlength="40" /></div>
+                        <div class="field"><label for="salary-basis">Pay basis</label><select id="salary-basis" required><option>MONTHLY</option><option>DAILY</option><option>HOURLY</option></select></div>
+                        <div class="field"><label for="salary-amount">Basic salary</label><input id="salary-amount" type="number" min="0.01" step="0.01" required /></div>
+                        <div class="field"><label for="salary-date">Effective date</label><input id="salary-date" type="date" required /></div>
+                    </div>
+                    <div class="field"><label for="salary-reason">Reason</label><textarea id="salary-reason" rows="3" maxlength="255" required placeholder="Appointment, promotion, salary adjustment…"></textarea><small>A new history record is created. Existing released payroll is not overwritten.</small></div>
+                    <div class="form-actions"><button class="button" type="button" data-close-drawer>Cancel</button><button class="button button-primary" type="submit">Save new salary</button></div>
+                </form>
+
+                <form class="form-card" id="loan-form" hidden>
+                    <div class="field"><label for="loan-employee">Employee</label><input id="loan-employee" readonly /></div>
+                    <input id="loan-usercode" type="hidden" />
+                    <div class="form-grid">
+                        <div class="field"><label for="loan-code">Loan code</label><input id="loan-code" required maxlength="40" placeholder="SSS-SALARY-01" /></div>
+                        <div class="field"><label for="loan-lender">Lender</label><input id="loan-lender" required maxlength="120" placeholder="SSS, Pag-IBIG, Cooperative…" /></div>
+                        <div class="field"><label for="loan-original">Original amount</label><input id="loan-original" type="number" min="0.01" step="0.01" required /></div>
+                        <div class="field"><label for="loan-installment">Deduction per payroll</label><input id="loan-installment" type="number" min="0.01" step="0.01" required /></div>
+                    </div>
+                    <div class="field"><label for="loan-from">Effective from</label><input id="loan-from" type="date" required /></div>
+                    <div class="form-actions"><button class="button" type="button" data-close-drawer>Cancel</button><button class="button button-primary" type="submit">Save employee loan</button></div>
+                </form>
+
+                <form class="form-card" id="employee-details-form" hidden>
+                    <h3>Employee identity</h3>
+                    <p class="readonly-note">Employee ID cannot be changed because it connects attendance, loans, and payroll history. Saved government and bank IDs stay masked; leave those fields blank to keep the saved value.</p>
+                    <div class="form-grid">
+                        <div class="field"><label for="edit-usercode">Employee ID</label><input id="edit-usercode" readonly /></div>
+                        <div class="field"><label for="edit-bio">Biometric ID</label><input id="edit-bio" required maxlength="255" /></div>
+                        <div class="field"><label for="edit-name">Full name</label><input id="edit-name" required maxlength="255" /></div>
+                        <div class="field"><label for="edit-department">Department</label><input id="edit-department" required maxlength="255" /></div>
+                        <div class="field"><label for="edit-position">Position</label><input id="edit-position" required maxlength="255" /></div>
+                        <div class="field"><label for="edit-supervisor">Supervisor</label><input id="edit-supervisor" maxlength="120" /></div>
+                        <div class="field"><label for="edit-employment-date">Employment date</label><input id="edit-employment-date" type="date" /></div>
+                        <div class="field"><label for="edit-employment-type">Employment type</label><select id="edit-employment-type"><option value="">Not configured</option><option>REGULAR</option><option>PROBATIONARY</option><option>CONTRACTUAL</option><option>CASUAL</option><option>PROJECT_BASED</option></select></div>
+                        <div class="field"><label for="edit-employment-status">Employment status</label><select id="edit-employment-status" required><option>ACTIVE</option><option>INACTIVE</option><option>RESIGNED</option><option>RETIRED</option><option>SUSPENDED</option></select></div>
+                        <div class="field"><label for="edit-area">Work area / location</label><input id="edit-area" maxlength="255" /></div>
+                        <div class="field"><label for="edit-email">Email</label><input id="edit-email" type="email" maxlength="255" /></div>
+                        <div class="field"><label for="edit-mobile">Mobile number</label><input id="edit-mobile" maxlength="20" /></div>
+                    </div>
+                    <div class="field"><label for="edit-address">Address</label><textarea id="edit-address" rows="3" maxlength="2000"></textarea></div>
+                    <h3>Payroll and government IDs</h3>
+                    <div class="form-grid">
+                        <div class="field"><label for="edit-payroll-id">Payroll ID</label><input id="edit-payroll-id" maxlength="40" autocomplete="off" /></div>
+                        <div class="field"><label for="edit-tin">TIN</label><input id="edit-tin" inputmode="numeric" maxlength="20" autocomplete="off" /></div>
+                        <div class="field"><label for="edit-sss">SSS number</label><input id="edit-sss" inputmode="numeric" maxlength="20" autocomplete="off" /></div>
+                        <div class="field"><label for="edit-philhealth">PhilHealth number</label><input id="edit-philhealth" inputmode="numeric" maxlength="20" autocomplete="off" /></div>
+                        <div class="field"><label for="edit-pagibig">Pag-IBIG number</label><input id="edit-pagibig" inputmode="numeric" maxlength="20" autocomplete="off" /></div>
+                        <div class="field"><label for="edit-national-id">National ID</label><input id="edit-national-id" inputmode="numeric" maxlength="24" autocomplete="off" /></div>
+                    </div>
+                    <h3>Payroll bank account</h3>
+                    <div class="form-grid">
+                        <div class="field"><label for="edit-bank-name">Bank name</label><input id="edit-bank-name" maxlength="120" /></div>
+                        <div class="field"><label for="edit-bank-account-name">Account name</label><input id="edit-bank-account-name" maxlength="120" /></div>
+                        <div class="field"><label for="edit-bank-account-number">Account number</label><input id="edit-bank-account-number" maxlength="40" autocomplete="off" /></div>
+                    </div>
+                    <div class="form-actions"><button class="button" type="button" data-close-drawer>Cancel</button><button class="button button-primary" type="submit">Save employee details</button></div>
+                </form>
+            </div>
+        </section>
+    </aside>
+
+    <script>
+        (() => {
+            "use strict";
+
+            const host = window.location.hostname || "127.0.0.1";
+            const API = `http://${host}:3000/api/payroll`;
+            const DTR_API = `http://${host}:3000/api/dtr`;
+            const LEAVE_API = `http://${host}:3000/api/leave`;
+            const HOLIDAY_API = `http://${host}:3000/api/holiday`;
+            const AUTH_API = `http://${host}:3000/api/auth`;
+            const token = localStorage.getItem("samelcii_token") || "";
+            const PAGE_SIZE = 10;
+            const currentMonth = () => new Date().toISOString().slice(0, 7);
+            const state = { employees: [], visible: [], page: 1, selected: null, profile: null, loans: [], searchTimer: 0, profileRequest: 0, inlineEdit: null, dtr: { items: [], loading: false, month: currentMonth(), request: 0, usercode: "" }, leave: { items: [], balance: null, loading: false, request: 0, usercode: "" }, holidays: { items: [], loading: false, loaded: false, year: new Date().getFullYear(), request: 0 } };
+            const $ = (selector) => document.querySelector(selector);
+            const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+            const money = (value) => {
+                if (value === null || value === undefined || value === "") return "Not configured";
+                const amount = Number(value);
+                return Number.isFinite(amount) ? new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(amount) : "Not configured";
+            };
+
+            const initials = (name) => String(name || "Employee").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+            const today = () => new Date().toISOString().slice(0, 10);
+
+            function setAvatar(el, name, id) {
+                el.textContent = initials(name);
+                if (!id) return;
+                const img = document.createElement("img");
+                img.src = `${AUTH_API}/profile-photo?id=${encodeURIComponent(id)}`;
+                img.alt = "";
+                img.loading = "lazy";
+                img.onerror = () => img.remove();
+                el.appendChild(img);
+            }
+
+            function showNotice(message, tone = "info") {
+                const notice = $("#notice");
+                notice.textContent = message || "";
+                notice.dataset.tone = tone;
+                notice.hidden = !message;
+            }
+
+            async function request(path, options = {}) {
+                const settings = { method: "GET", ...options, headers: { ...(options.headers || {}) } };
+                if (settings.body) settings.headers["Content-Type"] = "application/json";
+                if (token) settings.headers.Authorization = `Bearer ${token}`;
+                const response = await fetch(`${API}${path}`, settings);
+                const payload = await response.json().catch(() => ({ ok: false, message: "The employee service returned an unreadable response." }));
+                if (!response.ok) throw new Error(payload.message || `Employee request failed (${response.status}).`);
+                return payload;
+            }
+
+            async function dtrRequest(body) {
+                const settings = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+                if (token) settings.headers.Authorization = `Bearer ${token}`;
+                const response = await fetch(DTR_API, settings);
+                const payload = await response.json().catch(() => ({ ok: false, message: "The DTR service returned an unreadable response." }));
+                if (!response.ok) throw new Error(payload.message || `DTR request failed (${response.status}).`);
+                return payload;
+            }
+
+            async function leaveRequest(params) {
+                const settings = { method: "GET", headers: {} };
+                if (token) settings.headers.Authorization = `Bearer ${token}`;
+                const query = new URLSearchParams(params).toString();
+                const response = await fetch(`${LEAVE_API}?${query}`, settings);
+                const payload = await response.json().catch(() => ({ ok: false, message: "The Leave service returned an unreadable response." }));
+                if (!response.ok) throw new Error(payload.message || `Leave request failed (${response.status}).`);
+                return payload;
+            }
+
+            async function holidayRequest(params) {
+                const settings = { method: "GET", headers: {} };
+                if (token) settings.headers.Authorization = `Bearer ${token}`;
+                const query = new URLSearchParams(params).toString();
+                const response = await fetch(`${HOLIDAY_API}?${query}`, settings);
+                const payload = await response.json().catch(() => ({ ok: false, message: "The Holidays service returned an unreadable response." }));
+                if (!response.ok) throw new Error(payload.message || `Holidays request failed (${response.status}).`);
+                return payload;
+            }
+
+            const formatMinutes = (minutes) => {
+                const value = Number(minutes || 0);
+                if (!value) return "—";
+                const h = Math.floor(value / 60), m = value % 60;
+                return h ? `${h}h ${m}m` : `${m}m`;
+            };
+
+            function addDetail(target, label, value) {
+                const wrapper = document.createElement("div");
+                const term = document.createElement("dt");
+                const detail = document.createElement("dd");
+                term.textContent = label;
+                detail.textContent = value || "Not configured";
+                wrapper.append(term, detail);
+                target.appendChild(wrapper);
+            }
+
+            function profilePatch(overrides = {}) {
+                const profile = state.profile;
+                return {
+                    name: profile.name, position: profile.position, department: profile.department, bioUID: profile.bioUID,
+                    email: profile.email || "", mobileNumber: profile.mobileNumber || "", address: profile.address || "",
+                    area: profile.area || "", employmentDate: profile.employmentDate || "",
+                    employmentType: profile.employmentType || "", employmentStatus: profile.employmentStatus || "ACTIVE",
+                    supervisor: profile.supervisor || "", payrollId: "", tin: "", sssNumber: "", philhealthNumber: "",
+                    pagibigNumber: "", nationalId: "", bankName: profile.bank?.name || "",
+                    bankAccountName: profile.bank?.accountName || "", bankAccountNumber: "", ...overrides
+                };
+            }
+
+            function cancelInlineEdit() {
+                if (!state.inlineEdit || state.inlineEdit.saving) return;
+                const { wrapper, label, value, config, restore } = state.inlineEdit;
+                state.inlineEdit = null;
+                if (restore) restore();
+                else wrapper.replaceWith(createEditableDetail(label, value, config));
+            }
+
+            async function saveInlineEdit() {
+                const editor = state.inlineEdit;
+                if (!editor || editor.saving || !state.selected) return;
+                const value = editor.input.value.trim();
+                if (editor.config.sensitive && !value) return cancelInlineEdit();
+                editor.saving = true;
+                editor.input.disabled = true;
+                editor.button.disabled = true;
+                try {
+                    const payload = await request(`/employees/${encodeURIComponent(state.selected.usercode)}/profile`, {
+                        method: "PATCH", body: JSON.stringify(profilePatch({ [editor.config.field]: value }))
+                    });
+                    state.inlineEdit = null;
+                    state.profile = payload.profile;
+                    renderProfile();
+                    showNotice(`${editor.label} saved.`, "success");
+                } catch (error) {
+                    editor.saving = false;
+                    editor.input.disabled = false;
+                    editor.button.disabled = false;
+                    editor.input.focus();
+                    showNotice(error.message, "error");
+                }
+            }
+
+            function beginInlineEdit(wrapper, label, value, config) {
+                cancelInlineEdit();
+                const detail = wrapper.querySelector("dd");
+                const input = document.createElement("input");
+                const button = document.createElement("button");
+                input.className = "inline-input";
+                input.value = config.sensitive ? "" : (value === "Not configured" ? "" : value);
+                input.maxLength = config.maxLength;
+                input.autocomplete = "off";
+                input.placeholder = config.sensitive && value !== "Not configured" ? `Saved · ${value}` : `Enter ${label}`;
+                button.className = "inline-action";
+                button.type = "button";
+                button.textContent = "✓";
+                button.setAttribute("aria-label", `Save ${label}`);
+                button.title = `Save ${label}`;
+                wrapper.dataset.editing = "true";
+                detail.replaceChildren(input, button);
+                state.inlineEdit = { wrapper, label, value, config, input, button, saving: false };
+                button.addEventListener("click", saveInlineEdit);
+                input.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter") { event.preventDefault(); saveInlineEdit(); }
+                    if (event.key === "Escape") { event.preventDefault(); cancelInlineEdit(); }
+                });
+                input.focus();
+                if (!config.sensitive) input.select();
+            }
+
+            function createEditableDetail(label, value, config) {
+                const wrapper = document.createElement("div");
+                const term = document.createElement("dt");
+                const detail = document.createElement("dd");
+                const copy = document.createElement("span");
+                const button = document.createElement("button");
+                wrapper.className = "inline-editable";
+                term.textContent = label;
+                copy.className = "inline-value";
+                copy.textContent = value || "Not configured";
+                button.className = "inline-action";
+                button.type = "button";
+                button.textContent = "✎";
+                button.setAttribute("aria-label", `Edit ${label}`);
+                button.title = `Edit ${label}`;
+                button.addEventListener("click", () => beginInlineEdit(wrapper, label, copy.textContent, config));
+                detail.append(copy, button);
+                wrapper.append(term, detail);
+                return wrapper;
+            }
+
+            function addEditableDetail(target, label, value, field, maxLength, sensitive = false) {
+                target.appendChild(createEditableDetail(label, value, { field, maxLength, sensitive }));
+            }
+
+            function beginRequirementEdit(item, label, ready, missingCopy, config) {
+                cancelInlineEdit();
+                const controls = item.querySelector(".requirement-controls");
+                const input = document.createElement("input");
+                const button = document.createElement("button");
+                input.className = "inline-input";
+                input.maxLength = config.maxLength;
+                input.autocomplete = "off";
+                input.placeholder = config.masked ? `Saved · ${config.masked}` : `Enter ${label}`;
+                button.className = "requirement-action";
+                button.type = "button";
+                button.textContent = "✓";
+                button.setAttribute("aria-label", `Save ${label}`);
+                button.title = `Save ${label}`;
+                item.dataset.editing = "true";
+                controls.replaceChildren(input, button);
+                state.inlineEdit = {
+                    wrapper: item, label, value: config.masked || "Not configured", config: { ...config, sensitive: true },
+                    input, button, saving: false,
+                    restore: () => item.replaceWith(createEditableRequirement(label, ready, missingCopy, config))
+                };
+                button.addEventListener("click", saveInlineEdit);
+                input.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter") { event.preventDefault(); saveInlineEdit(); }
+                    if (event.key === "Escape") { event.preventDefault(); cancelInlineEdit(); }
+                });
+                input.focus();
+            }
+
+            function createEditableRequirement(label, ready, missingCopy, config) {
+                const item = document.createElement("li");
+                const copy = document.createElement("span");
+                const controls = document.createElement("span");
+                const badge = document.createElement("span");
+                const button = document.createElement("button");
+                item.className = "requirement-editable";
+                copy.textContent = label;
+                controls.className = "requirement-controls";
+                badge.className = "badge";
+                badge.dataset.state = ready ? "ready" : "blocked";
+                badge.textContent = ready ? "Ready" : missingCopy;
+                button.className = "requirement-action";
+                button.type = "button";
+                button.textContent = "✎";
+                button.setAttribute("aria-label", `Edit ${label}`);
+                button.title = config.workflow ? `Open ${label} setup` : `Edit ${label}`;
+                button.addEventListener("click", () => {
+                    if (config.workflow === "salary") openDrawer("salary");
+                    else beginRequirementEdit(item, label, ready, missingCopy, config);
+                });
+                controls.append(badge, button);
+                item.append(copy, controls);
+                return item;
+            }
+
+            function editableRequirement(label, ready, missingCopy, field, maxLength, masked = "") {
+                return createEditableRequirement(label, ready, missingCopy, { field, maxLength, masked });
+            }
+
+            function workflowRequirement(label, ready, missingCopy) {
+                return createEditableRequirement(label, ready, missingCopy, { workflow: "salary" });
+            }
+
+            function readinessItem(label, ready, missingCopy) {
+                const item = document.createElement("li");
+                const copy = document.createElement("span");
+                const badge = document.createElement("span");
+                copy.textContent = label;
+                badge.className = "badge";
+                badge.dataset.state = ready ? "ready" : "blocked";
+                badge.textContent = ready ? "Ready" : missingCopy;
+                item.append(copy, badge);
+                return item;
+            }
+
+            function currentEmployeeLoans() {
+                const code = String(state.selected?.usercode || "").toUpperCase();
+                return state.loans.filter((loan) => String(loan.usercode || "").toUpperCase() === code);
+            }
+
+            function updateMetrics() {
+                const ready = state.visible.filter((item) => item.readiness === "READY").length;
+                $("#metric-loaded").textContent = state.visible.length;
+                $("#metric-ready").textContent = ready;
+                $("#metric-missing").textContent = state.visible.length - ready;
+                $("#metric-loans").textContent = state.loans.filter((item) => item.status === "ACTIVE").length;
+            }
+
+            function renderDirectory() {
+                const list = $("#employee-list");
+                const pager = $("#employee-pager");
+                list.replaceChildren();
+                $("#result-count").textContent = `${state.visible.length} employee${state.visible.length === 1 ? "" : "s"}`;
+                updateMetrics();
+
+                if (!state.visible.length) {
+                    const empty = document.createElement("li");
+                    empty.className = "empty-state";
+                    empty.textContent = "No employees match these filters.";
+                    list.appendChild(empty);
+                    pager.hidden = true;
+                    return;
+                }
+
+                const pageCount = Math.max(1, Math.ceil(state.visible.length / PAGE_SIZE));
+                state.page = Math.min(Math.max(1, state.page), pageCount);
+                const start = (state.page - 1) * PAGE_SIZE;
+                const pageItems = state.visible.slice(start, start + PAGE_SIZE);
+
+                pager.hidden = pageCount <= 1;
+                $("#pager-status").textContent = `Page ${state.page} of ${pageCount}`;
+                $("#pager-prev").disabled = state.page <= 1;
+                $("#pager-next").disabled = state.page >= pageCount;
+
+                pageItems.forEach((employee) => {
+                    const item = document.createElement("li");
+                    const button = document.createElement("button");
+                    const avatar = document.createElement("span");
+                    const copy = document.createElement("span");
+                    const name = document.createElement("strong");
+                    const meta = document.createElement("small");
+                    const badge = document.createElement("span");
+                    button.type = "button";
+                    button.className = "employee-card";
+                    button.setAttribute("aria-current", String(state.selected?.usercode === employee.usercode));
+                    avatar.className = "avatar";
+                    setAvatar(avatar, employee.name, employee.Id);
+                    copy.className = "employee-copy";
+                    name.textContent = employee.name || "Unnamed employee";
+                    meta.textContent = `${employee.usercode || "No ID"} · ${employee.position || employee.department || "No assignment"}`;
+                    badge.className = "badge";
+                    badge.dataset.state = employee.readiness === "READY" ? "ready" : "blocked";
+                    badge.textContent = employee.readiness === "READY" ? "Ready" : "Setup";
+                    copy.append(name, meta);
+                    button.append(avatar, copy, badge);
+                    button.addEventListener("click", () => selectEmployee(employee));
+                    item.appendChild(button);
+                    list.appendChild(item);
+                });
+            }
+
+            function filterEmployees() {
+                const query = $("#employee-search").value.trim().toLowerCase();
+                const department = $("#department-filter").value.trim().toLowerCase();
+                const readiness = $("#readiness-filter").value;
+                state.visible = state.employees.filter((employee) => {
+                    const haystack = `${employee.name || ""} ${employee.usercode || ""} ${employee.position || ""} ${employee.department || ""}`.toLowerCase();
+                    return (!query || haystack.includes(query))
+                        && (!department || String(employee.department || "").toLowerCase().includes(department))
+                        && (!readiness || employee.readiness === readiness);
+                });
+                state.page = 1;
+                renderDirectory();
+            }
+
+            function renderLoans() {
+                const target = $("#loan-list");
+                const loans = currentEmployeeLoans();
+                target.replaceChildren();
+                if (!loans.length) {
+                    const empty = document.createElement("p");
+                    empty.className = "readonly-note";
+                    empty.textContent = "No employee loans are recorded in Payroll.";
+                    target.appendChild(empty);
+                    return;
+                }
+                loans.forEach((loan) => {
+                    const row = document.createElement("div");
+                    const identity = document.createElement("div");
+                    const code = document.createElement("strong");
+                    const lender = document.createElement("small");
+                    const original = document.createElement("span");
+                    const balance = document.createElement("span");
+                    const installment = document.createElement("span");
+                    row.className = "loan-row";
+                    code.textContent = loan.loan_code || "Loan";
+                    lender.textContent = `${loan.lender || "No lender"} · ${loan.status || "UNKNOWN"}`;
+                    original.className = balance.className = installment.className = "money";
+                    original.textContent = money(loan.original_amount);
+                    original.title = "Original amount";
+                    balance.textContent = money(loan.balance);
+                    balance.title = "Remaining balance";
+                    installment.textContent = money(loan.installment_amount);
+                    installment.title = "Deduction per payroll";
+                    identity.append(code, lender);
+                    row.append(identity, original, balance, installment);
+                    target.appendChild(row);
+                });
+            }
+
+            const OFFICE_PUNCH_FIELDS = [
+                { key: "morning_in", label: "AM In" }, { key: "morning_out", label: "AM Out" },
+                { key: "afternoon_in", label: "PM In" }, { key: "afternoon_out", label: "PM Out" },
+                { key: "ot_in", label: "OT In" }, { key: "ot_out", label: "OT Out" },
+            ];
+            const SHIFT_PUNCH_FIELDS = [
+                { key: "morning_in", label: "Shift 1 In" }, { key: "morning_out", label: "Shift 1 Out" },
+                { key: "afternoon_in", label: "Shift 2 In" }, { key: "afternoon_out", label: "Shift 2 Out" },
+                { key: "ot_in", label: "Shift 3 In" }, { key: "ot_out", label: "Shift 3 Out" },
+            ];
+            const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            let selectedDtrDate = null;
+
+            // ponytail: mirrors dtrService.js's position-based shift check only (MAINTENANCE / SECURITY
+            // GUARD / SUBSTATION TENDER); it skips the server's extra "actual overnight punch" detection
+            // for maintenance staff on a regular day shift, so a maintenance employee with a plain office
+            // schedule may still see Shift 1/2/3 labels here. Upgrade path: have monthly_computed return
+            // an explicit `shift_worker` flag on the employee object instead of inferring it client-side.
+            function isShiftEmployee(position) {
+                const token = String(position || "").toUpperCase().replace(/[^A-Z]/g, "");
+                return token.includes("MAINTENANCE") || token.includes("SECURITYGUARD") || token.includes("SUBSTATIONTENDER");
+            }
+
+            function punchFieldsFor(position) {
+                return isShiftEmployee(position) ? SHIFT_PUNCH_FIELDS : OFFICE_PUNCH_FIELDS;
+            }
+
+            function monthBounds(month) {
+                const [y, m] = month.split("-").map(Number);
+                const from = `${month}-01`;
+                const lastDay = new Date(y, m, 0).getDate();
+                const to = `${month}-${String(lastDay).padStart(2, "0")}`;
+                return { from, to };
+            }
+
+            function dayStatus(row) {
+                const dayName = row.day_name || "";
+                const isWeekend = dayName === "Saturday" || dayName === "Sunday";
+                const special = row.special_label ? (/holiday/i.test(row.special_label) ? "holiday" : "epass") : "";
+                const hasPunch = Boolean(row.morning_in || row.afternoon_in || row.ot_in);
+                const isFuture = row.work_date > today();
+                const isAbsent = !isFuture && !hasPunch && !isWeekend && !special;
+                const corrected = OFFICE_PUNCH_FIELDS.some((f) => row.corrections && row.corrections[f.key]);
+                return { isWeekend, special, hasPunch, isAbsent, corrected };
+            }
+
+            function closeDtrDay() {
+                selectedDtrDate = null;
+                renderDtr();
+            }
+
+            function openDtrDay(workDate) {
+                selectedDtrDate = workDate;
+                renderDtr();
+            }
+
+            function renderDtrDayPanel() {
+                const panel = $("#dtr-day-panel");
+                const row = state.dtr.items.find((item) => item.work_date === selectedDtrDate);
+                if (!row) { panel.hidden = true; panel.replaceChildren(); return; }
+                panel.hidden = false;
+                panel.replaceChildren();
+
+                const head = document.createElement("div");
+                head.className = "dtr-day-panel-head";
+                const title = document.createElement("strong");
+                const dateObj = new Date(`${row.work_date}T00:00:00`);
+                title.style.fontSize = "14px";
+                title.textContent = `${MONTH_NAMES[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()} · ${row.day_name || ""}`;
+                const close = document.createElement("button");
+                close.type = "button"; close.className = "button nav-step"; close.style.width = "28px"; close.style.height = "28px";
+                close.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#66758f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+                close.addEventListener("click", closeDtrDay);
+                head.append(title, close);
+                panel.appendChild(head);
+
+                const fieldsWrap = document.createElement("div");
+                fieldsWrap.className = "dtr-day-fields";
+                const inputs = {};
+                const punchFields = punchFieldsFor(state.selected?.position);
+                punchFields.forEach((f) => {
+                    const box = document.createElement("div");
+                    box.className = "dtr-day-field";
+                    const label = document.createElement("label");
+                    label.textContent = f.label;
+                    const fieldRow = document.createElement("div");
+                    fieldRow.className = "dtr-day-field-row";
+                    const input = document.createElement("input");
+                    input.type = "time";
+                    const current = row[f.key];
+                    input.placeholder = current ? `Now ${current}` : "HH:MM";
+                    inputs[f.key] = input;
+                    fieldRow.appendChild(input);
+                    if (row.corrections && row.corrections[f.key]) {
+                        const badge = document.createElement("span");
+                        badge.className = "badge"; badge.dataset.state = "ready"; badge.textContent = "Edited";
+                        fieldRow.appendChild(badge);
+                    }
+                    box.append(label, fieldRow);
+                    fieldsWrap.appendChild(box);
+                });
+                panel.appendChild(fieldsWrap);
+
+                const footer = document.createElement("div");
+                footer.className = "dtr-day-footer";
+                const reasonInput = document.createElement("input");
+                reasonInput.type = "text"; reasonInput.maxLength = 255;
+                reasonInput.placeholder = "Reason for change (required to save)";
+                const cancelBtn = document.createElement("button");
+                cancelBtn.type = "button"; cancelBtn.className = "button"; cancelBtn.textContent = "Close";
+                cancelBtn.addEventListener("click", closeDtrDay);
+                const saveBtn = document.createElement("button");
+                saveBtn.type = "button"; saveBtn.className = "button button-primary"; saveBtn.textContent = "Save correction";
+                saveBtn.addEventListener("click", async () => {
+                    const changed = punchFields.filter((f) => inputs[f.key].value);
+                    if (!changed.length) { showNotice("Change at least one time before saving.", "error"); return; }
+                    if (!reasonInput.value.trim()) { showNotice("Enter a reason for the correction.", "error"); return; }
+                    saveBtn.disabled = true; cancelBtn.disabled = true;
+                    try {
+                        for (const f of changed) {
+                            await dtrRequest({
+                                action: "submit_correction",
+                                usercode: state.selected.usercode,
+                                work_date: row.work_date,
+                                field_name: f.key,
+                                proposed_value: inputs[f.key].value,
+                                category: "biometric_misread",
+                                reason: reasonInput.value.trim(),
+                            });
+                        }
+                        showNotice("DTR correction submitted.", "success");
+                        await loadDtr(state.selected.usercode);
+                    } catch (error) {
+                        showNotice(error.message, "error");
+                        saveBtn.disabled = false; cancelBtn.disabled = false;
+                    }
+                });
+                footer.append(reasonInput, cancelBtn, saveBtn);
+                panel.appendChild(footer);
+
+                const note = document.createElement("div");
+                note.style.marginTop = "8px"; note.style.fontSize = "11px"; note.style.color = "var(--muted)";
+                note.textContent = "Saved corrections are logged with a reason and go through the same audit trail as the DTR module.";
+                panel.appendChild(note);
+            }
+
+            function renderDtr() {
+                const status = $("#dtr-status");
+                const content = $("#dtr-content");
+                const { items, loading, month } = state.dtr;
+                const [y, m] = month.split("-").map(Number);
+                $("#dtr-month-label").textContent = `${MONTH_NAMES[m - 1]} ${y}`;
+                const punchFields = punchFieldsFor(state.selected?.position);
+                const cellGroups = [
+                    { label: punchFields[0].label.replace(/ In$/, ""), inKey: punchFields[0].key, outKey: punchFields[1].key },
+                    { label: punchFields[2].label.replace(/ In$/, ""), inKey: punchFields[2].key, outKey: punchFields[3].key },
+                    { label: punchFields[4].label.replace(/ In$/, ""), inKey: punchFields[4].key, outKey: punchFields[5].key },
+                ];
+
+                if (loading) {
+                    status.hidden = false; content.hidden = true;
+                    status.textContent = "Loading attendance…";
+                    return;
+                }
+                if (!items.length) {
+                    status.hidden = false; content.hidden = true;
+                    status.textContent = "No DTR records for this employee in this month.";
+                    return;
+                }
+                status.hidden = true; content.hidden = false;
+
+                const worked = items.filter((row) => row.morning_in || row.afternoon_in || row.ot_in).length;
+                const lateDays = items.filter((row) => Number(row.late_min || 0) > 0).length;
+                const undertimeMinutes = items.reduce((sum, row) => sum + Number(row.undertime_min || 0), 0);
+                $("#dtr-stats").innerHTML = "";
+                [["Days with punches", `${worked}/${items.length}`], ["Late", String(lateDays)], ["Total undertime", formatMinutes(undertimeMinutes)]]
+                    .forEach(([label, value]) => {
+                        const span = document.createElement("span");
+                        const strong = document.createElement("strong");
+                        strong.textContent = value;
+                        span.append(`${label}: `, strong);
+                        $("#dtr-stats").appendChild(span);
+                    });
+
+                const byDate = {};
+                items.forEach((row) => { byDate[row.work_date] = row; });
+                const leading = new Date(`${month}-01T00:00:00`).getDay();
+                const daysInMonth = new Date(y, m, 0).getDate();
+                const totalCells = Math.ceil((leading + daysInMonth) / 7) * 7;
+
+                const grid = $("#dtr-cal-grid");
+                grid.replaceChildren();
+                for (let i = 0; i < totalCells; i += 1) {
+                    const dayNum = i - leading + 1;
+                    if (dayNum < 1 || dayNum > daysInMonth) {
+                        grid.appendChild(document.createElement("div"));
+                        continue;
+                    }
+                    const workDate = `${month}-${String(dayNum).padStart(2, "0")}`;
+                    const row = byDate[workDate];
+                    const cell = document.createElement("div");
+                    cell.className = "dtr-cal-cell";
+                    if (!row) { cell.textContent = String(dayNum); grid.appendChild(cell); continue; }
+
+                    const st = dayStatus(row);
+                    if (st.isWeekend) cell.dataset.weekend = "true";
+                    if (st.special) cell.dataset.special = st.special;
+                    if (st.isAbsent) cell.dataset.absent = "true";
+                    if (selectedDtrDate === workDate) cell.dataset.selected = "true";
+
+                    const num = document.createElement("div");
+                    num.className = "dtr-cal-daynum";
+                    num.textContent = String(dayNum);
+                    cell.appendChild(num);
+
+                    cellGroups.forEach((group) => {
+                        const inTime = row[group.inKey];
+                        const outTime = row[group.outKey];
+                        const line = document.createElement("div");
+                        line.className = "dtr-cal-line";
+                        const label = document.createElement("span");
+                        label.className = "dtr-cal-line-label";
+                        label.textContent = group.label;
+                        const time = document.createElement("span");
+                        time.className = "dtr-cal-line-time";
+                        time.textContent = inTime || outTime ? `${inTime || "—"}–${outTime || "—"}` : "—";
+                        line.append(label, time);
+                        cell.appendChild(line);
+                    });
+
+                    const tagText = row.special_label || (st.isAbsent ? "Absent" : "");
+                    if (tagText) {
+                        const tag = document.createElement("div");
+                        tag.className = "dtr-cal-tag";
+                        tag.textContent = tagText;
+                        cell.appendChild(tag);
+                    }
+
+                    if (st.isAbsent || st.corrected || Number(row.undertime_min || 0) > 0) {
+                        const flag = document.createElement("span");
+                        flag.className = "dtr-cal-flag";
+                        flag.style.background = st.isAbsent ? "var(--red)" : st.corrected ? "var(--green)" : "var(--amber)";
+                        cell.appendChild(flag);
+                    }
+
+                    if (Number(row.undertime_min || 0) > 0) {
+                        const ut = document.createElement("span");
+                        ut.className = "dtr-cal-ut";
+                        ut.textContent = formatMinutes(row.undertime_min);
+                        cell.appendChild(ut);
+                    }
+
+                    cell.addEventListener("click", () => openDtrDay(workDate));
+                    grid.appendChild(cell);
+                }
+
+                renderDtrDayPanel();
+            }
+
+            async function loadDtr(usercode) {
+                const requestId = ++state.dtr.request;
+                state.dtr.loading = true;
+                state.dtr.usercode = usercode;
+                renderDtr();
+                const { from, to } = monthBounds(state.dtr.month);
+                try {
+                    const payload = await dtrRequest({ action: "monthly_computed", usercode, date_from: from, date_to: to });
+                    if (requestId !== state.dtr.request) return;
+                    state.dtr.items = Array.isArray(payload.items) ? payload.items : [];
+                } catch (error) {
+                    if (requestId !== state.dtr.request) return;
+                    state.dtr.items = [];
+                    $("#dtr-status").textContent = error.message || "DTR data is unavailable right now.";
+                } finally {
+                    if (requestId === state.dtr.request) { state.dtr.loading = false; renderDtr(); }
+                }
+            }
+
+            function renderLeave() {
+                const status = $("#leave-status");
+                const content = $("#leave-content");
+                const { items, balance, loading } = state.leave;
+
+                if (loading) {
+                    status.hidden = false; content.hidden = true;
+                    status.textContent = "Loading leave records…";
+                    return;
+                }
+                status.hidden = true; content.hidden = false;
+
+                const grid = $("#leave-balance-grid");
+                grid.replaceChildren();
+                [
+                    ["Vacation leave", balance?.vacation_leave],
+                    ["Sick leave", balance?.sick_leave],
+                    ["Other leave", balance?.other_leave],
+                ].forEach(([label, value]) => {
+                    const card = document.createElement("div");
+                    card.className = "leave-balance-card";
+                    const span = document.createElement("span");
+                    span.textContent = label;
+                    const strong = document.createElement("strong");
+                    strong.textContent = `${Number(value || 0)} days`;
+                    card.append(span, strong);
+                    grid.appendChild(card);
+                });
+
+                const list = $("#leave-list");
+                list.replaceChildren();
+                if (!items.length) {
+                    const empty = document.createElement("p");
+                    empty.className = "readonly-note";
+                    empty.textContent = "No leave requests on file for this employee.";
+                    list.appendChild(empty);
+                    return;
+                }
+                items.forEach((item) => {
+                    const row = document.createElement("div");
+                    const identity = document.createElement("div");
+                    const type = document.createElement("strong");
+                    const meta = document.createElement("small");
+                    const badge = document.createElement("span");
+                    row.className = "leave-row";
+                    type.textContent = `${item.leave_type || "Leave"} · ${item.days || 0} day${Number(item.days) === 1 ? "" : "s"}`;
+                    meta.textContent = `${item.date_range || "-"} · ${item.tracking_no || "-"}${item.purpose ? " · " + item.purpose : ""}`;
+                    identity.append(type, meta);
+                    const label = String(item.status_label || "Pending");
+                    badge.className = "badge";
+                    if (/approved/i.test(label)) badge.dataset.state = "ready";
+                    else if (/rejected/i.test(label)) badge.dataset.state = "blocked";
+                    badge.textContent = label;
+                    row.append(identity, badge);
+                    list.appendChild(row);
+                });
+            }
+
+            async function loadLeave(usercode) {
+                const requestId = ++state.leave.request;
+                state.leave.loading = true;
+                state.leave.usercode = usercode;
+                renderLeave();
+                try {
+                    const payload = await leaveRequest({ action: "for_employee", usercode, limit: 20 });
+                    if (requestId !== state.leave.request) return;
+                    state.leave.items = Array.isArray(payload.items) ? payload.items : [];
+                    state.leave.balance = payload.balance || null;
+                } catch (error) {
+                    if (requestId !== state.leave.request) return;
+                    state.leave.items = [];
+                    state.leave.balance = null;
+                    $("#leave-status").textContent = error.message || "Leave data is unavailable right now.";
+                } finally {
+                    if (requestId === state.leave.request) { state.leave.loading = false; renderLeave(); }
+                }
+            }
+
+            function renderHolidays() {
+                const status = $("#holiday-status");
+                const list = $("#holiday-list");
+                const { items, loading, year } = state.holidays;
+                $("#holiday-year-label").textContent = String(year);
+                list.replaceChildren();
+
+                if (loading) {
+                    status.hidden = false;
+                    status.textContent = "Loading holidays…";
+                    return;
+                }
+                if (!items.length) {
+                    status.hidden = false;
+                    status.textContent = `No holidays on file for ${year}.`;
+                    return;
+                }
+                status.hidden = true;
+
+                items.forEach((holiday) => {
+                    const row = document.createElement("div");
+                    const identity = document.createElement("div");
+                    const name = document.createElement("strong");
+                    const meta = document.createElement("small");
+                    const badge = document.createElement("span");
+                    row.className = "leave-row";
+                    name.textContent = holiday.holiday_name || "Holiday";
+                    const dateObj = new Date(`${holiday.holiday_date}T00:00:00`);
+                    const weekday = dateObj.toLocaleDateString("en-US", { weekday: "long" });
+                    meta.textContent = `${MONTH_NAMES[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()} · ${weekday}`;
+                    identity.append(name, meta);
+                    badge.className = "badge";
+                    badge.dataset.state = holiday.holiday_type === "Regular" ? "ready" : "";
+                    badge.textContent = holiday.holiday_type || "Holiday";
+                    row.append(identity, badge);
+                    list.appendChild(row);
+                });
+            }
+
+            async function loadHolidays(year) {
+                const requestId = ++state.holidays.request;
+                state.holidays.loading = true;
+                state.holidays.year = year;
+                renderHolidays();
+                try {
+                    const payload = await holidayRequest({ action: "list", year });
+                    if (requestId !== state.holidays.request) return;
+                    state.holidays.items = Array.isArray(payload.items) ? payload.items : [];
+                } catch (error) {
+                    if (requestId !== state.holidays.request) return;
+                    state.holidays.items = [];
+                    state.holidays.loading = false;
+                    renderHolidays();
+                    $("#holiday-status").textContent = error.message || "Holidays are unavailable right now.";
+                    return;
+                }
+                if (requestId === state.holidays.request) { state.holidays.loading = false; renderHolidays(); }
+            }
+
+            function stepHolidayYear(delta) {
+                loadHolidays(state.holidays.year + delta);
+            }
+
+            function stepDtrMonth(delta) {
+                const [y, m] = state.dtr.month.split("-").map(Number);
+                const next = new Date(y, m - 1 + delta, 1);
+                state.dtr.month = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+                selectedDtrDate = null;
+                if (state.selected) loadDtr(state.selected.usercode);
+            }
+
+            function renderProfile() {
+                const employee = state.selected;
+                if (!employee) return;
+                state.inlineEdit = null;
+                const profile = state.profile || employee;
+                $("#profile-empty").hidden = true;
+                $("#profile-content").hidden = false;
+                setAvatar($("#profile-avatar"), profile.name, employee.Id || profile.id);
+                $("#profile-name").textContent = profile.name || "Unnamed employee";
+                $("#profile-meta").textContent = `${employee.usercode || "Missing employee ID"} · ${employee.department || "Department not assigned"}`;
+                const ready = employee.readiness === "READY";
+                const badge = $("#profile-readiness");
+                badge.dataset.state = ready ? "ready" : "blocked";
+                badge.textContent = ready ? "Payroll ready" : (employee.readiness || "Needs review");
+                const position = state.visible.findIndex((item) => item.usercode === employee.usercode);
+                $("#profile-index").textContent = position === -1 ? "" : `Employee ${position + 1} of ${state.visible.length}`;
+
+                const overview = $("#overview-details");
+                overview.replaceChildren();
+                addDetail(overview, "Employee ID", employee.usercode);
+                addDetail(overview, "Biometric ID", profile.bioUID);
+                addDetail(overview, "Department", profile.department);
+                addDetail(overview, "Position", profile.position);
+                addDetail(overview, "Employment status", profile.employmentStatus);
+                addDetail(overview, "Payroll group", employee.payroll_group);
+
+                const employment = $("#employment-details");
+                employment.replaceChildren();
+                addDetail(employment, "Employee ID", employee.usercode);
+                addEditableDetail(employment, "Employee name", profile.name, "name", 120);
+                addEditableDetail(employment, "Biometric ID", profile.bioUID, "bioUID", 40);
+                addEditableDetail(employment, "Department", profile.department, "department", 120);
+                addEditableDetail(employment, "Position", profile.position, "position", 120);
+                addEditableDetail(employment, "Employment type", profile.employmentType, "employmentType", 40);
+                addEditableDetail(employment, "Employment status", profile.employmentStatus, "employmentStatus", 40);
+                addEditableDetail(employment, "Employment date", profile.employmentDate, "employmentDate", 10);
+                addEditableDetail(employment, "Supervisor", profile.supervisor, "supervisor", 120);
+                addEditableDetail(employment, "Email", profile.email, "email", 120);
+                addEditableDetail(employment, "Mobile number", profile.mobileNumber, "mobileNumber", 20);
+                addEditableDetail(employment, "Work area / location", profile.area, "area", 80);
+                addEditableDetail(employment, "Address", profile.address, "address", 200);
+
+                const compensation = $("#compensation-details");
+                compensation.replaceChildren();
+                addDetail(compensation, "Basic salary", money(employee.basic_monthly));
+                addDetail(compensation, "Pay basis", employee.pay_basis);
+                addDetail(compensation, "Payroll group", employee.payroll_group);
+                addDetail(compensation, "Effective from", employee.effective_date ? String(employee.effective_date).slice(0, 10) : "Not configured");
+
+                const snapshot = $("#payroll-snapshot");
+                snapshot.replaceChildren();
+                addDetail(snapshot, "Current basic salary", money(employee.basic_monthly));
+                addDetail(snapshot, "Pay basis", employee.pay_basis);
+                addDetail(snapshot, "Effective date", employee.effective_date ? String(employee.effective_date).slice(0, 10) : "Not configured");
+                addDetail(snapshot, "Recorded loans", String(currentEmployeeLoans().length));
+
+                const payroll = $("#payroll-details");
+                payroll.replaceChildren();
+                addDetail(payroll, "Payroll employee code", employee.usercode);
+                addEditableDetail(payroll, "Payroll ID", profile.identifiers?.payrollId?.masked, "payrollId", 40, true);
+                addEditableDetail(payroll, "TIN", profile.identifiers?.tin?.masked, "tin", 20, true);
+                addEditableDetail(payroll, "SSS number", profile.identifiers?.sss?.masked, "sssNumber", 20, true);
+                addEditableDetail(payroll, "PhilHealth number", profile.identifiers?.philhealth?.masked, "philhealthNumber", 20, true);
+                addEditableDetail(payroll, "Pag-IBIG number", profile.identifiers?.pagibig?.masked, "pagibigNumber", 20, true);
+                addEditableDetail(payroll, "National ID", profile.identifiers?.nationalId?.masked, "nationalId", 24, true);
+                addEditableDetail(payroll, "Bank", profile.bank?.name, "bankName", 120);
+                addEditableDetail(payroll, "Bank account name", profile.bank?.accountName, "bankAccountName", 120);
+                addEditableDetail(payroll, "Bank account number", profile.bank?.accountNumber?.masked, "bankAccountNumber", 40, true);
+                addDetail(payroll, "Payroll group", employee.payroll_group);
+                addDetail(payroll, "Pay basis", employee.pay_basis);
+                addDetail(payroll, "Current salary", money(employee.basic_monthly));
+
+                const readiness = $("#readiness-list");
+                readiness.replaceChildren(
+                    readinessItem("Employee identity", Boolean(employee.usercode), "Missing ID"),
+                    readinessItem("Biometric ID", Boolean(profile.bioUID), "Missing"),
+                    readinessItem("Department assignment", Boolean(profile.department), "Missing"),
+                    readinessItem("Position", Boolean(profile.position), "Missing"),
+                    readinessItem("Effective salary", Boolean(employee.basic_monthly), "Add salary")
+                );
+
+                const requirements = $("#payroll-requirements");
+                requirements.replaceChildren(
+                    readinessItem("Employee ID", Boolean(employee.usercode), "Missing"),
+                    editableRequirement("TIN", Boolean(profile.identifiers?.tin?.configured), "Missing", "tin", 20, profile.identifiers?.tin?.masked),
+                    editableRequirement("SSS number", Boolean(profile.identifiers?.sss?.configured), "Missing", "sssNumber", 20, profile.identifiers?.sss?.masked),
+                    editableRequirement("PhilHealth number", Boolean(profile.identifiers?.philhealth?.configured), "Missing", "philhealthNumber", 20, profile.identifiers?.philhealth?.masked),
+                    editableRequirement("Pag-IBIG number", Boolean(profile.identifiers?.pagibig?.configured), "Missing", "pagibigNumber", 20, profile.identifiers?.pagibig?.masked),
+                    editableRequirement("Payroll bank account", Boolean(profile.bank?.accountNumber?.configured), "Missing", "bankAccountNumber", 40, profile.bank?.accountNumber?.masked),
+                    workflowRequirement("Salary record", Boolean(employee.basic_monthly), "Missing"),
+                    workflowRequirement("Pay basis", Boolean(employee.pay_basis), "Missing"),
+                    workflowRequirement("Payroll group", Boolean(employee.payroll_group), "Missing")
+                );
+
+                $("#next-action").textContent = ready
+                    ? "Next required action: Review schedule and statutory information before the payroll cutoff."
+                    : "Next required action: Add an effective basic salary to complete the current payroll profile.";
+                renderLoans();
+                renderDirectory();
+            }
+
+            function stepEmployee(delta) {
+                if (!state.visible.length) return;
+                const index = state.visible.findIndex((item) => item.usercode === state.selected?.usercode);
+                const nextIndex = index === -1 ? 0 : (index + delta + state.visible.length) % state.visible.length;
+                selectEmployee(state.visible[nextIndex]);
+            }
+
+            async function selectEmployee(employee) {
+                state.selected = employee;
+                state.profile = null;
+                state.dtr = { items: [], loading: false, month: state.dtr.month, request: state.dtr.request, usercode: "" };
+                selectedDtrDate = null;
+                state.leave = { items: [], balance: null, loading: false, request: state.leave.request, usercode: "" };
+                renderProfile();
+                setTab("overview");
+                history.replaceState(null, "", `#employee/${encodeURIComponent(employee.usercode || "")}/overview`);
+                const requestId = ++state.profileRequest;
+                try {
+                    const payload = await request(`/employees/${encodeURIComponent(employee.usercode || "")}/profile`);
+                    if (requestId !== state.profileRequest || state.selected?.usercode !== employee.usercode) return;
+                    state.profile = payload.profile || null;
+                    if (state.profile) {
+                        employee.name = state.profile.name;
+                        employee.position = state.profile.position;
+                        employee.department = state.profile.department;
+                    }
+                    renderProfile();
+                    showNotice("");
+                } catch (error) {
+                    if (requestId === state.profileRequest) showNotice(error.message, "error");
+                }
+            }
+
+            function setTab(key) {
+                $$("[data-tab]").forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.tab === key)));
+                $$("[data-panel]").forEach((panel) => { panel.hidden = panel.dataset.panel !== key; });
+                if (state.selected) history.replaceState(null, "", `#employee/${encodeURIComponent(state.selected.usercode || "")}/${key}`);
+                if (key === "schedule" && state.selected && state.dtr.usercode !== state.selected.usercode) {
+                    loadDtr(state.selected.usercode);
+                }
+                if (key === "leave" && state.selected && state.leave.usercode !== state.selected.usercode) {
+                    loadLeave(state.selected.usercode);
+                }
+                if (key === "holidays" && !state.holidays.loaded) {
+                    state.holidays.loaded = true;
+                    loadHolidays(state.holidays.year);
+                }
+            }
+
+            function setSensitiveInput(selector, identifier) {
+                const input = $(selector);
+                input.value = "";
+                input.placeholder = identifier?.configured ? `Saved · ${identifier.masked}` : "Not configured";
+            }
+
+            function openDrawer(type) {
+                if (!state.selected) return;
+                const employee = state.selected;
+                $("#salary-form").hidden = type !== "salary";
+                $("#loan-form").hidden = type !== "loan";
+                $("#employee-details-form").hidden = type !== "edit";
+                $("#drawer-title").textContent = type === "salary" ? "Add effective salary" : type === "loan" ? "Add employee loan" : "Edit HR details";
+                if (type === "salary") {
+                    $("#salary-usercode").value = employee.usercode || "";
+                    $("#salary-employee").value = `${employee.name || "Employee"} · ${employee.usercode || ""}`;
+                    $("#salary-group").value = employee.payroll_group || "REGULAR";
+                    $("#salary-basis").value = employee.pay_basis || "MONTHLY";
+                    $("#salary-amount").value = "";
+                    $("#salary-date").value = today();
+                    $("#salary-reason").value = "";
+                }
+                if (type === "loan") {
+                    $("#loan-usercode").value = employee.usercode || "";
+                    $("#loan-employee").value = `${employee.name || "Employee"} · ${employee.usercode || ""}`;
+                    $("#loan-form").reset();
+                    $("#loan-usercode").value = employee.usercode || "";
+                    $("#loan-employee").value = `${employee.name || "Employee"} · ${employee.usercode || ""}`;
+                    $("#loan-from").value = today();
+                }
+                if (type === "edit") {
+                    const profile = state.profile;
+                    if (!profile) {
+                        showNotice("Employee details are still loading. Please try again.", "error");
+                        return;
+                    }
+                    $("#employee-details-form").reset();
+                    $("#edit-usercode").value = employee.usercode || "";
+                    $("#edit-bio").value = profile.bioUID || "";
+                    $("#edit-name").value = profile.name || "";
+                    $("#edit-department").value = profile.department || "";
+                    $("#edit-position").value = profile.position || "";
+                    $("#edit-supervisor").value = profile.supervisor || "";
+                    $("#edit-employment-date").value = profile.employmentDate || "";
+                    $("#edit-employment-type").value = profile.employmentType || "";
+                    $("#edit-employment-status").value = profile.employmentStatus || "ACTIVE";
+                    $("#edit-area").value = profile.area || "";
+                    $("#edit-email").value = profile.email || "";
+                    $("#edit-mobile").value = profile.mobileNumber || "";
+                    $("#edit-address").value = profile.address || "";
+                    $("#edit-bank-name").value = profile.bank?.name || "";
+                    $("#edit-bank-account-name").value = profile.bank?.accountName || "";
+                    setSensitiveInput("#edit-payroll-id", profile.identifiers?.payrollId);
+                    setSensitiveInput("#edit-tin", profile.identifiers?.tin);
+                    setSensitiveInput("#edit-sss", profile.identifiers?.sss);
+                    setSensitiveInput("#edit-philhealth", profile.identifiers?.philhealth);
+                    setSensitiveInput("#edit-pagibig", profile.identifiers?.pagibig);
+                    setSensitiveInput("#edit-national-id", profile.identifiers?.nationalId);
+                    setSensitiveInput("#edit-bank-account-number", profile.bank?.accountNumber);
+                }
+                $("#drawer").hidden = false;
+                document.body.style.overflow = "hidden";
+                const focusTarget = $("#drawer input:not([type='hidden']):not([readonly]), #drawer button");
+                focusTarget?.focus();
+            }
+
+            function closeDrawer() {
+                $("#drawer").hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            async function loadEmployees(query = "") {
+                $("#result-count").textContent = "Loading employees…";
+                try {
+                    const payload = await request(`/employees?q=${encodeURIComponent(query)}`);
+                    state.employees = Array.isArray(payload.items) ? payload.items : [];
+                    state.visible = [...state.employees];
+                    $("#service-state").dataset.state = "online";
+                    $("#service-state").textContent = "Employee payroll data online";
+                    showNotice("");
+                    filterEmployees();
+                    const hashCode = decodeURIComponent((location.hash.match(/^#employee\/([^/]+)/) || [])[1] || "");
+                    const preferred = state.employees.find((item) => String(item.usercode) === hashCode) || state.employees[0];
+                    if (preferred) selectEmployee(preferred);
+                } catch (error) {
+                    $("#service-state").dataset.state = "offline";
+                    $("#service-state").textContent = "Employee payroll data unavailable";
+                    state.employees = [];
+                    state.visible = [];
+                    renderDirectory();
+                    showNotice(error.message, "error");
+                }
+            }
+
+            async function loadLoans() {
+                try {
+                    const payload = await request("/phase5/master-data");
+                    state.loans = Array.isArray(payload.loans) ? payload.loans : [];
+                    updateMetrics();
+                    if (state.selected) renderLoans();
+                } catch (_error) {
+                    state.loans = [];
+                }
+            }
+
+            $("#employee-search").addEventListener("input", () => {
+                clearTimeout(state.searchTimer);
+                state.searchTimer = setTimeout(() => {
+                    const query = $("#employee-search").value.trim();
+                    if (query.length >= 2) {
+                        loadEmployees(query);
+                    } else if (!query) {
+                        loadEmployees($("#department-filter").value);
+                    } else {
+                        filterEmployees();
+                    }
+                }, 280);
+            });
+            $("#department-filter").addEventListener("change", (event) => {
+                const department = event.currentTarget.value;
+                $("#employee-search").value = "";
+                loadEmployees(department);
+            });
+            $("#readiness-filter").addEventListener("change", filterEmployees);
+            $("#pager-prev").addEventListener("click", () => { state.page -= 1; renderDirectory(); });
+            $("#pager-next").addEventListener("click", () => { state.page += 1; renderDirectory(); });
+            $$("[data-tab]").forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
+            $("#profile-prev").addEventListener("click", () => stepEmployee(-1));
+            $("#profile-next").addEventListener("click", () => stepEmployee(1));
+            document.addEventListener("keydown", (event) => {
+                if (!$("#drawer").hidden || state.inlineEdit) return;
+                const tag = document.activeElement?.tagName;
+                if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+                if (event.key === "ArrowLeft") stepEmployee(-1);
+                if (event.key === "ArrowRight") stepEmployee(1);
+            });
+            $("#dtr-month-prev").addEventListener("click", () => stepDtrMonth(-1));
+            $("#dtr-month-next").addEventListener("click", () => stepDtrMonth(1));
+            $("#holiday-year-prev").addEventListener("click", () => stepHolidayYear(-1));
+            $("#holiday-year-next").addEventListener("click", () => stepHolidayYear(1));
+            [$("#add-salary"), $("#overview-salary"), $("#compensation-add")].forEach((button) => button.addEventListener("click", () => openDrawer("salary")));
+            [$("#edit-details"), $("#employment-edit")].forEach((button) => button.addEventListener("click", () => openDrawer("edit")));
+            $("#add-loan").addEventListener("click", () => openDrawer("loan"));
+            $("#drawer-close").addEventListener("click", closeDrawer);
+            $("#drawer-backdrop").addEventListener("click", closeDrawer);
+            $$('[data-close-drawer]').forEach((button) => button.addEventListener("click", closeDrawer));
+            document.addEventListener("keydown", (event) => {
+                if (event.key !== "Escape") return;
+                if (!$("#drawer").hidden) closeDrawer();
+                if (selectedDtrDate) closeDtrDay();
+            });
+            document.addEventListener("pointerdown", (event) => {
+                if (state.inlineEdit && !state.inlineEdit.wrapper.contains(event.target)) cancelInlineEdit();
+            });
+
+            $("#employee-details-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (!event.currentTarget.reportValidity() || !state.selected) return;
+                const button = event.currentTarget.querySelector('button[type="submit"]');
+                button.disabled = true;
+                try {
+                    const payload = await request(`/employees/${encodeURIComponent(state.selected.usercode)}/profile`, {
+                        method: "PATCH",
+                        body: JSON.stringify({
+                            name: $("#edit-name").value.trim(), position: $("#edit-position").value.trim(),
+                            department: $("#edit-department").value.trim(), bioUID: $("#edit-bio").value.trim(),
+                            email: $("#edit-email").value.trim(), mobileNumber: $("#edit-mobile").value.trim(),
+                            address: $("#edit-address").value.trim(), area: $("#edit-area").value.trim(),
+                            employmentDate: $("#edit-employment-date").value,
+                            employmentType: $("#edit-employment-type").value,
+                            employmentStatus: $("#edit-employment-status").value,
+                            supervisor: $("#edit-supervisor").value.trim(),
+                            payrollId: $("#edit-payroll-id").value.trim(), tin: $("#edit-tin").value.trim(),
+                            sssNumber: $("#edit-sss").value.trim(), philhealthNumber: $("#edit-philhealth").value.trim(),
+                            pagibigNumber: $("#edit-pagibig").value.trim(), nationalId: $("#edit-national-id").value.trim(),
+                            bankName: $("#edit-bank-name").value.trim(),
+                            bankAccountName: $("#edit-bank-account-name").value.trim(),
+                            bankAccountNumber: $("#edit-bank-account-number").value.trim()
+                        })
+                    });
+                    state.profile = payload.profile;
+                    Object.assign(state.selected, {
+                        name: payload.profile.name, position: payload.profile.position, department: payload.profile.department
+                    });
+                    closeDrawer();
+                    renderProfile();
+                    showNotice(payload.message || "Employee HR details saved.", "success");
+                } catch (error) { showNotice(error.message, "error"); }
+                finally { button.disabled = false; }
+            });
+
+            $("#salary-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (!event.currentTarget.reportValidity()) return;
+                const button = event.currentTarget.querySelector('button[type="submit"]');
+                button.disabled = true;
+                try {
+                    const payload = await request("/compensation", { method: "POST", body: JSON.stringify({
+                        usercode: $("#salary-usercode").value,
+                        payrollGroup: $("#salary-group").value.trim(),
+                        payBasis: $("#salary-basis").value,
+                        basicPay: $("#salary-amount").value,
+                        effectiveDate: $("#salary-date").value,
+                        reason: $("#salary-reason").value.trim()
+                    }) });
+                    closeDrawer();
+                    showNotice(payload.message || "Employee salary saved.", "success");
+                    await loadEmployees($("#employee-search").value.trim());
+                } catch (error) { showNotice(error.message, "error"); }
+                finally { button.disabled = false; }
+            });
+
+            $("#loan-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (!event.currentTarget.reportValidity()) return;
+                if (Number($("#loan-installment").value) > Number($("#loan-original").value)) {
+                    showNotice("The payroll deduction cannot exceed the original loan amount.", "error");
+                    return;
+                }
+                const button = event.currentTarget.querySelector('button[type="submit"]');
+                button.disabled = true;
+                try {
+                    const payload = await request("/loans", { method: "POST", body: JSON.stringify({
+                        usercode: $("#loan-usercode").value,
+                        loanCode: $("#loan-code").value.trim().toUpperCase(),
+                        lender: $("#loan-lender").value.trim(),
+                        originalAmount: $("#loan-original").value,
+                        installmentAmount: $("#loan-installment").value,
+                        effectiveFrom: $("#loan-from").value
+                    }) });
+                    closeDrawer();
+                    showNotice(payload.message || "Employee loan saved.", "success");
+                    await loadLoans();
+                    renderProfile();
+                } catch (error) { showNotice(error.message, "error"); }
+                finally { button.disabled = false; }
+            });
+
+            Promise.all([loadEmployees(), loadLoans()]);
+        })();
+    </script>
+</body>
+</html>

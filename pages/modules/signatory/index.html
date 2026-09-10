@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signatory Assignment | SAMELCII</title>
+    <!-- Signatory page ito; dito baguhin ang department at area assignment UI. -->
+    <link rel="stylesheet" href="styles.css?v=20260526-font-standard-v1" />
+</head>
+<body>
+    <!-- [AUTH] HUWAG BAGUHIN: direct URL guard para privilege 10 lang makakita ng Signatory screen. -->
+    <section class="super-admin-lock" id="super-admin-lock" hidden>
+        <div class="super-admin-lock-card">
+            <p class="eyebrow">Privilege 10</p>
+            <h1>Super Admin Only</h1>
+            <p>Signatory Assignment is a special feature for privilege 10 accounts only.</p>
+        </div>
+    </section>
+    <main class="signatory-page">
+        <header class="signatory-head">
+            <div>
+                <p class="eyebrow">Privilege 10</p>
+                <h1>Signatory Assignment</h1>
+            </div>
+            <div class="header-tools">
+                <label class="header-filter">
+                    <span>Department / Area</span>
+                    <select id="department-filter">
+                        <option value="">All Departments / Areas</option>
+                    </select>
+                </label>
+                <label class="search-box">
+                    <input id="employee-search" type="search" placeholder="Type employee name to search all departments" autocomplete="off" />
+                </label>
+            </div>
+        </header>
+
+        <section class="canvas-shell">
+            <div class="module-column">
+                <div class="column-title">Labels</div>
+                <div id="module-list" class="module-list"></div>
+            </div>
+
+            <div class="assignment-canvas" id="assignment-canvas">
+                <div class="chart-viewport" id="chart-viewport">
+                    <svg class="connector-layer" id="connector-layer" aria-hidden="true"></svg>
+                    <div id="assignment-list" class="assignment-list"></div>
+                </div>
+                <div class="chart-zoom-bar">
+                    <button class="zoom-btn" id="zoom-out" type="button" title="Zoom out">−</button>
+                    <span id="zoom-label">75%</span>
+                    <button class="zoom-btn" id="zoom-in" type="button" title="Zoom in">+</button>
+                    <button class="zoom-btn" id="zoom-reset" type="button" title="Reset view">⌂</button>
+                    <span class="zoom-sep">|</span>
+                    <button class="zoom-btn zoom-btn-arrange" id="btn-auto-arrange" type="button" title="Auto arrange all cards">⊞ Arrange</button>
+                </div>
+            </div>
+
+            <aside class="employee-drawer">
+                <div class="column-title">Employees</div>
+                <div class="department-summary" id="department-summary"></div>
+                <div id="employee-list" class="employee-list"></div>
+            </aside>
+        </section>
+
+        <p class="message" id="signatory-message" aria-live="polite"></p>
+    </main>
+
+    <script src="script.js?v=20260522-freeform-chart-v2"></script>
+    <script src="../../../assets/js/offline-sync.js?v=20260820-sw-registration-fix-v10"></script>
+</body>
+</html>
+

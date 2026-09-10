@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membership Map</title>
+  <!-- Map iframe shell ito; dito ilagay ang guide comment sa controls. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./map.css?v=20260526-font-standard-v1">
+</head>
+<body>
+  <aside class="left-panel">
+    <div class="panel-head">
+      <h3>Area</h3>
+      <button class="panel-toggle-btn" id="panelToggleBtn" type="button" aria-label="Hide Area panel" title="Hide panel">Hide</button>
+    </div>
+    <select id="municipalitySelect" class="map-select">
+      <option value="auto">Auto (by center)</option>
+      <option value="CATBALOGAN">CATBALOGAN</option>
+      <option value="BASEY">BASEY</option>
+      <option value="CALBIGA">CALBIGA</option>
+      <option value="JIABONG">JIABONG</option>
+      <option value="VILLAREAL">VILLAREAL</option>
+    </select>
+    <input id="latField" class="map-input" placeholder="Latitude" readonly>
+    <input id="lngField" class="map-input" placeholder="Longitude" readonly>
+    <input id="landmarkField" class="map-input" placeholder="Nearest Landmark">
+    <div class="camera-row">📍 <span id="topViewLabel">None</span> <button class="icon-btn" id="captureTopBtn" type="button" title="Capture map only">📷</button></div>
+    <div class="camera-row">🏞 <span id="streetViewLabel">None</span> <button class="icon-btn" id="captureStreetBtn" type="button" title="Capture street view only">📷</button></div>
+    <!-- Mensahe sa iframe mismo — makikita kahit naka-open ang map modal sa parent (hindi lang #save-message). -->
+    <p class="map-capture-status" id="mapCaptureStatus" role="status" aria-live="polite"></p>
+    <button id="saveBtn" class="save-btn" type="button">SAVE</button>
+  </aside>
+
+  <div class="map-canvas-wrap">
+    <div id="map"></div>
+    <!-- Isang larawan galing sa ating PHP proxy (Street View o satellite fallback) — walang Google Maps embed / gen_204 sa browser. -->
+    <iframe id="streetview" class="streetview-panel" title="Street View" aria-hidden="true"></iframe>
+    <button class="panel-open-btn" id="panelOpenBtn" type="button" aria-label="Show Area panel" title="Show panel">Show Area</button>
+    <div class="search-floating">
+      <input id="searchBox" class="map-input" placeholder="Search address or paste lat,lng then press Enter">
+      <span class="zoom-hint">Zoom out</span>
+    </div>
+    <div class="view-buttons">
+      <button class="map-btn active" id="btnTopView" type="button" title="Satellite view">🛰</button>
+      <button class="map-btn" id="btnStreetView" type="button" title="Aerial / street preview (server image)">🏠</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Cache bust: map.js ang may pin, capture, at load fixes. -->
+  <script src="./map.js?v=20260727-api-same-origin-v1"></script>
+</body>
+</html>

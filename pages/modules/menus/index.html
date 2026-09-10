@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Menus | SAMELCII</title>
+    <style>
+        :root {
+            --blue: #1565d8;
+            --blue-dark: #0d3f8f;
+            --ink: #16233b;
+            --muted: #667085;
+            --line: #d8e1ee;
+            --panel: #ffffff;
+            --soft: #f5f8fc;
+            --success: #087a4b;
+            --danger: #b42318;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--soft);
+            color: var(--ink);
+            font-family: Inter, Arial, sans-serif;
+        }
+
+        button, input { font: inherit; }
+
+        .page {
+            width: min(1480px, 100%);
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        h1, h2, p { margin: 0; }
+        h1 { font-size: clamp(24px, 3vw, 34px); }
+        h2 { font-size: 18px; }
+
+        .subtitle {
+            margin-top: 7px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .admin-badge {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #e8f1ff;
+            color: var(--blue-dark);
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+            gap: 18px;
+            min-height: 640px;
+        }
+
+        .panel {
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--panel);
+            box-shadow: 0 8px 30px rgba(31, 55, 90, 0.07);
+        }
+
+        .panel-head {
+            padding: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .search {
+            width: 100%;
+            min-height: 44px;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            outline: none;
+        }
+
+        .search:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(21, 101, 216, 0.13);
+        }
+
+        .employee-list {
+            max-height: 570px;
+            overflow: auto;
+            padding: 8px;
+        }
+
+        .employee {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .employee:hover { background: var(--soft); }
+        .employee.active { background: #e8f1ff; color: var(--blue-dark); }
+        .employee strong, .employee span { display: block; }
+        .employee span { margin-top: 4px; color: var(--muted); font-size: 12px; }
+
+        .empty {
+            padding: 26px 18px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .assignment-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .selected-meta {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .save {
+            min-width: 140px;
+            min-height: 44px;
+            border: 0;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .save:disabled { cursor: not-allowed; opacity: 0.5; }
+
+        .module-groups {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .module-group {
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+        }
+
+        .module-group h3 {
+            margin: 0 0 10px;
+            color: var(--blue-dark);
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .module-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 40px;
+            padding: 8px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .module-option:hover { background: var(--soft); }
+        .module-option input { width: 18px; height: 18px; accent-color: var(--blue); }
+        .module-option small { margin-left: auto; color: var(--muted); }
+
+        .status {
+            min-height: 22px;
+            padding: 0 18px 18px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .status.success { color: var(--success); }
+        .status.error { color: var(--danger); }
+
+        @media (max-width: 820px) {
+            .page { padding: 14px; }
+            .workspace { grid-template-columns: 1fr; }
+            .employee-list { max-height: 320px; }
+            .module-groups { grid-template-columns: 1fr; }
+        }
+
+        /* Modern access-control theme */
+        body {
+            position: relative;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 4% 8%, rgba(59, 130, 246, 0.18), transparent 28%),
+                radial-gradient(circle at 94% 4%, rgba(124, 58, 237, 0.14), transparent 26%),
+                linear-gradient(145deg, #eef5ff 0%, #f7f9fd 48%, #f0f4fb 100%);
+        }
+
+        body::before,
+        body::after {
+            position: fixed;
+            z-index: 0;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            content: "";
+            pointer-events: none;
+            filter: blur(6px);
+        }
+
+        body::before {
+            top: -190px;
+            right: 12%;
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        body::after {
+            bottom: -230px;
+            left: 18%;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .page-head {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+            padding: 24px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 88% 25%, rgba(96, 165, 250, 0.45), transparent 22%),
+                linear-gradient(120deg, #0b2453 0%, #124da4 52%, #2563eb 100%);
+            color: #fff;
+            box-shadow: 0 16px 38px rgba(20, 73, 160, 0.22);
+        }
+
+        .page-head::after {
+            position: absolute;
+            right: -46px;
+            bottom: -76px;
+            width: 210px;
+            height: 210px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 50%;
+            content: "";
+            box-shadow:
+                0 0 0 28px rgba(255, 255, 255, 0.05),
+                0 0 0 58px rgba(255, 255, 255, 0.035);
+        }
+
+        .page-head > * { position: relative; z-index: 1; }
+        .page-head h1 { color: #fff; letter-spacing: -0.03em; }
+        .page-head .subtitle { color: rgba(255, 255, 255, 0.76); }
+
+        .admin-badge {
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .workspace {
+            grid-template-columns: minmax(300px, 350px) minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        .panel {
+            border-color: rgba(171, 190, 219, 0.7);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow:
+                0 18px 45px rgba(30, 64, 120, 0.09),
+                inset 0 1px rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(14px);
+        }
+
+        .panel-head {
+            padding: 18px 16px 14px;
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.9), rgba(255, 255, 255, 0));
+        }
+
+        .panel-head h2,
+        .assignment-head h2 {
+            letter-spacing: -0.02em;
+        }
+
+        .search {
+            padding-left: 42px;
+            border-color: #c9d8ed;
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235b6b82' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.2-3.2'/%3E%3C/svg%3E")
+                no-repeat 14px center / 18px;
+            box-shadow: inset 0 1px 2px rgba(35, 58, 92, 0.05);
+        }
+
+        .employee-list {
+            padding: 10px;
+            scrollbar-color: #9bb2d1 transparent;
+            scrollbar-width: thin;
+        }
+
+        .employee {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 11px;
+            align-items: center;
+            margin-bottom: 4px;
+            padding: 10px;
+            border: 1px solid transparent;
+            transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+
+        .employee:hover {
+            transform: translateX(3px);
+            border-color: #d7e3f4;
+            background: #f7faff;
+        }
+
+        .employee.active {
+            border-color: #a8c7f7;
+            background: linear-gradient(135deg, #eaf3ff, #edf0ff);
+            box-shadow: 0 7px 16px rgba(45, 101, 190, 0.12);
+        }
+
+        .employee-avatar {
+            display: grid !important;
+            width: 42px;
+            height: 42px;
+            margin: 0 !important;
+            place-items: center;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #dbeafe, #c7d2fe);
+            color: #174ea6 !important;
+            font-size: 13px !important;
+            font-weight: 900;
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+        }
+
+        .employee.active .employee-avatar {
+            background: linear-gradient(145deg, #2563eb, #4f46e5);
+            color: #fff !important;
+            box-shadow: 0 7px 14px rgba(37, 99, 235, 0.25);
+        }
+
+        .employee-copy {
+            min-width: 0;
+            margin: 0 !important;
+        }
+
+        .employee-copy strong {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .employee-copy span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .assignment-head {
+            position: sticky;
+            z-index: 3;
+            top: 0;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.93);
+            backdrop-filter: blur(16px);
+        }
+
+        .save {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background: linear-gradient(135deg, #2563eb, #174ea6 58%, #0b3474);
+            box-shadow: 0 10px 22px rgba(23, 78, 166, 0.24);
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .save:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 26px rgba(23, 78, 166, 0.31);
+        }
+
+        .save:not(:disabled):active { transform: translateY(0); }
+
+        .module-groups {
+            gap: 12px;
+            padding: 16px;
+            background: linear-gradient(180deg, rgba(247, 250, 255, 0.74), rgba(255, 255, 255, 0));
+        }
+
+        .module-group {
+            position: relative;
+            overflow: hidden;
+            padding: 15px;
+            border-color: #d6e2f1;
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.97), rgba(246, 249, 255, 0.92));
+            box-shadow: 0 8px 20px rgba(35, 68, 120, 0.055);
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .module-group::before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            content: "";
+        }
+
+        .module-group:nth-child(2n)::before { background: linear-gradient(90deg, #0891b2, #2563eb); }
+        .module-group:nth-child(3n)::before { background: linear-gradient(90deg, #7c3aed, #db2777); }
+
+        .module-group:hover {
+            transform: translateY(-2px);
+            border-color: #b8cff0;
+            box-shadow: 0 13px 25px rgba(35, 68, 120, 0.1);
+        }
+
+        .module-group h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 11px;
+            color: #174ea6;
+            letter-spacing: 0.08em;
+        }
+
+        .module-group h3::before {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #3b82f6;
+            content: "";
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+        }
+
+        .group-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 9px;
+        }
+
+        .group-head h3 { margin-bottom: 0; }
+
+        .group-select {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 8px;
+            border: 1px solid #d4e1f2;
+            border-radius: 999px;
+            background: #f4f8ff;
+            color: #315b95;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+        }
+
+        .group-select:hover {
+            transform: translateY(-1px);
+            border-color: #9cbcec;
+            background: #eaf3ff;
+        }
+
+        .group-select:has(input:disabled) {
+            cursor: default;
+            opacity: 0.62;
+        }
+
+        .group-select:has(input:disabled):hover { transform: none; }
+
+        .group-select input {
+            display: grid;
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            appearance: none;
+            place-content: center;
+            border: 1.5px solid #8fa7c7;
+            border-radius: 5px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .group-select input::before {
+            width: 7px;
+            height: 4px;
+            border-bottom: 2px solid #fff;
+            border-left: 2px solid #fff;
+            content: "";
+            opacity: 0;
+            transform: translateY(-1px) rotate(-45deg);
+        }
+
+        .group-select input:checked,
+        .group-select input:indeterminate {
+            border-color: #2563eb;
+            background: linear-gradient(145deg, #3b82f6, #174ea6);
+        }
+
+        .group-select input:checked::before { opacity: 1; }
+
+        .group-select input:indeterminate::before {
+            width: 8px;
+            height: 0;
+            border-bottom: 2px solid #fff;
+            border-left: 0;
+            opacity: 1;
+            transform: none;
+        }
+
+        .group-select input:disabled { cursor: default; }
+
+        .module-option {
+            margin-top: 4px;
+            border: 1px solid transparent;
+            transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+        }
+
+        .module-option:hover {
+            transform: translateX(2px);
+            border-color: #dbe7f7;
+            background: #f4f8ff;
+        }
+
+        .module-option:has(input:checked) {
+            border-color: #c5d9f6;
+            background: linear-gradient(90deg, #edf5ff, #f5f3ff);
+            color: #123f85;
+            font-weight: 700;
+        }
+
+        .module-option input {
+            display: grid;
+            flex: 0 0 auto;
+            width: 19px;
+            height: 19px;
+            margin: 0;
+            appearance: none;
+            place-content: center;
+            border: 1.5px solid #9caec5;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .module-option input::before {
+            width: 9px;
+            height: 5px;
+            border-bottom: 2px solid #fff;
+            border-left: 2px solid #fff;
+            content: "";
+            opacity: 0;
+            transform: translateY(-1px) rotate(-45deg) scale(0.6);
+            transition: opacity 120ms ease, transform 120ms ease;
+        }
+
+        .module-option input:checked {
+            border-color: #2563eb;
+            background: linear-gradient(145deg, #3b82f6, #174ea6);
+            box-shadow: 0 4px 9px rgba(37, 99, 235, 0.22);
+        }
+
+        .module-option input:checked::before {
+            opacity: 1;
+            transform: translateY(-1px) rotate(-45deg) scale(1);
+        }
+
+        .module-option input:disabled { cursor: not-allowed; opacity: 0.62; }
+
+        .module-option small {
+            padding: 3px 7px;
+            border-radius: 999px;
+            background: #edf2f8;
+            color: #607089;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status.success,
+        .status.error {
+            margin: 0 16px 16px;
+            padding: 11px 13px;
+            border-radius: 9px;
+        }
+
+        .status.success { background: #eafaf3; }
+        .status.error { background: #fff0ef; }
+
+        @media (max-width: 820px) {
+            .page { padding: 10px; }
+            .page-head { padding: 20px; border-radius: 14px; }
+            .workspace { grid-template-columns: 1fr; }
+            .assignment-head { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="page-head">
+            <div>
+                <h1>Employee Menu Access</h1>
+                <p class="subtitle">Assign extra dashboard modules to each employee. Employees Profile, Fuel, and Messenger are always available.</p>
+            </div>
+            <span class="admin-badge">PRIVILEGE 10</span>
+        </header>
+
+        <div class="workspace">
+            <section class="panel" aria-labelledby="employees-title">
+                <div class="panel-head">
+                    <h2 id="employees-title">Employees</h2>
+                    <input class="search" id="employee-search" type="search" placeholder="Search name, ID, or department" autocomplete="off" />
+                </div>
+                <div class="employee-list" id="employee-list"><div class="empty">Loading employees…</div></div>
+            </section>
+
+            <section class="panel" aria-labelledby="assignment-title">
+                <div class="assignment-head">
+                    <div>
+                        <h2 id="assignment-title">Select an employee</h2>
+                        <p class="selected-meta" id="selected-meta">Choose an employee to view assigned modules.</p>
+                    </div>
+                    <button class="save" id="save-access" type="button" disabled>Save Access</button>
+                </div>
+                <div class="module-groups" id="module-groups"><div class="empty">No employee selected.</div></div>
+                <div class="status" id="status" role="status" aria-live="polite"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (() => {
+            const API_BASE = `${window.location.protocol === "https:" ? "https:" : "http:"}//${window.location.hostname || "127.0.0.1"}:3000/api`;
+            const API = `${API_BASE}/menu_permissions`;
+            const list = document.getElementById("employee-list");
+            const search = document.getElementById("employee-search");
+            const groups = document.getElementById("module-groups");
+            const title = document.getElementById("assignment-title");
+            const meta = document.getElementById("selected-meta");
+            const save = document.getElementById("save-access");
+            const status = document.getElementById("status");
+            let modules = [];
+            let employees = [];
+            let selectedEmployee = null;
+            let assigned = new Set();
+            let searchTimer = null;
+
+            const authHeaders = (extra = {}) => {
+                const headers = { ...extra };
+                const token = String(localStorage.getItem("samelcii_token") || "").trim();
+                if (token) headers.Authorization = `Bearer ${token}`;
+                return headers;
+            };
+
+            const request = async (action, options = {}) => {
+                const response = await fetch(`${API}?action=${encodeURIComponent(action)}${options.query || ""}`, {
+                    method: options.method || "GET",
+                    cache: "no-store",
+                    credentials: "same-origin",
+                    headers: authHeaders(options.headers || {}),
+                    body: options.body
+                });
+                const data = await response.json().catch(() => ({ ok: false, message: "Invalid server response." }));
+                if (!response.ok || !data.ok) throw new Error(data.message || "Request failed.");
+                return data;
+            };
+
+            const privilege10 = (value) => String(value || "").split(/[^0-9]+/).filter(Boolean).includes("10");
+
+            // Privilege 10 always has full access server-side, so per-module boxes must stay
+            // locked+checked for them — editing/saving must never write real assignment rows,
+            // or a later privilege downgrade would silently leave stale full access behind.
+            const moduleState = (module, adminEmployee, assignedSet) => ({
+                locked: module.default || module.adminOnly || adminEmployee,
+                checked: adminEmployee || module.default || assignedSet.has(module.key)
+            });
+
+            (() => {
+                const on = { key: "x" };
+                const off = { key: "y" };
+                console.assert(moduleState(on, true, new Set()).locked === true, "admin modules must be locked");
+                console.assert(moduleState(on, true, new Set()).checked === true, "admin modules must show checked");
+                console.assert(moduleState(off, false, new Set()).locked === false, "non-admin modules stay editable");
+                console.assert(moduleState(off, false, new Set(["x"])).checked === false, "unassigned module for non-admin stays unchecked");
+                console.assert(moduleState(off, false, new Set(["y"])).checked === true, "assigned module for non-admin shows checked");
+            })();
+
+            const setStatus = (message, type = "") => {
+                status.textContent = message || "";
+                status.className = `status${type ? ` ${type}` : ""}`;
+            };
+
+            const renderEmployees = () => {
+                if (!employees.length) {
+                    list.innerHTML = '<div class="empty">No employees found.</div>';
+                    return;
+                }
+                list.innerHTML = employees.map((employee) => `
+                    <button class="employee${selectedEmployee?.usercode === employee.usercode ? " active" : ""}" type="button" data-usercode="${escapeHtml(employee.usercode)}">
+                        <span class="employee-avatar" aria-hidden="true">${escapeHtml(employeeInitials(employee.name || employee.usercode))}</span>
+                        <span class="employee-copy">
+                            <strong>${escapeHtml(employee.name || employee.usercode)}</strong>
+                            <span>${escapeHtml(employee.usercode)} · ${escapeHtml(employee.department || "No department")}</span>
+                        </span>
+                    </button>
+                `).join("");
+            };
+
+            const renderModules = () => {
+                if (!selectedEmployee) {
+                    groups.innerHTML = '<div class="empty">No employee selected.</div>';
+                    save.disabled = true;
+                    return;
+                }
+
+                const adminEmployee = privilege10(selectedEmployee.privilage);
+                const grouped = modules.reduce((result, module) => {
+                    (result[module.group] ||= []).push(module);
+                    return result;
+                }, {});
+
+                groups.innerHTML = Object.entries(grouped).map(([group, items]) => {
+                    const selectable = items.filter((module) => !module.default && !module.adminOnly);
+                    const groupLocked = selectable.length === 0 || adminEmployee;
+                    const groupChecked = groupLocked || selectable.every((module) => moduleState(module, adminEmployee, assigned).checked);
+                    const groupAction = groupLocked ? "Always on" : "Select all";
+                    return `
+                    <section class="module-group">
+                        <div class="group-head">
+                            <h3>${escapeHtml(group)}</h3>
+                            <label class="group-select">
+                                <input type="checkbox" data-group-toggle aria-label="Select all ${escapeHtml(group)}" ${groupChecked ? "checked" : ""} ${groupLocked ? "disabled" : ""} />
+                                <span>${escapeHtml(groupAction)}</span>
+                            </label>
+                        </div>
+                        ${items.map((module) => {
+                            const { locked, checked } = moduleState(module, adminEmployee, assigned);
+                            const note = module.default ? "Default" : module.adminOnly ? "Privilege 10" : adminEmployee ? "Full access anyway" : "";
+                            return `
+                                <label class="module-option">
+                                    <input type="checkbox" data-module-key value="${escapeHtml(module.key)}" ${checked ? "checked" : ""} ${locked ? "disabled" : ""} />
+                                    <span>${escapeHtml(module.label)}</span>
+                                    ${note ? `<small>${escapeHtml(note)}</small>` : ""}
+                                </label>
+                            `;
+                        }).join("")}
+                    </section>
+                `;
+                }).join("");
+                syncGroupToggles();
+                save.disabled = false;
+                if (adminEmployee) setStatus("Privilege 10 always has full access — modules are locked here and can't be individually restricted.");
+            };
+
+            const syncGroupToggles = () => {
+                groups.querySelectorAll(".module-group").forEach((group) => {
+                    const toggle = group.querySelector("[data-group-toggle]");
+                    if (!toggle || toggle.disabled) return;
+                    const items = Array.from(group.querySelectorAll("[data-module-key]:not(:disabled)"));
+                    const checkedCount = items.filter((input) => input.checked).length;
+                    toggle.checked = items.length > 0 && checkedCount === items.length;
+                    toggle.indeterminate = checkedCount > 0 && checkedCount < items.length;
+                });
+            };
+
+            const selectEmployee = async (usercode) => {
+                setStatus("Loading assignments…");
+                save.disabled = true;
+                try {
+                    const data = await request("get", { query: `&usercode=${encodeURIComponent(usercode)}` });
+                    selectedEmployee = data.employee;
+                    assigned = new Set(data.assigned_modules || []);
+                    title.textContent = selectedEmployee.name || selectedEmployee.usercode;
+                    meta.textContent = `${selectedEmployee.usercode} · ${selectedEmployee.position || "Employee"} · ${selectedEmployee.department || "No department"}`;
+                    renderEmployees();
+                    renderModules();
+                    if (!privilege10(selectedEmployee.privilage)) setStatus("");
+                } catch (error) {
+                    setStatus(error.message, "error");
+                }
+            };
+
+            const loadEmployees = async () => {
+                list.innerHTML = '<div class="empty">Loading employees…</div>';
+                try {
+                    const q = search.value.trim();
+                    const data = await request("employees", { query: `&q=${encodeURIComponent(q)}` });
+                    employees = data.employees || [];
+                    renderEmployees();
+                } catch (error) {
+                    list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+                }
+            };
+
+            const saveAssignments = async () => {
+                if (!selectedEmployee) return;
+                const adminEmployee = privilege10(selectedEmployee.privilage);
+                const selectedModules = Array.from(groups.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)'))
+                    .map((input) => input.value);
+                save.disabled = true;
+                setStatus("Saving menu assignments…");
+                try {
+                    const data = await request("save", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ usercode: selectedEmployee.usercode, modules: selectedModules })
+                    });
+                    assigned = new Set(data.assigned_modules || []);
+                    renderModules();
+                    setStatus(
+                        adminEmployee
+                            ? "Saved. Privilege 10 keeps full access regardless of these checkboxes — any leftover per-module overrides were cleared."
+                            : "Menu assignments saved. They apply on every computer after the employee refreshes or signs in again.",
+                        "success"
+                    );
+                } catch (error) {
+                    save.disabled = false;
+                    setStatus(error.message, "error");
+                }
+            };
+
+            function escapeHtml(value) {
+                return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+                    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+                })[char]);
+            }
+
+            function employeeInitials(value) {
+                return String(value || "?")
+                    .replace(/[^a-zA-Z0-9 ]+/g, " ")
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((part) => part.charAt(0))
+                    .join("")
+                    .toUpperCase() || "?";
+            }
+
+            list.addEventListener("click", (event) => {
+                const button = event.target.closest("[data-usercode]");
+                if (button) void selectEmployee(button.dataset.usercode);
+            });
+
+            search.addEventListener("input", () => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => void loadEmployees(), 250);
+            });
+
+            groups.addEventListener("change", (event) => {
+                const target = event.target;
+                if (!(target instanceof HTMLInputElement)) return;
+                if (target.matches("[data-group-toggle]")) {
+                    const group = target.closest(".module-group");
+                    group?.querySelectorAll("[data-module-key]:not(:disabled)").forEach((input) => {
+                        input.checked = target.checked;
+                    });
+                }
+                syncGroupToggles();
+            });
+
+            save.addEventListener("click", () => void saveAssignments());
+
+            Promise.all([request("catalog"), request("employees")])
+                .then(([catalogData, employeeData]) => {
+                    modules = catalogData.modules || [];
+                    employees = employeeData.employees || [];
+                    renderEmployees();
+                })
+                .catch((error) => {
+                    list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+                    groups.innerHTML = '<div class="empty">Privilege 10 access is required.</div>';
+                    setStatus(error.message, "error");
+                });
+        })();
+    </script>
+</body>
+</html>

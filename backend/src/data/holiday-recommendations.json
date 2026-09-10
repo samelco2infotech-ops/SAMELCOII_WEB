@@ -1,0 +1,21 @@
+{
+  "templates": [
+    { "id": 1, "name": "New Year's Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 2, "name": "Maundy Thursday", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 3, "name": "Good Friday", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 4, "name": "Black Saturday", "holiday_type": "Special Non-Working", "day_portion": "WHOLE" },
+    { "id": 5, "name": "Araw ng Kagitingan", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 6, "name": "Labor Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 7, "name": "Independence Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 8, "name": "Ninoy Aquino Day", "holiday_type": "Special Non-Working", "day_portion": "WHOLE" },
+    { "id": 9, "name": "National Heroes Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 10, "name": "All Saints' Day", "holiday_type": "Special Non-Working", "day_portion": "WHOLE" },
+    { "id": 11, "name": "All Souls' Day", "holiday_type": "Special Non-Working", "day_portion": "WHOLE" },
+    { "id": 12, "name": "Bonifacio Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 13, "name": "Christmas Eve", "holiday_type": "Special Non-Working", "day_portion": "WHOLE" },
+    { "id": 14, "name": "Christmas Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 15, "name": "Rizal Day", "holiday_type": "Regular", "day_portion": "WHOLE" },
+    { "id": 16, "name": "Last Day of the Year", "holiday_type": "Special Non-Working", "day_portion": "WHOLE" }
+  ],
+  "next_id": 17
+}

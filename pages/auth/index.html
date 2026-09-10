@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="../../assets/images/samelco-mark.svg" />
+    <title>Login/Signup Form</title>
+    <script>
+        (function () {
+            const authRoot = new URL("../../", window.location.href).toString().replace(/\/$/, "");
+            window.SAMELCII_API_BASE = `${authRoot}/api`;
+            window.SAMELCII_MEDIA_BASE = window.location.origin;
+        })();
+    </script>
+    <!-- Auth page ito; dito baguhin ang login at register structure. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../../assets/css/style.css?v=20260902-saved-accounts-v1" />
+</head>
+<body>
+    <div class="container">
+        <div class="form-box login">
+            <form id="login-form" action="#" method="post" autocomplete="on">
+                <h1>Login</h1>
+                <section id="saved-accounts-panel" class="saved-accounts-panel" aria-labelledby="saved-accounts-title" hidden>
+                    <div class="saved-accounts-heading">
+                        <h2 id="saved-accounts-title">Choose an account</h2>
+                        <p>Click a saved profile to continue without entering a password.</p>
+                    </div>
+                    <div id="saved-account-list" class="saved-account-list" role="list"></div>
+                    <button id="use-another-account" class="account-secondary-btn" type="button">
+                        <i class="fa fa-user-plus" aria-hidden="true"></i>
+                        Use another account
+                    </button>
+                </section>
+
+                <div id="manual-login-panel" class="manual-login-panel">
+                    <div class="input-box">
+                        <i class="fa fa-user field-icon"></i>
+                        <input id="login-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Username" required />
+                    </div>
+                    <div class="input-box">
+                        <i class="fa fa-lock field-icon"></i>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Password" required />
+                        <i class="fa fa-eye toggle-password" data-target="login-password" aria-label="Show password" title="Show password"></i>
+                    </div>
+                    <div class="auth-row">
+                        <label class="remember-me">
+                            <input id="remember-me" type="checkbox" />
+                            Save account on this device
+                        </label>
+                        <button id="forgot-password-link" class="forgot-btn" type="button">Forgot Password?</button>
+                    </div>
+                    <div id="forgot-panel" class="forgot-panel">
+                        <div class="input-box small">
+                            <i class="fa fa-user field-icon"></i>
+                            <input id="forgot-identifier" type="text" placeholder="Username or Employee ID" />
+                        </div>
+                        <div class="input-box small">
+                            <i class="fa fa-lock field-icon"></i>
+                            <input id="forgot-new-password" type="password" placeholder="New Password" />
+                            <i class="fa fa-eye toggle-password" data-target="forgot-new-password" aria-label="Show password" title="Show password"></i>
+                        </div>
+                        <div class="input-box small">
+                            <i class="fa fa-lock field-icon"></i>
+                            <input id="forgot-confirm-password" type="password" placeholder="Confirm New Password" />
+                            <i class="fa fa-eye toggle-password" data-target="forgot-confirm-password" aria-label="Show password" title="Show password"></i>
+                        </div>
+                        <div class="forgot-actions">
+                            <button id="forgot-save-btn" class="btn mini" type="button">Reset Password</button>
+                            <button id="forgot-cancel-btn" class="btn mini secondary" type="button">Cancel</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                    <button id="back-to-saved-accounts" class="account-secondary-btn compact" type="button" hidden>
+                        <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                        Back to saved accounts
+                    </button>
+                    <a class="desktop-download" href="../../desktop/downloads/SAMELCII-Desktop-Windows.zip" download="SAMELCII-Desktop-Windows.zip">
+                        <i class="fa fa-download"></i>
+                        Download desktop app
+                    </a>
+                </div>
+                <p id="login-message" class="form-message" aria-live="polite"></p>
+            </form>
+        </div>
+
+        <div class="form-box register">
+            <form id="register-form" action="#">
+                <h1>Register</h1>
+                <div class="input-box">
+                    <i class="fa fa-user field-icon"></i>
+                    <input id="register-usercode" list="employee-list" type="text" placeholder="Employee ID" required />
+                </div>
+                <datalist id="employee-list"></datalist>
+                <div class="input-box">
+                    <i class="fa fa-id-card field-icon"></i>
+                    <input id="register-username" type="text" placeholder="Username" required />
+                </div>
+                <div class="input-box">
+                    <i class="fa fa-lock field-icon"></i>
+                    <input id="register-password" type="password" placeholder="Password" required />
+                    <i class="fa fa-eye toggle-password" data-target="register-password" aria-label="Show password" title="Show password"></i>
+                </div>
+                <div class="input-box">
+                    <i class="fa fa-lock field-icon"></i>
+                    <input id="register-confirm-password" type="password" placeholder="Confirm Password" required />
+                    <i class="fa fa-eye toggle-password" data-target="register-confirm-password" aria-label="Show password" title="Show password"></i>
+                </div>
+                <button type="submit" class="btn">Register</button>
+                <p id="register-message" class="form-message" aria-live="polite"></p>
+            </form>
+        </div>
+
+        <div class="toggle-box"></div>
+
+        <div class="toggle-panel toggle-left">
+            <img src="../../assets/images/samelco-3d.png" alt="SAMELCO II Logo" class="form-logo" />
+            <p>Don't have an account?</p>
+            <button class="btn register-btn" type="button">Register</button>
+        </div>
+
+        <div class="toggle-panel toggle-right">
+            <h1>Welcome Back!</h1>
+            <p>Already have an account?</p>
+            <button class="btn login-btn" type="button">Login</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const projectRoot = new URL("../../", window.location.href).toString().replace(/\/$/, "");
+            window.SAMELCII_API_BASE = `${projectRoot}/api`;
+            window.SAMELCII_MEDIA_BASE = window.location.origin;
+        })();
+    </script>
+    <!-- JWT API Client for Node.js Backend -->
+    <script src="../../assets/js/api-client.js?v=20260730-node-auth-v2"></script>
+    <script>
+        (function () {
+            const projectRoot = new URL("../../", window.location.href).toString().replace(/\/$/, "");
+            window.SAMELCII_API_BASE = `${projectRoot}/api`;
+            window.SAMELCII_MEDIA_BASE = window.location.origin;
+        })();
+    </script>
+    <!-- Page Protection Utility -->
+    <script src="../../assets/js/page-protection.js?v=20260730-node-auth-v3"></script>
+    <!-- Auth Page Script -->
+    <script src="../../assets/js/script.js?v=20260902-saved-accounts-v1"></script>
+</body>
+</html>

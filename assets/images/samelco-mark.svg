@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">SAMELCO II mark</title>
+  <desc id="desc">Circular atom-style logo mark for SAMELCO II.</desc>
+  <defs>
+    <linearGradient id="bg" x1="32" y1="24" x2="224" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#e5e7eb"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="76" y1="70" x2="180" y2="188" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5b6472"/>
+      <stop offset="1" stop-color="#9098a5"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="36" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="22" fill="#23272f"/>
+  <ellipse cx="128" cy="128" rx="74" ry="28" fill="none" stroke="url(#ring)" stroke-width="8"/>
+  <ellipse cx="128" cy="128" rx="74" ry="28" fill="none" stroke="url(#ring)" stroke-width="8" transform="rotate(60 128 128)"/>
+  <ellipse cx="128" cy="128" rx="74" ry="28" fill="none" stroke="url(#ring)" stroke-width="8" transform="rotate(-60 128 128)"/>
+  <circle cx="128" cy="56" r="10" fill="#d6dbe2"/>
+  <circle cx="192" cy="152" r="10" fill="#d6dbe2"/>
+  <circle cx="72" cy="170" r="10" fill="#d6dbe2"/>
+  <circle cx="154" cy="78" r="6" fill="#ffffff"/>
+</svg>

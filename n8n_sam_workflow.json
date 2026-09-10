@@ -1,0 +1,537 @@
+{
+  "name": "SAM AI — SAMELCO II",
+  "nodes": [
+    {
+      "id": "wh01",
+      "name": "SAM Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [600, 60],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sam-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "my01",
+      "name": "Init Employee Memory Table",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [600, 260],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS `messenger`.`ai_employee_memory` (`id` INT AUTO_INCREMENT PRIMARY KEY, `employee_id` INT NOT NULL, `topic` VARCHAR(100) NOT NULL DEFAULT 'general', `summary` TEXT NOT NULL, `last_request` TEXT NULL, `request_count` INT NOT NULL DEFAULT 1, `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY `uq_emp_topic` (`employee_id`, `topic`), KEY `idx_employee_id` (`employee_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "options": {}
+      }
+    },
+    {
+      "id": "my02",
+      "name": "Get AI User ID",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [600, 460],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT setting_value FROM messenger.ai_settings WHERE setting_key = 'ai_user_id' LIMIT 1",
+        "options": {}
+      }
+    },
+    {
+      "id": "my03",
+      "name": "Get User Profile",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [600, 660],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=`SELECT Id, usercode, name, position, department, COALESCE(privilage,'0') AS privilage, COALESCE(VLbal,0) AS VLbal, COALESCE(SLbal,0) AS SLbal, COALESCE(OLbal,0) AS OLbal FROM it_program.usertb WHERE Id = ${parseInt($('SAM Webhook').first().json.user_id)} LIMIT 1`",
+        "options": {}
+      }
+    },
+    {
+      "id": "my04",
+      "name": "Get Last 25 Messages",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [600, 860],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=`SELECT SenderID, MessageText, SentAt, MessageID FROM (SELECT SenderID, MessageText, SentAt, MessageID FROM messenger.messages WHERE ConversationID = ${parseInt($('SAM Webhook').first().json.conversation_id)} ORDER BY SentAt DESC, MessageID DESC LIMIT 25) recent ORDER BY SentAt ASC, MessageID ASC`",
+        "options": {}
+      }
+    },
+    {
+      "id": "co01",
+      "name": "Process Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 1060],
+      "parameters": {
+        "jsCode": "const webhookData = $('SAM Webhook').first().json;\nconst conversationId = parseInt(webhookData.conversation_id || 0);\nconst userId = parseInt(webhookData.user_id || 0);\nconst aiUserId = parseInt($('Get AI User ID').first().json?.setting_value || '0');\nconst userProfile = $('Get User Profile').first().json || {};\nconst historyItems = $('Get Last 25 Messages').all();\n\nconst rawMsgs = historyItems.map(i => ({\n  senderId: parseInt(i.json.SenderID),\n  text: (i.json.MessageText || '').trim()\n}));\n\nconst claudeMessages = [];\nfor (const msg of rawMsgs) {\n  if (!msg.text) continue;\n  const role = msg.senderId === aiUserId ? 'assistant' : 'user';\n  if (claudeMessages.length && claudeMessages[claudeMessages.length-1].role === role) {\n    claudeMessages[claudeMessages.length-1].content += '\\n' + msg.text;\n  } else {\n    claudeMessages.push({ role, content: msg.text });\n  }\n}\nif (!claudeMessages.length || claudeMessages[0].role !== 'user') {\n  claudeMessages.unshift({ role: 'user', content: 'Hello' });\n}\n\nlet lastMessage = '';\nfor (let i = rawMsgs.length - 1; i >= 0; i--) {\n  if (rawMsgs[i].senderId === userId && rawMsgs[i].text) {\n    lastMessage = rawMsgs[i].text;\n    break;\n  }\n}\n\nif (!lastMessage) return [{ json: { skip: true } }];\n\nconst lower = lastMessage.toLowerCase();\nconst isReport = /\\b(report|excel|generate|gawa|dtr|fuel|epass|leave|travel|attendance|employee list|billing|soa|membership|warehouse|material|inventory|job.?order|turnover|summary|download|export|list.?all|show.?all|all.?records|image|picture)\\b/i.test(lastMessage);\nconst isWebSearch = /\\b(search|look up|find online|search online|latest|current news|recent update|news update|today.s news)\\b/i.test(lastMessage);\nconst isBlockedWrite = /\\b(delete|drop|truncate|update.?database|edit.?database|modify.?database|change.?database|remove.?record|erase.?record)\\b/i.test(lastMessage);\n\nlet topic = 'general';\nif (/\\b(dtr|attendance|time|late|absent|overtime|undertime)\\b/i.test(lower)) topic = 'dtr';\nelse if (/\\b(fuel|petrol|gasoline|diesel)\\b/i.test(lower)) topic = 'fuel';\nelse if (/\\b(epass|e-pass|gate.?pass)\\b/i.test(lower)) topic = 'epass';\nelse if (/\\b(leave|vacation|sick|vl|sl|leave.?balance)\\b/i.test(lower)) topic = 'leave';\nelse if (/\\b(travel|travel.?order|destination|mission)\\b/i.test(lower)) topic = 'travel';\nelse if (/\\b(warehouse|material|inventory|stock|requisition)\\b/i.test(lower)) topic = 'warehouse';\nelse if (/\\b(employee|profile|personnel|staff|department|position)\\b/i.test(lower)) topic = 'employee';\nelse if (/\\b(membership|member|consumer)\\b/i.test(lower)) topic = 'membership';\nelse if (/\\b(billing|bill|payment|soa|statement)\\b/i.test(lower)) topic = 'billing';\nelse if (/\\b(it|equipment|computer|laptop|asset|device)\\b/i.test(lower)) topic = 'it';\n\nreturn [{ json: {\n  conversationId, userId, aiUserId, lastMessage, claudeMessages,\n  isReport, isWebSearch, isBlockedWrite, topic,\n  userName: userProfile.name || 'User',\n  userPosition: userProfile.position || '',\n  userDepartment: userProfile.department || '',\n  userPrivilege: parseInt(userProfile.privilage || '0')\n} }];"
+      }
+    },
+    {
+      "id": "my05",
+      "name": "Search Knowledge Base",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [600, 1260],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=`SELECT title, content FROM messenger.ai_knowledge_base WHERE LOWER(title) LIKE LOWER('%${String($json.lastMessage || '').substring(0,60).replace(/'/g, \"''\")}%') OR LOWER(content) LIKE LOWER('%${String($json.lastMessage || '').substring(0,60).replace(/'/g, \"''\")}%') ORDER BY created_at DESC LIMIT 5`",
+        "options": {}
+      }
+    },
+    {
+      "id": "my06",
+      "name": "Get Employee Memory",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [600, 1460],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=`SELECT topic, summary, request_count FROM messenger.ai_employee_memory WHERE employee_id = ${parseInt($json.userId)} ORDER BY updated_at DESC LIMIT 10`",
+        "options": {}
+      }
+    },
+    {
+      "id": "co02",
+      "name": "Combine Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 1660],
+      "parameters": {
+        "jsCode": "const processed = $('Process Messages').first().json;\nconst kbItems = $('Search Knowledge Base').all();\nconst memItems = $('Get Employee Memory').all();\n\nconst kbParts = kbItems\n  .filter(i => i.json?.title && i.json?.content)\n  .map(i => `### ${i.json.title}\\n${i.json.content}`);\nconst knowledgeContext = kbParts.join('\\n\\n').trim();\n\nconst memParts = memItems\n  .filter(i => i.json?.topic && i.json?.summary)\n  .map(i => `• **${i.json.topic}**: ${i.json.summary} (asked ${i.json.request_count || 1}x)`);\nconst memoryContext = memParts.join('\\n').trim();\n\nreturn [{ json: { ...processed, knowledgeContext, memoryContext } }];"
+      }
+    },
+    {
+      "id": "if01",
+      "name": "IF Report Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 1860],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-report",
+              "leftValue": "={{ $json.isReport }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals", "rightType": "boolean" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "co03",
+      "name": "Build Report SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 2060],
+      "parameters": {
+        "jsCode": "const ctx = $input.first().json;\nconst { lastMessage, userId, userPrivilege, isBlockedWrite } = ctx;\nconst lower = lastMessage.toLowerCase();\nconst isAdmin = userPrivilege >= 10;\nconst safeId = parseInt(userId);\n\nif (isBlockedWrite) {\n  return [{ json: { ...ctx, reportBlocked: true, reportReply: '**Restricted:** SAM cannot delete, update, or modify any database records. I am strictly read-only — I can only help you view and generate reports. Is there anything else I can help you with? 😊' } }];\n}\n\nlet sql = '', title = 'Report', reportType = 'general';\n\nif (/\\b(dtr|attendance|time.?record|time.?in|time.?out|late|absent|overtime|undertime)\\b/.test(lower)) {\n  reportType = 'dtr'; title = 'DTR Attendance Report';\n  sql = isAdmin\n    ? `SELECT u.name AS Employee, u.position AS Position, u.department AS Department, d.DTRdate AS Date, d.TimeIn AS \\`Time In\\`, d.TimeOut AS \\`Time Out\\`, d.DTRStatus AS Status FROM it_program.dtrtb d LEFT JOIN it_program.usertb u ON u.bioUID = d.bioUID WHERE d.DTRdate >= DATE_FORMAT(NOW(),'%Y-%m-01') ORDER BY d.DTRdate DESC, u.name ASC LIMIT 500`\n    : `SELECT d.DTRdate AS Date, d.TimeIn AS \\`Time In\\`, d.TimeOut AS \\`Time Out\\`, d.DTRStatus AS Status FROM it_program.dtrtb d LEFT JOIN it_program.usertb u ON u.bioUID = d.bioUID WHERE u.Id = ${safeId} AND d.DTRdate >= DATE_FORMAT(NOW(),'%Y-%m-01') ORDER BY d.DTRdate DESC LIMIT 50`;\n\n} else if (/\\b(fuel|petrol|gasoline|diesel)\\b/.test(lower)) {\n  reportType = 'fuel'; title = 'Fuel Records Report';\n  sql = isAdmin\n    ? 'SELECT * FROM it_program.fueltb ORDER BY id DESC LIMIT 200'\n    : `SELECT * FROM it_program.fueltb WHERE requested_by_id = ${safeId} ORDER BY id DESC LIMIT 50`;\n\n} else if (/\\b(epass|e-pass|gate.?pass)\\b/.test(lower)) {\n  reportType = 'epass'; title = 'EPASS Records';\n  sql = isAdmin\n    ? 'SELECT e.*, u.name AS employee_name FROM it_program.epasstb e LEFT JOIN it_program.usertb u ON u.Id = e.employee_id ORDER BY e.id DESC LIMIT 200'\n    : `SELECT * FROM it_program.epasstb WHERE employee_id = ${safeId} ORDER BY id DESC LIMIT 50`;\n\n} else if (/\\b(leave|vacation|sick|vl|sl|leave.?balance)\\b/.test(lower)) {\n  reportType = 'leave'; title = 'Leave Balance Report';\n  sql = isAdmin\n    ? \"SELECT name AS Employee, position AS Position, department AS Department, VLbal AS `VL Balance`, SLbal AS `SL Balance`, OLbal AS `OL Balance` FROM it_program.usertb WHERE username != '__samelco_ai__' ORDER BY name ASC LIMIT 500\"\n    : `SELECT name AS Employee, VLbal AS \\`VL Balance\\`, SLbal AS \\`SL Balance\\`, OLbal AS \\`OL Balance\\` FROM it_program.usertb WHERE Id = ${safeId} LIMIT 1`;\n\n} else if (/\\b(travel|travel.?order|destination|mission)\\b/.test(lower)) {\n  reportType = 'travel'; title = 'Travel Order Records';\n  sql = isAdmin\n    ? 'SELECT * FROM it_program.travelordertb ORDER BY id DESC LIMIT 200'\n    : `SELECT * FROM it_program.travelordertb WHERE employee_id = ${safeId} ORDER BY id DESC LIMIT 50`;\n\n} else if (/\\b(employee|employees|staff|personnel)\\b/.test(lower)) {\n  reportType = 'employee'; title = 'Employee List Report';\n  sql = isAdmin\n    ? \"SELECT usercode, name, position, department, area, emailadd FROM it_program.usertb WHERE username != '__samelco_ai__' ORDER BY department, name ASC LIMIT 500\"\n    : `SELECT usercode, name, position, department, area, emailadd FROM it_program.usertb WHERE Id = ${safeId} LIMIT 1`;\n\n} else if (/\\b(warehouse|material|inventory|stock|requisition)\\b/.test(lower)) {\n  reportType = 'warehouse'; title = 'Warehouse Records';\n  sql = 'SELECT * FROM it_program.warehousetb ORDER BY id DESC LIMIT 200';\n\n} else if (/\\b(membership|member|consumer)\\b/.test(lower)) {\n  reportType = 'membership'; title = 'Membership Records';\n  sql = isAdmin\n    ? 'SELECT * FROM it_program.membershiptb ORDER BY id DESC LIMIT 200'\n    : `SELECT * FROM it_program.membershiptb WHERE member_id = ${safeId} ORDER BY id DESC LIMIT 50`;\n\n} else if (/\\b(it.?equipment|computer|laptop|asset|device|printer)\\b/.test(lower)) {\n  reportType = 'it'; title = 'IT Equipment Records';\n  sql = 'SELECT * FROM it_program.it_equipment ORDER BY id DESC LIMIT 200';\n\n} else if (/\\b(billing|bill|payment|soa|statement)\\b/.test(lower)) {\n  reportType = 'billing'; title = 'Billing / SOA Records';\n  sql = isAdmin\n    ? 'SELECT * FROM it_program.billingtb ORDER BY id DESC LIMIT 200'\n    : `SELECT * FROM it_program.billingtb WHERE user_id = ${safeId} ORDER BY id DESC LIMIT 50`;\n\n} else {\n  reportType = 'profile'; title = 'Profile Summary';\n  sql = `SELECT usercode, name, position, department, area, VLbal, SLbal, OLbal FROM it_program.usertb WHERE Id = ${safeId} LIMIT 1`;\n}\n\nreturn [{ json: { ...ctx, reportSql: sql, reportTitle: title, reportType, reportBlocked: false } }];"
+      }
+    },
+    {
+      "id": "my07",
+      "name": "Execute Report Query",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [300, 2260],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $('Build Report SQL').first().json.reportSql }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "co04",
+      "name": "Format Report Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 2460],
+      "parameters": {
+        "jsCode": "const ctx = $('Build Report SQL').first().json;\nif (ctx.reportBlocked) return [{ json: { ...ctx, formattedReply: ctx.reportReply } }];\n\nconst rows = $('Execute Report Query').all().map(i => i.json);\nconst { reportTitle, conversationId, aiUserId } = ctx;\nconst count = rows.length;\n\nif (count === 0) {\n  const reply = `I looked through the records but found no data for **${reportTitle}** this period.\\n\\nThis may mean there are no records yet, or try a different date range. I am always here to help! 😊`;\n  return [{ json: { ...ctx, formattedReply: reply } }];\n}\n\nconst columns = Object.keys(rows[0]).slice(0, 8);\nconst tablePayload = {\n  title: reportTitle,\n  columns,\n  rows: rows.slice(0, 100).map(row => {\n    const mapped = {};\n    for (const col of columns) {\n      let v = row[col];\n      if (v === null || v === undefined) v = '';\n      mapped[col] = String(v);\n    }\n    return mapped;\n  }),\n  total: count,\n  note: count > 100 ? `Showing first 100 of ${count} records.` : ''\n};\n\nconst samTable = `[SAM_TABLE]${JSON.stringify(tablePayload)}[/SAM_TABLE]`;\nconst intro = `Of course! Here is your **${reportTitle}** — happy to help! 😊\\n\\n**Records found:** ${count}\\n\\nLet me know if you need a different period or module! 🌟\\n\\n`;\n\nreturn [{ json: { ...ctx, formattedReply: intro + samTable } }];"
+      }
+    },
+    {
+      "id": "co05",
+      "name": "Prepare Report Insert SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 2660],
+      "parameters": {
+        "jsCode": "const ctx = $input.first().json;\nfunction esc(v) { return String(v || '').replace(/\\\\/g,'\\\\\\\\').replace(/'/g,\"\\\\'\").replace(/\\n/g,'\\\\n').replace(/\\r/g,''); }\nconst sql = `INSERT INTO messenger.messages (ConversationID, SenderID, MessageText) VALUES (${parseInt(ctx.conversationId)}, ${parseInt(ctx.aiUserId)}, '${esc(ctx.formattedReply)}')`;\nreturn [{ json: { ...ctx, insertSql: sql } }];"
+      }
+    },
+    {
+      "id": "my08",
+      "name": "Insert Report Reply",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [300, 2860],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.insertSql }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "rw01",
+      "name": "Respond Report",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [300, 3060],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"response\": \"report\" }",
+        "options": {}
+      }
+    },
+    {
+      "id": "if02",
+      "name": "IF Web Search",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 2060],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-web",
+              "leftValue": "={{ $json.isWebSearch }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals", "rightType": "boolean" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ht01",
+      "name": "DuckDuckGo Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 2260],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.duckduckgo.com/?q={{ encodeURIComponent($('Combine Context').first().json.lastMessage) }}&format=json&no_redirect=1&no_html=1&skip_disambig=1",
+        "options": {
+          "timeout": 5000,
+          "response": { "response": { "neverError": true } }
+        }
+      }
+    },
+    {
+      "id": "co06",
+      "name": "Build Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 2460],
+      "parameters": {
+        "jsCode": "const ctx = $('Combine Context').first().json;\nconst { lastMessage, claudeMessages, knowledgeContext, memoryContext, userName, userPosition, userDepartment } = ctx;\n\nlet webContext = '';\ntry {\n  const w = $('DuckDuckGo Search').first().json;\n  const text = w?.AbstractText || w?.RelatedTopics?.[0]?.Text || '';\n  if (text) webContext = '[Web] ' + text;\n} catch(e) { webContext = ''; }\n\nconst date = new Date().toISOString().split('T')[0];\nlet whoLine = userName;\nif (userPosition) whoLine += `, ${userPosition}`;\nif (userDepartment) whoLine += ` (${userDepartment})`;\n\nlet sections = '';\nif (knowledgeContext) sections += `\\n\\n## Relevant Knowledge\\n${knowledgeContext}`;\nif (memoryContext) sections += `\\n\\n## Topics This Employee Has Asked About Before\\n${memoryContext}`;\nif (webContext) sections += `\\n\\n## Online Search Result\\n${webContext}`;\n\nconst systemPrompt = `You are SAM (SAMELCO II AI). You are a warm, kind, and helpful AI assistant built into the SAMELCII Web System for Samar II Electric Cooperative employees.\\n\\nYou are talking with: ${whoLine}\\nToday: ${date}\\n\\n## Non-Negotiable Rules\\n- Be warm, kind, respectful, and helpful in every single reply\\n- NEVER delete, update, edit, insert (except chat messages), or modify any database records — you are strictly read-only on all business data\\n- NEVER fabricate employee records, DTR data, fuel data, or any system data — only describe data you can see in the context\\n- Respond in the same language the user writes in: English, Tagalog, Waray-Waray, Bisaya, or any mix\\n- End every reply with a warm, caring closing line${sections}\\n\\n## SAMELCII Modules\\nEmployees Profile, Membership, DTR, Warehouse, IT Equipment, Fuel, SOA, Billing, Forms, Messenger\\n\\n## Report Format (when showing table data)\\n[SAM_TABLE]{\\\"title\\\":\\\"...\\\",\\\"columns\\\":[...],\\\"rows\\\":[...],\\\"total\\\":N}[/SAM_TABLE]\\n\\n## Learning (save useful organizational facts)\\n[LEARN: Short Title | Full fact to remember | category]\\nCategories: general, employee, process, system, policy`;\n\n// Groq uses OpenAI-compatible format: system goes as first message\nconst groqMessages = [\n  { role: 'system', content: systemPrompt },\n  ...claudeMessages\n];\nconst apiBody = {\n  model: 'llama-3.3-70b-versatile',\n  max_tokens: 1024,\n  messages: groqMessages\n};\n\nreturn [{ json: { ...ctx, apiBody: apiBody } }];"
+      }
+    },
+    {
+      "id": "ht02",
+      "name": "Call Groq AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 2660],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer REPLACE_WITH_YOUR_GROQ_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.apiBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "neverError": true } }
+        }
+      }
+    },
+    {
+      "id": "co07",
+      "name": "Process Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 2860],
+      "parameters": {
+        "jsCode": "const ctx = $('Build Claude Request').first().json;\nconst resp = $input.first().json;\n\nlet rawText = '';\nif (resp?.choices?.[0]?.message?.content) {\n  rawText = resp.choices[0].message.content;\n} else if (resp?.error?.message) {\n  rawText = `I am sorry, I could not connect to the AI service right now: ${resp.error.message}. Please try again in a moment! 😊`;\n} else {\n  rawText = 'I apologize — I encountered an issue processing your request. Please try again! 😊';\n}\n\nconst learnPattern = /\\[LEARN:\\s*([^|\\]]+)\\s*\\|\\s*([^|\\]]+)\\s*\\|\\s*([^\\]]+)\\s*\\]/g;\nconst learnItems = [];\nlet m;\nwhile ((m = learnPattern.exec(rawText)) !== null) {\n  learnItems.push({\n    title: m[1].trim().substring(0, 255),\n    content: m[2].trim().substring(0, 3000),\n    category: m[3].trim().toLowerCase().substring(0, 100)\n  });\n}\nconst cleanText = rawText.replace(/\\[LEARN:[^\\]]+\\]/g, '').trim();\n\nconst today = new Date().toISOString().split('T')[0];\nconst memSummary = `Last asked about ${ctx.topic}: \"${ctx.lastMessage.substring(0, 120)}\" on ${today}`;\n\nreturn [{ json: { ...ctx, cleanText, learnItems, hasLearnItems: learnItems.length > 0, memSummary } }];"
+      }
+    },
+    {
+      "id": "if03",
+      "name": "IF Has LEARN Tags",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 3060],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-learn",
+              "leftValue": "={{ $json.hasLearnItems }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals", "rightType": "boolean" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "co08",
+      "name": "Prepare Knowledge Insert SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 3260],
+      "parameters": {
+        "jsCode": "const ctx = $input.first().json;\nconst allowed = ['general', 'employee', 'process', 'system', 'policy'];\nfunction esc(v) { return String(v || '').replace(/\\\\/g,'\\\\\\\\').replace(/'/g,\"\\\\'\"); }\n\nconst values = (ctx.learnItems || []).map(item => {\n  const cat = allowed.includes(item.category) ? item.category : 'general';\n  return `('${esc(cat)}', '${esc(item.title.substring(0,255))}', '${esc(item.content.substring(0,3000))}')`;\n}).join(', ');\n\nconst sql = values\n  ? `INSERT INTO messenger.ai_knowledge_base (category, title, content) VALUES ${values}`\n  : 'SELECT 1';\nreturn [{ json: { ...ctx, learnInsertSql: sql } }];"
+      }
+    },
+    {
+      "id": "my09",
+      "name": "Save New Knowledge",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [700, 3460],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.learnInsertSql }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "co09",
+      "name": "Prepare Memory and Reply SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 3660],
+      "parameters": {
+        "jsCode": "const ctx = $('Process Claude Response').first().json;\nfunction esc(v) { return String(v || '').replace(/\\\\/g,'\\\\\\\\').replace(/'/g,\"\\\\'\").replace(/\\n/g,'\\\\n').replace(/\\r/g,''); }\n\nconst empId = parseInt(ctx.userId);\nconst topic = esc((ctx.topic || 'general').substring(0, 100));\nconst summary = esc((ctx.memSummary || '').substring(0, 500));\nconst lastReq = esc((ctx.lastMessage || '').substring(0, 500));\n\nconst memorySql = `INSERT INTO messenger.ai_employee_memory (employee_id, topic, summary, last_request, request_count) VALUES (${empId}, '${topic}', '${summary}', '${lastReq}', 1) ON DUPLICATE KEY UPDATE summary = '${summary}', last_request = '${lastReq}', request_count = request_count + 1`;\n\nconst replySql = `INSERT INTO messenger.messages (ConversationID, SenderID, MessageText) VALUES (${parseInt(ctx.conversationId)}, ${parseInt(ctx.aiUserId)}, '${esc(ctx.cleanText)}')`;\n\nreturn [{ json: { ...ctx, memorySql, replySql } }];"
+      }
+    },
+    {
+      "id": "my10",
+      "name": "Update Employee Memory",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [900, 3860],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.memorySql }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "my11",
+      "name": "Insert General Reply",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [900, 4060],
+      "credentials": {
+        "mySql": {
+          "id": "REPLACE_WITH_YOUR_MYSQL_CREDENTIAL_ID",
+          "name": "SAMELCO II MySQL"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.replySql }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "rw02",
+      "name": "Respond General",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 4260],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"response\": \"chat\" }",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "SAM Webhook": {
+      "main": [[{ "node": "Init Employee Memory Table", "type": "main", "index": 0 }]]
+    },
+    "Init Employee Memory Table": {
+      "main": [[{ "node": "Get AI User ID", "type": "main", "index": 0 }]]
+    },
+    "Get AI User ID": {
+      "main": [[{ "node": "Get User Profile", "type": "main", "index": 0 }]]
+    },
+    "Get User Profile": {
+      "main": [[{ "node": "Get Last 25 Messages", "type": "main", "index": 0 }]]
+    },
+    "Get Last 25 Messages": {
+      "main": [[{ "node": "Process Messages", "type": "main", "index": 0 }]]
+    },
+    "Process Messages": {
+      "main": [[{ "node": "Search Knowledge Base", "type": "main", "index": 0 }]]
+    },
+    "Search Knowledge Base": {
+      "main": [[{ "node": "Get Employee Memory", "type": "main", "index": 0 }]]
+    },
+    "Get Employee Memory": {
+      "main": [[{ "node": "Combine Context", "type": "main", "index": 0 }]]
+    },
+    "Combine Context": {
+      "main": [[{ "node": "IF Report Request", "type": "main", "index": 0 }]]
+    },
+    "IF Report Request": {
+      "main": [
+        [{ "node": "Build Report SQL", "type": "main", "index": 0 }],
+        [{ "node": "IF Web Search", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Report SQL": {
+      "main": [[{ "node": "Execute Report Query", "type": "main", "index": 0 }]]
+    },
+    "Execute Report Query": {
+      "main": [[{ "node": "Format Report Reply", "type": "main", "index": 0 }]]
+    },
+    "Format Report Reply": {
+      "main": [[{ "node": "Prepare Report Insert SQL", "type": "main", "index": 0 }]]
+    },
+    "Prepare Report Insert SQL": {
+      "main": [[{ "node": "Insert Report Reply", "type": "main", "index": 0 }]]
+    },
+    "Insert Report Reply": {
+      "main": [[{ "node": "Respond Report", "type": "main", "index": 0 }]]
+    },
+    "IF Web Search": {
+      "main": [
+        [{ "node": "DuckDuckGo Search", "type": "main", "index": 0 }],
+        [{ "node": "Build Claude Request", "type": "main", "index": 0 }]
+      ]
+    },
+    "DuckDuckGo Search": {
+      "main": [[{ "node": "Build Claude Request", "type": "main", "index": 0 }]]
+    },
+    "Build Claude Request": {
+      "main": [[{ "node": "Call Groq AI", "type": "main", "index": 0 }]]
+    },
+    "Call Groq AI": {
+      "main": [[{ "node": "Process Claude Response", "type": "main", "index": 0 }]]
+    },
+    "Process Claude Response": {
+      "main": [[{ "node": "IF Has LEARN Tags", "type": "main", "index": 0 }]]
+    },
+    "IF Has LEARN Tags": {
+      "main": [
+        [{ "node": "Prepare Knowledge Insert SQL", "type": "main", "index": 0 }],
+        [{ "node": "Prepare Memory and Reply SQL", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare Knowledge Insert SQL": {
+      "main": [[{ "node": "Save New Knowledge", "type": "main", "index": 0 }]]
+    },
+    "Save New Knowledge": {
+      "main": [[{ "node": "Prepare Memory and Reply SQL", "type": "main", "index": 0 }]]
+    },
+    "Prepare Memory and Reply SQL": {
+      "main": [[{ "node": "Update Employee Memory", "type": "main", "index": 0 }]]
+    },
+    "Update Employee Memory": {
+      "main": [[{ "node": "Insert General Reply", "type": "main", "index": 0 }]]
+    },
+    "Insert General Reply": {
+      "main": [[{ "node": "Respond General", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "id": "sam-ai-samelco-ii",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "sam-samelcii"
+  }
+}

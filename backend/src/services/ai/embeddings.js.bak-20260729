@@ -1,0 +1,54 @@
+/**
+ * Semantic recall — calls Ollama's /api/embeddings (nomic-embed-text) so brain
+ * recall can match by MEANING, not just shared keywords. Purely additive: the
+ * existing keyword/synonym match in brain.js still runs first (fast, no network
+ * call); this is only a fallback for phrasing the keyword pass misses.
+ *
+ * Every function here is best-effort — a down/slow embedding model must never
+ * block or break a chat reply, so callers get null/[] on any failure, not a throw.
+ */
+const config = require('../../config/env');
+
+const TIMEOUT_MS = 8000;
+
+async function getEmbedding(text) {
+  const { baseUrl, embedModel } = config.ai.ollama;
+  if (!baseUrl || !embedModel) return null;
+  const t = String(text || '').trim();
+  if (!t) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const url = new URL('/api/embeddings', `${String(baseUrl).replace(/\/+$/, '')}/`);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: embedModel, prompt: t.slice(0, 2000) }),
+      signal: controller.signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    return Array.isArray(data?.embedding) ? data.embedding : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Standard cosine similarity, -1..1 (1 = identical direction). */
+function cosineSimilarity(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length || a.length === 0) return 0;
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  if (na === 0 || nb === 0) return 0;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+module.exports = { getEmbedding, cosineSimilarity };

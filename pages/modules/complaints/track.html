@@ -1,0 +1,480 @@
+<!--
+============================================================
+FILE: track.html
+PURPOSE: Public, unauthenticated complaint tracker for consumers. Search by
+         Reference No. (goes straight to that complaint) or Contact No.
+         (lists every complaint under that number, latest first, 10/page).
+         Tap the eye icon to open a popup with full details + the
+         remarks/update log.
+DATA: Calls the public backend API at /api/public/complaints (no login) —
+      see backend/src/routes/complaintsPublic.js. Does NOT touch the staff
+      workspace's localStorage or authenticated /api/complaints endpoint.
+============================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Track My Complaint | SAMELCO II</title>
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-soft: #eef2ff; --accent: #a78bfa;
+            --ink: #1f2937; --body: #374151; --muted: #6b7280; --canvas: #f9fafb;
+            --surface: #fff; --elevated: #f3f4f6; --border: #e5e7eb;
+            --success: #10b981; --success-soft: #ecfdf5; --warning: #f59e0b; --warning-soft: #fffbeb;
+            --error: #ef4444; --error-soft: #fef2f2; --processing: #f97316; --processing-soft: #fff7ed;
+            --info: #0ea5e9; --info-soft: #f0f9ff;
+            --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
+            --r1: 6px; --r2: 8px; --r3: 12px; --r4: 20px;
+            --shadow: 0 1px 3px rgba(0,0,0,.1);
+            --font: "Segoe UI", Tahoma, Arial, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body { font: 14px/1.5 var(--font); color: var(--ink); background: var(--canvas); }
+        button, input { font: inherit; }
+        button { cursor: pointer; }
+        button:focus-visible, input:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--primary) 25%, transparent); outline-offset: 2px;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c7ff2 45%, var(--accent) 100%);
+            padding: var(--s8) var(--s4) 76px;
+            color: #fff; text-align: center;
+        }
+        .brand {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 999px; background: rgba(255,255,255,.18);
+            font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+        }
+        .hero h1 { margin: var(--s3) 0 var(--s1); font-size: clamp(22px, 4vw, 30px); }
+        .hero p { margin: 0; opacity: .92; font-size: 13.5px; }
+
+        /* Embedded in the staff workspace's F2 popup: that dialog already has its own
+           header/title, so this page's hero would just be a redundant duplicate. */
+        body.embedded .hero { display: none; }
+        body.embedded .search-wrap { margin-top: var(--s6); }
+
+        /* ===== SEARCH ===== */
+        .search-wrap { max-width: 640px; margin: -54px auto 0; padding: 0 var(--s4) var(--s8); }
+        .search-card { background: var(--surface); border-radius: var(--r4); box-shadow: 0 20px 44px rgba(17,24,39,.18); padding: var(--s5); }
+        .search-form { display: flex; gap: var(--s2); }
+        .search-form input { flex: 1; height: 44px; padding: 0 var(--s3); border: 1px solid var(--border); border-radius: var(--r2); background: var(--canvas); color: var(--ink); }
+        .search-btn { height: 44px; padding: 0 var(--s5); border: 0; border-radius: var(--r2); background: var(--primary); color: #fff; font-weight: 800; white-space: nowrap; }
+        .search-btn:hover { background: var(--primary-dark); }
+        .search-hint { margin: var(--s2) 2px 0; color: var(--muted); font-size: 12px; }
+
+        /* ===== RESULTS ===== */
+        .results { margin-top: var(--s6); }
+        .results-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s2); }
+        .results-head h2 { margin: 0; font-size: 15px; }
+        .results-count { color: var(--muted); font-size: 12px; }
+        .result-list { display: grid; gap: var(--s2); }
+        .result-card {
+            display: flex; align-items: center; gap: var(--s3);
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--r3);
+            padding: var(--s3) var(--s4); box-shadow: var(--shadow);
+            transition: box-shadow .15s ease, transform .15s ease;
+        }
+        .result-card:hover { box-shadow: 0 8px 22px rgba(17,24,39,.1); transform: translateY(-1px); }
+        .result-card-old { opacity: .7; }
+        .result-card-old:hover { opacity: .95; }
+        .result-card-old .result-id, .result-card-old .result-meta { filter: grayscale(1); }
+        .result-main { flex: 1; min-width: 0; }
+        .result-id { font-weight: 800; font-size: 13px; }
+        .result-meta { margin-top: 2px; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .view-btn { flex-shrink: 0; width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 999px; background: var(--primary-soft); font-size: 15px; }
+        .view-btn:hover { background: var(--accent); }
+        .pagination { display: flex; align-items: center; justify-content: center; gap: var(--s4); margin-top: var(--s5); }
+        .pagination button { border: 1px solid var(--border); background: var(--surface); padding: 7px 14px; border-radius: var(--r2); font-weight: 700; font-size: 12.5px; }
+        .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+        #page-indicator { color: var(--muted); font-size: 12.5px; }
+        .empty-state { margin-top: var(--s6); text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--r3); padding: var(--s8) var(--s4); }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+        .status-new { background: var(--info-soft); color: #0369a1; }
+        .status-pending { background: var(--warning-soft); color: #b45309; }
+        .status-progress { background: var(--primary-soft); color: var(--primary-dark); }
+        .status-released { background: var(--warning-soft); color: #a16207; }
+        .status-done { background: var(--success-soft); color: #047857; }
+
+        /* ===== DETAIL DIALOG (mirrors the staff workspace's native <dialog> pattern) ===== */
+        dialog#detail-dialog { width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 24px); padding: 0; overflow: hidden; border: 0; border-radius: var(--r4); background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px rgba(17,24,39,.35); }
+        dialog#detail-dialog::backdrop { background: rgba(17,24,39,.6); backdrop-filter: blur(4px); }
+        .dialog-head { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); padding: var(--s5) var(--s5) var(--s4); background: linear-gradient(135deg, var(--primary) 0%, #7c7ff2 50%, var(--accent) 100%); color: #fff; }
+        .dialog-head .eyebrow { margin: 0 0 2px; color: rgba(255,255,255,.8); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+        .dialog-head h3 { margin: 0; font-size: 19px; font-family: Consolas, monospace; letter-spacing: .02em; }
+        .dialog-head p { margin: 3px 0 0; color: rgba(255,255,255,.85); font-size: 12px; }
+        .dialog-head .status-badge { background: rgba(255,255,255,.22); color: #fff; }
+        .dialog-body { padding: var(--s5); display: grid; gap: var(--s5); max-height: calc(100vh - 200px); overflow-y: auto; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+        .detail-tile { display: flex; align-items: flex-start; gap: 10px; padding: var(--s3); border-radius: var(--r3); background: var(--canvas); border: 1px solid var(--border); }
+        .detail-tile .tile-icon { flex: 0 0 auto; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r2); background: var(--primary-soft); color: var(--primary-dark); font-size: 14px; }
+        .detail-tile-copy { min-width: 0; }
+        .detail-grid label, .detail-desc label, .detail-log label { display: block; color: var(--muted); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+        .detail-tile-copy span { font-weight: 700; font-size: 13.5px; overflow-wrap: anywhere; }
+        .detail-desc { padding: var(--s3) var(--s4); border-radius: var(--r3); background: var(--canvas); border: 1px solid var(--border); border-left: 3px solid var(--primary); }
+        .detail-desc p { margin: 4px 0 0; line-height: 1.55; }
+        .detail-log label { margin-bottom: var(--s3); }
+        /* Capped + independently scrollable so a long history never pushes the details above it
+           or the "Add remark" box below it out of view — you scroll the log itself, not the popup. */
+        .log-list { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: var(--s2); max-height: 260px; overflow-y: auto; }
+        .log-item { position: relative; display: flex; gap: var(--s2); padding: var(--s3); border-radius: var(--r3); background: var(--canvas); border: 1px solid var(--border); }
+        .log-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-top: 6px; border-radius: 999px; background: var(--log-color, var(--primary)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--log-color, var(--primary)) 18%, transparent); }
+        .log-body { min-width: 0; flex: 1; }
+        .log-top { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-bottom: 2px; }
+        .log-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--log-color, var(--primary)) 14%, var(--surface)); color: var(--log-color, var(--primary-dark)); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+        .log-text { margin-top: 4px; font-size: 13.5px; line-height: 1.4; }
+        .log-time { color: var(--muted); font-size: 11px; white-space: nowrap; }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: var(--s2); padding: var(--s4) var(--s5); border-top: 1px solid var(--border); background: var(--surface); }
+        .dialog-close { border: 1px solid var(--border); background: var(--elevated); color: var(--ink); padding: 9px 16px; border-radius: var(--r2); font-weight: 800; font-size: 13px; }
+        .dialog-close:hover { background: var(--border); }
+        .remark-form { display: grid; gap: var(--s2); padding: var(--s4); border-radius: var(--r3); background: linear-gradient(180deg, var(--primary-soft), var(--surface)); border: 1px solid var(--border); }
+        .remark-form label { color: var(--primary-dark); }
+        .remark-form textarea { min-height: 64px; padding: var(--s3); border: 1px solid var(--border); border-radius: var(--r3); background: var(--surface); color: var(--ink); resize: vertical; font: inherit; box-shadow: var(--shadow); }
+        .remark-form textarea:focus-visible { border-color: var(--primary); }
+        .remark-form .btn { justify-self: end; display: inline-flex; align-items: center; gap: 6px; border: 0; padding: 10px 18px; border-radius: 999px; font-weight: 800; font-size: 13px; background: var(--primary); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 45%, transparent); }
+        .remark-form .btn:hover { background: var(--primary-dark); }
+        .remark-form[hidden] { display: none; }
+        @media (max-width: 480px) { .detail-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <span class="brand">⚡ SAMELCO II</span>
+        <h1>Track Your Complaint</h1>
+        <p>Paste your Reference No. or Contact No. below — we'll figure out which one it is.</p>
+    </header>
+
+    <main class="search-wrap">
+        <section class="search-card">
+            <form class="search-form" id="search-form">
+                <input id="search-input" type="text" placeholder="Paste your Reference No. or Contact No." autocomplete="off" />
+                <button class="search-btn" type="submit">🔍 Search</button>
+            </form>
+            <p class="search-hint" id="search-hint">e.g. CMP-20260810-0001, or your mobile/landline number — no need to pick which one, just paste and search.</p>
+        </section>
+
+        <section class="results" id="results" hidden>
+            <div class="results-head">
+                <h2 id="results-title">Results</h2>
+                <span class="results-count" id="results-count"></span>
+            </div>
+            <div class="result-list" id="result-list"></div>
+            <nav class="pagination" id="pagination" hidden>
+                <button id="prev-page" type="button">‹ Prev</button>
+                <span id="page-indicator">Page 1</span>
+                <button id="next-page" type="button">Next ›</button>
+            </nav>
+        </section>
+
+        <section class="empty-state" id="empty-state" hidden>
+            <p id="empty-text">😕 No complaint found.</p>
+        </section>
+    </main>
+
+    <dialog id="detail-dialog">
+        <header class="dialog-head">
+            <div>
+                <p class="eyebrow">SAMELCO II · Complaint record</p>
+                <h3 id="detail-title">—</h3>
+                <p id="detail-date">—</p>
+            </div>
+            <span class="status-badge" id="detail-status-badge">—</span>
+        </header>
+        <div class="dialog-body">
+            <div class="detail-grid">
+                <div class="detail-tile"><span class="tile-icon">🔧</span><div class="detail-tile-copy"><label>Complaint Type</label><span id="d-type">—</span></div></div>
+                <div class="detail-tile"><span class="tile-icon">📍</span><div class="detail-tile-copy"><label>Address</label><span id="d-address">—</span></div></div>
+            </div>
+            <div class="detail-desc">
+                <label>Description</label>
+                <p id="d-description">—</p>
+            </div>
+            <div class="detail-log">
+                <label>📋 Remarks / Update Log</label>
+                <ol class="log-list" id="log-list"></ol>
+            </div>
+            <form class="remark-form" id="remark-form" hidden>
+                <label for="remark-input">Add remark</label>
+                <textarea id="remark-input" maxlength="500" required placeholder="Field update, transfer reason, or resolution…"></textarea>
+                <button class="btn" id="remark-submit" type="submit">Post remark</button>
+            </form>
+        </div>
+        <div class="dialog-actions">
+            <button class="dialog-close" id="close-dialog" type="button">Close</button>
+        </div>
+    </dialog>
+
+    <script>
+        const nodeApiBase = String(window.SAMELCII_NODE_API_BASE || `${window.location.protocol}//${window.location.hostname}:3000/api`).replace(/\/+$/, "");
+        const trackApi = `${nodeApiBase}/public/complaints`;
+
+        function statusClass(status) {
+            return { "New": "status-new", "Pending": "status-pending", "In Progress": "status-progress", "Released": "status-released", "Done": "status-done" }[status] || "status-new";
+        }
+        function statusLabel(status) { return status === "In Progress" ? "Handling" : status; }
+        function formatDate(value) {
+            if (!value) return "—";
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" });
+        }
+        const ACTIVITY_ICON = { CREATED: "●", CLAIMED: "↗", TRANSFERRED: "↗", RELEASED: "○", COMPLETED: "✓", PRIORITY: "!", REMARK: "💬" };
+        const ACTIVITY_COLOR = { CREATED: "#0ea5e9", CLAIMED: "#6366f1", TRANSFERRED: "#6366f1", RELEASED: "#f59e0b", COMPLETED: "#10b981", PRIORITY: "#ef4444", REMARK: "#a78bfa" };
+        const ACTIVITY_LABEL = { CREATED: "Created", CLAIMED: "Claimed", TRANSFERRED: "Transferred", RELEASED: "Released", COMPLETED: "Completed", PRIORITY: "Priority", REMARK: "Remark" };
+        // Same-origin as the staff workspace, so when embedded (F2 popup) this can read the
+        // staff session token it already stored — lets staff post a remark straight from the
+        // popup via the authenticated workflow endpoint, without leaving the queue.
+        function authHeaders() {
+            const headers = {}, token = String(localStorage.getItem("samelcii_token") || "").trim(), session = String(localStorage.getItem("samelcii_session") || "").trim();
+            if (token.split(".").length === 3) { headers.Authorization = `Bearer ${token}`; headers["X-SAMELCII-TOKEN"] = token; }
+            if (session) headers["X-SAMELCII-SESSION"] = session;
+            return headers;
+        }
+
+        // When embedded as the staff workspace's F2 popup (index.html wraps this page in an
+        // iframe inside a <dialog>), keydown events fired inside this iframe's own document
+        // never bubble to the parent — so Escape pressed here (e.g. right after typing in the
+        // search box) never reached the parent dialog's own Escape handler. Reaching back into
+        // the parent directly works because it's the same origin.
+        document.addEventListener("keydown", (event) => {
+            if (event.key !== "Escape" || window.parent === window) return;
+            try { window.parent.closeTracker?.(); } catch (e) { /* not embedded by the workspace, or cross-origin */ }
+        });
+        try {
+            if (window.parent !== window && window.parent.document.getElementById("tracker-dialog")) {
+                document.body.classList.add("embedded");
+            }
+        } catch (e) { /* not embedded by the workspace, or cross-origin */ }
+
+        const els = {
+            form: document.getElementById("search-form"),
+            input: document.getElementById("search-input"),
+            hint: document.getElementById("search-hint"),
+            results: document.getElementById("results"),
+            resultsTitle: document.getElementById("results-title"),
+            resultsCount: document.getElementById("results-count"),
+            resultList: document.getElementById("result-list"),
+            pagination: document.getElementById("pagination"),
+            prevPage: document.getElementById("prev-page"),
+            nextPage: document.getElementById("next-page"),
+            pageIndicator: document.getElementById("page-indicator"),
+            emptyState: document.getElementById("empty-state"),
+            emptyText: document.getElementById("empty-text"),
+            dialog: document.getElementById("detail-dialog"),
+            closeDialog: document.getElementById("close-dialog")
+        };
+
+        let mode = "ref";
+        let lastContactQuery = "";
+        let currentPage = 1;
+        let totalPages = 1;
+        // Guards against a slower, earlier search (e.g. an accidental ref-mode submit before
+        // switching to Contact No.) resolving after a newer one and overwriting its results
+        // with a stale error. Each search captures the token at start; only the search that's
+        // still the latest when its response arrives is allowed to touch the UI.
+        let searchToken = 0;
+
+        // No manual tab to pick anymore — one box, auto-detected by format on every search.
+        function detectMode(query) {
+            if (/^cmp[\s-]?\d/i.test(query)) return "ref";
+            if (query.replace(/\D/g, "").length >= 7) return "contact";
+            return "ref";
+        }
+
+        function hideResults() { els.results.hidden = true; els.emptyState.hidden = true; }
+        function showEmpty(text) { hideResults(); els.emptyText.textContent = text; els.emptyState.hidden = false; }
+
+        async function fetchJson(url) {
+            const response = await fetch(url);
+            let body = null;
+            try { body = await response.json(); } catch (e) { /* non-JSON error page */ }
+            return { status: response.status, body };
+        }
+
+        function isToday(value) {
+            if (!value) return false;
+            const d = new Date(value);
+            const now = new Date();
+            return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+        }
+
+        function renderList(data) {
+            els.resultList.innerHTML = "";
+            data.items.forEach((complaint) => {
+                const card = document.createElement("div");
+                card.className = `result-card${isToday(complaint.requestedAt) ? "" : " result-card-old"}`;
+                card.innerHTML = `
+                    <div class="result-main">
+                        <div class="result-id">${complaint.id}</div>
+                        <div class="result-meta">${complaint.type} · ${formatDate(complaint.requestedAt)}</div>
+                    </div>
+                    <span class="status-badge ${statusClass(complaint.status)}">${statusLabel(complaint.status)}</span>
+                    <button class="view-btn" type="button" title="View details" aria-label="View complaint details">👁</button>
+                `;
+                // Legacy complaints have no real reference code — complaint.id is a derived
+                // display-only string in that case, so use the reliable internal databaseId
+                // for the lookup instead when it's available (both endpoints accept a bare
+                // numeric id as an alternative to the reference-code string).
+                const lookupValue = complaint.databaseId ? String(complaint.databaseId) : complaint.id;
+                card.querySelector(".view-btn").addEventListener("click", () => openByRef(lookupValue, ++searchToken));
+                els.resultList.appendChild(card);
+            });
+
+            totalPages = data.totalPages;
+            currentPage = data.page;
+            els.pagination.hidden = totalPages <= 1;
+            els.pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+            els.prevPage.disabled = currentPage <= 1;
+            els.nextPage.disabled = currentPage >= totalPages;
+
+            els.emptyState.hidden = true;
+            els.resultsTitle.textContent = "Complaints";
+            els.resultsCount.textContent = `${data.total} found`;
+            els.results.hidden = false;
+        }
+
+        async function runContactSearch(page, token) {
+            const { status, body } = await fetchJson(`${trackApi}?contact=${encodeURIComponent(lastContactQuery)}&page=${page}`);
+            if (token !== searchToken) return; // a newer search started while this one was in flight
+            if (status === 429) return showEmpty("⏳ Too many searches. Please try again later.");
+            if (status !== 200 || !body?.ok) return showEmpty(body?.message || "😕 No complaints found under that contact number.");
+            if (!body.items.length) return showEmpty("😕 No complaints found under that contact number.");
+            renderList(body);
+        }
+
+        els.prevPage.addEventListener("click", () => { if (currentPage > 1) runContactSearch(currentPage - 1, ++searchToken); });
+        els.nextPage.addEventListener("click", () => { if (currentPage < totalPages) runContactSearch(currentPage + 1, ++searchToken); });
+
+        let currentDatabaseId = null;
+        const remarkForm = document.getElementById("remark-form");
+        const remarkInput = document.getElementById("remark-input");
+
+        function renderLog(activities) {
+            const logList = document.getElementById("log-list");
+            logList.innerHTML = "";
+            if (!activities || !activities.length) {
+                logList.innerHTML = `<li class="log-item"><div class="log-text">No updates logged yet.</div></li>`;
+                return;
+            }
+            activities.forEach((activity) => {
+                const li = document.createElement("li");
+                li.className = "log-item";
+                li.style.setProperty("--log-color", ACTIVITY_COLOR[activity.actionType] || "var(--primary)");
+                const icon = ACTIVITY_ICON[activity.actionType] || "●";
+                const label = ACTIVITY_LABEL[activity.actionType] || "Update";
+                li.innerHTML = `<span class="log-dot"></span><div class="log-body"><div class="log-top"><span class="log-badge">${icon} ${label}</span><span class="log-time">${formatDate(activity.createdAt)}</span></div><div class="log-text">${activity.details}</div></div>`;
+                logList.appendChild(li);
+            });
+        }
+
+        function openDetail(item, activities) {
+            document.getElementById("detail-title").textContent = item.id;
+            document.getElementById("detail-date").textContent = formatDate(item.requestedAt);
+            const badge = document.getElementById("detail-status-badge");
+            badge.textContent = statusLabel(item.status);
+            badge.className = `status-badge ${statusClass(item.status)}`;
+            document.getElementById("d-type").textContent = item.type || "—";
+            document.getElementById("d-address").textContent = item.address || "—";
+            document.getElementById("d-description").textContent = item.description || "—";
+
+            renderLog(activities);
+
+            // Staff-only: posting a remark needs the numeric CompID, which only the authenticated
+            // lookup returns (the public endpoint deliberately omits it) — so the form only shows
+            // up when embedded in the staff workspace's F2 popup, never on the public page.
+            currentDatabaseId = document.body.classList.contains("embedded") ? item.databaseId || null : null;
+            remarkForm.hidden = !currentDatabaseId;
+            remarkInput.value = "";
+
+            els.dialog.showModal();
+        }
+
+        async function openByRef(ref, token) {
+            if (document.body.classList.contains("embedded")) {
+                try {
+                    const response = await fetch(`${nodeApiBase}/complaints?action=complaint_lookup&q=${encodeURIComponent(ref)}`, { credentials: "same-origin", headers: authHeaders() });
+                    const result = await response.json().catch(() => ({ ok: false }));
+                    if (token !== searchToken) return;
+                    if (!response.ok || !result.ok) return showEmpty(result.message || "😕 No complaint found with that reference number.");
+                    const item = result.item;
+                    const activityResponse = await fetch(`${nodeApiBase}/complaints?action=activity&id=${encodeURIComponent(item.databaseId)}`, { credentials: "same-origin", headers: authHeaders() });
+                    const activityResult = await activityResponse.json().catch(() => ({ items: [] }));
+                    if (token !== searchToken) return;
+                    const activities = (activityResult.items || []).map((row) => ({ actionType: row.actionType, details: row.details, createdAt: row.createdAt }));
+                    return openDetail({ id: item.id, type: item.type, status: item.status, requestedAt: item.reportedAt, description: item.description, address: item.address, databaseId: item.databaseId }, activities);
+                } catch (error) {
+                    if (token !== searchToken) return;
+                    return showEmpty("😕 Could not load that complaint.");
+                }
+            }
+            const { status, body } = await fetchJson(`${trackApi}?ref=${encodeURIComponent(ref)}`);
+            if (token !== searchToken) return;
+            if (status === 429) return showEmpty("⏳ Too many searches. Please try again later.");
+            if (status !== 200 || !body?.ok) return showEmpty(body?.message || "😕 No complaint found with that reference number.");
+            openDetail(body.item, body.activities);
+        }
+
+        async function workflowRequest(operation, extra) {
+            const response = await fetch(`${nodeApiBase}/complaints?action=workflow`, {
+                method: "POST", credentials: "same-origin", cache: "no-store",
+                headers: { "Content-Type": "application/json", ...authHeaders() },
+                body: JSON.stringify({ id: currentDatabaseId, operation, ...extra })
+            });
+            const result = await response.json().catch(() => ({ ok: false }));
+            return { ok: response.ok && result.ok, status: response.status, result };
+        }
+
+        remarkForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const remark = remarkInput.value.trim();
+            if (!remark || !currentDatabaseId) return;
+            const submitBtn = document.getElementById("remark-submit");
+            submitBtn.disabled = true;
+            try {
+                let attempt = await workflowRequest("remark", { remark });
+                // 409 here means nobody (or someone else) currently owns the complaint. If it's
+                // simply unassigned, claim it for the logged-in staff member and retry once —
+                // saves a trip back to the main queue just to click "Take" first.
+                if (!attempt.ok && attempt.status === 409) {
+                    const claim = await workflowRequest("claim");
+                    if (claim.ok) attempt = await workflowRequest("remark", { remark });
+                }
+                if (!attempt.ok) throw new Error(attempt.result.message || "Remark could not be saved.");
+                remarkInput.value = "";
+                const activityResponse = await fetch(`${nodeApiBase}/complaints?action=activity&id=${encodeURIComponent(currentDatabaseId)}`, { credentials: "same-origin", headers: authHeaders() });
+                const activityResult = await activityResponse.json().catch(() => ({ items: [] }));
+                renderLog((activityResult.items || []).map((row) => ({ actionType: row.actionType, details: row.details, createdAt: row.createdAt })));
+            } catch (error) {
+                alert(error.message || "Remark could not be saved.");
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        els.closeDialog.addEventListener("click", () => els.dialog.close());
+        els.dialog.addEventListener("click", (event) => { if (event.target === els.dialog) els.dialog.close(); });
+
+        els.form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const query = els.input.value.trim();
+            if (!query) return;
+            mode = detectMode(query);
+            const token = ++searchToken;
+
+            if (mode === "ref") {
+                hideResults();
+                await openByRef(query, token);
+                return;
+            }
+
+            lastContactQuery = query;
+            await runContactSearch(1, token);
+        });
+    </script>
+</body>
+</html>
