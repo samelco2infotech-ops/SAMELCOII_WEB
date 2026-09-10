@@ -32,6 +32,64 @@ const getDepartmentAbbr = async (usercode) => {
   return String(row?.abbr || '').trim().toUpperCase();
 };
 
+// ponytail: reading currentStatus before the transaction and deducting balance with no lock let
+// two concurrent approve clicks on the same FARCode (double-click, two tabs, two approvers) both
+// pass the check and both deduct, silently doubling the balance hit. Folding the status check
+// into the UPDATE's own WHERE as an atomic compare-and-swap (same pattern as overtime.js) fixes
+// it: MySQL's row lock on UPDATE serializes concurrent attempts, so only the transaction that
+// actually flips the status gets affectedRows>0 and is allowed to touch the balance — a second,
+// now-stale attempt affects 0 rows and skips the deduction instead of double-applying it.
+// Must run inside a transaction already begun by the caller (connection.beginTransaction()).
+const applyFuelStatusTransition = async (connection, { status, currentStatus, farCode, amount, departmentAbbr, actorUsercode, usercode }) => {
+  let transitioned = false;
+  if (status === 1 && [2, 3].includes(currentStatus)) {
+    // ponytail: used to require fuel>=amount / balance>=amount and block approval otherwise.
+    // Approvers now need to be able to approve past a depleted allocation — the balance is a
+    // running report of usage, not a hard spending cap — so it's allowed to go negative.
+    const [swap] = await connection.execute(
+      'UPDATE fuelallocation_history SET status=?,approvedby=? WHERE FARCode=? AND status IN (2,3)',
+      [status, actorUsercode, farCode]
+    );
+    transitioned = swap.affectedRows > 0;
+    if (transitioned) {
+      const [deptResult] = await connection.execute(
+        'UPDATE fuelallocation_limit SET fuel=fuel-? WHERE Department=? LIMIT 1',
+        [amount, departmentAbbr]
+      );
+      const [userResult] = await connection.execute(
+        'UPDATE fuelallocation_history SET balance=balance-? WHERE usercode=? AND status=4 ORDER BY Id DESC LIMIT 1',
+        [amount, usercode]
+      );
+      if (!deptResult.affectedRows || !userResult.affectedRows) {
+        throw Object.assign(new Error('Department or employee fuel account is not configured.'), { statusCode: 422 });
+      }
+    }
+  } else if (status === 3 && currentStatus === 1) {
+    const [swap] = await connection.execute(
+      'UPDATE fuelallocation_history SET status=?,approvedby=? WHERE FARCode=? AND status=1',
+      [status, actorUsercode, farCode]
+    );
+    transitioned = swap.affectedRows > 0;
+    if (transitioned) {
+      await connection.execute('UPDATE fuelallocation_limit SET fuel=fuel+? WHERE Department=? LIMIT 1', [amount, departmentAbbr]);
+      await connection.execute(
+        'UPDATE fuelallocation_history SET balance=balance+? WHERE usercode=? AND status=4 ORDER BY Id DESC LIMIT 1',
+        [amount, usercode]
+      );
+    }
+  }
+  if (!transitioned) {
+    // No balance-affecting transition matched (already settled by a concurrent request, or this
+    // status change carries no fund adjustment) — still record the requested status, matching
+    // the original unconditional behavior for that case.
+    await connection.execute(
+      'UPDATE fuelallocation_history SET status=?,approvedby=? WHERE FARCode=? AND status<>4',
+      [status, actorUsercode, farCode]
+    );
+  }
+  return transitioned;
+};
+
 const getRequestUsercode = (req) => sanitizeString(req.query?.usercode || req.body?.usercode || req.user?.usercode || '');
 
 const getVehicleAssignments = async (plate) => {
@@ -350,32 +408,10 @@ router.all('/', async (req, res, next) => {
       const connection = await db.getConnection();
       try {
         await connection.beginTransaction();
-        if (status === 1 && [2, 3].includes(currentStatus)) {
-          // ponytail: used to require fuel>=amount / balance>=amount and block approval otherwise.
-          // Approvers now need to be able to approve past a depleted allocation — the balance is a
-          // running report of usage, not a hard spending cap — so it's allowed to go negative.
-          const [deptResult] = await connection.execute(
-            'UPDATE fuelallocation_limit SET fuel=fuel-? WHERE Department=? LIMIT 1',
-            [amount, departmentAbbr]
-          );
-          const [userResult] = await connection.execute(
-            'UPDATE fuelallocation_history SET balance=balance-? WHERE usercode=? AND status=4 ORDER BY Id DESC LIMIT 1',
-            [amount, row.usercode]
-          );
-          if (!deptResult.affectedRows || !userResult.affectedRows) {
-            throw Object.assign(new Error('Department or employee fuel account is not configured.'), { statusCode: 422 });
-          }
-        } else if (status === 3 && currentStatus === 1) {
-          await connection.execute('UPDATE fuelallocation_limit SET fuel=fuel+? WHERE Department=? LIMIT 1', [amount, departmentAbbr]);
-          await connection.execute(
-            'UPDATE fuelallocation_history SET balance=balance+? WHERE usercode=? AND status=4 ORDER BY Id DESC LIMIT 1',
-            [amount, row.usercode]
-          );
-        }
-        await connection.execute(
-          'UPDATE fuelallocation_history SET status=?,approvedby=? WHERE FARCode=? AND status<>4',
-          [status, req.user.usercode, farCode]
-        );
+        await applyFuelStatusTransition(connection, {
+          status, currentStatus, farCode, amount, departmentAbbr,
+          actorUsercode: req.user.usercode, usercode: row.usercode,
+        });
         if (linkedEpass) await connection.execute('UPDATE epasstb SET status=?,epass_approved=? WHERE epassnumber=?', [status === 1 ? 2 : 3, req.user.usercode, linkedEpass]);
         if (linkedTravel?.to_number) await connection.execute('UPDATE traveltb SET status=?,to_approved=? WHERE to_number=?', [status === 1 ? 2 : 3, req.user.usercode, linkedTravel.to_number]);
         await connection.commit();
@@ -884,3 +920,4 @@ router.get('/vehicles-today', async (req, res, next) => {
 });
 
 module.exports = router;
+module.exports._selfcheck = { applyFuelStatusTransition };
